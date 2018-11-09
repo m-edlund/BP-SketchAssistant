@@ -20,19 +20,22 @@ namespace SketchAssistant
             InitializeComponent();
         }
 
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            // Click on the link below to continue learning how to build a desktop app using WinForms!
-            System.Diagnostics.Process.Start("http://aka.ms/dotnet-get-started-desktop");
-
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("Thanks!");
-        }
-
         private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        //TODO: Remove this placeholde when real buttons are in place
+        private void toolStripLabel1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        // A Table Layout with one row and two columns. 
+        // Columns are 50% so that the window is evenly split.
+        // The size is manually set relative to the window size. 
+        // Maybe change this to automatically be the size of a parent container...
+        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
         {
 
         }
