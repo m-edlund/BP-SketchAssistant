@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+//using SvgNet;
 
 // This is the code for your desktop app.
 // Press Ctrl+F5 (or go to Debug > Start Without Debugging) to run your app.
@@ -21,7 +22,7 @@ namespace SketchAssistant
         }
 
         //Dialog to select a file.
-        OpenFileDialog ofd = new OpenFileDialog();
+        OpenFileDialog openFileDialogLeft = new OpenFileDialog();
         //Image loaded on the left
         Image leftImage = null;
 
@@ -34,10 +35,7 @@ namespace SketchAssistant
 
         private void pictureBoxLeft_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
         {
-            //Create a local version of the graphics object
-            //Graphics g = e.Graphics;
-
-            //Draw something
+            //Draw the left image
             if(leftImage != null)
             {
                 pictureBoxLeft.Image = leftImage;
@@ -45,7 +43,7 @@ namespace SketchAssistant
 
         }
 
-        //TODO: Remove this placeholde when real buttons are in place
+        //TODO: Remove this placeholder when real buttons are in place
         private void toolStripLabel1_Click(object sender, EventArgs e)
         {
 
@@ -54,7 +52,7 @@ namespace SketchAssistant
         // A Table Layout with one row and two columns. 
         // Columns are 50% so that the window is evenly split.
         // The size is manually set relative to the window size. 
-        // Maybe change this to automatically be the size of a parent container...
+        // TODO: Maybe change this to automatically be the size of a parent container...
         private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
         {
 
@@ -68,13 +66,11 @@ namespace SketchAssistant
         //Load button, will open an OpenFileDialog
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ofd.Filter = "SVG|*.svg;*.jpg";
-            if(ofd.ShowDialog() == DialogResult.OK)
+            openFileDialogLeft.Filter = "Image|*.jpg;*.png;*.jpeg";
+            if(openFileDialogLeft.ShowDialog() == DialogResult.OK)
             {
-                toolStripLoadStatus.Text = ofd.SafeFileName;
-                Svg.SvgDocument svgDoc = Svg.SvgDocument.Open(ofd.FileName);
-                leftImage = new Bitmap(svgDoc.Draw());
-                //leftImage = Image.FromFile(ofd.FileName);
+                toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
+                leftImage = Image.FromFile(openFileDialogLeft.FileName);
                 //The following line is needed, as else on first image load
                 //the image will only be shown after resizing the window.
                 this.Refresh();
@@ -90,10 +86,16 @@ namespace SketchAssistant
         {
 
         }
-
+        
+        //Timer that refreshes the picture box, so that it will always show the right contents in the right size
         private void timer1_Tick(object sender, EventArgs e)
         {
             pictureBoxLeft.Update();
+        }
+
+        private void pictureBoxLeft_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
