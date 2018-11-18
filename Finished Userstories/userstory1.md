@@ -7,7 +7,7 @@
 |**Akzeptanzkriterium**|Das Fenster wird geöffnet, wenn das Program gestartet wird und ist in zwei gleich große Bereiche aufgeteilt, einer auf der linken und einer auf der rechten Seite. Es wird eine Toolbar über den zwei Bereichen angezeigt. Die Bereiche sollen sich deutlich vom Rest der UI abheben, z.B. dadurch dass die Bereiche ein Grauton haben und die restliche UI weiß ist.|
 |Geschätzter Aufwand (Story Points)|2|
 |Entwickler|Martin|
-|Umgesetzt in Iteration|keine|
-|Tatsächlicher Aufwand (Std.)|keine|
-|Velocity (Std./Story Point)|keine|
+|Umgesetzt in Iteration|1|
+|Tatsächlicher Aufwand (Std.)|1|
+|Velocity (Std./Story Point)|0.5|
 |Bemerkungen|Keine|
