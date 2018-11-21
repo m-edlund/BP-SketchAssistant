@@ -42,6 +42,9 @@ namespace SketchAssistant
             this.toolStripLoadStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.edittoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.painttoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLeft)).BeginInit();
@@ -79,6 +82,9 @@ namespace SketchAssistant
             this.pictureBoxRight.Size = new System.Drawing.Size(344, 434);
             this.pictureBoxRight.TabIndex = 6;
             this.pictureBoxRight.TabStop = false;
+            this.pictureBoxRight.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseDown);
+            this.pictureBoxRight.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseMove);
+            this.pictureBoxRight.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseUp);
             // 
             // pictureBoxLeft
             // 
@@ -96,7 +102,8 @@ namespace SketchAssistant
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem});
+            this.fileToolStripMenuItem,
+            this.edittoolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.MaximumSize = new System.Drawing.Size(1000, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -159,6 +166,25 @@ namespace SketchAssistant
             this.timer1.Interval = 10;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // edittoolStripMenuItem
+            // 
+            this.edittoolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.painttoolStripMenuItem});
+            this.edittoolStripMenuItem.Name = "edittoolStripMenuItem";
+            this.edittoolStripMenuItem.Size = new System.Drawing.Size(39, 20);
+            this.edittoolStripMenuItem.Text = "Edit";
+            // 
+            // painttoolStripMenuItem
+            // 
+            this.painttoolStripMenuItem.Name = "painttoolStripMenuItem";
+            this.painttoolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.painttoolStripMenuItem.Text = "Paint";
+            this.painttoolStripMenuItem.Click += new System.EventHandler(this.painttoolStripMenuItem_Click);
+            // 
+            // timer2
+            // 
+            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -203,6 +229,9 @@ namespace SketchAssistant
         private System.Windows.Forms.PictureBox pictureBoxRight;
         private System.Windows.Forms.PictureBox pictureBoxLeft;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.ToolStripMenuItem edittoolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem painttoolStripMenuItem;
+        private System.Windows.Forms.Timer timer2;
     }
 }
 

@@ -97,5 +97,84 @@ namespace SketchAssistant
         {
 
         }
+
+        //Beginn userstory4
+        Bitmap skizze = null;
+        Graphics graph = null;
+        int x = 0;
+        int y = 0;
+        PointF[] points = new PointF[10]; //array Mousepositons
+        int i = 0;
+        PointF first;
+        PointF second;
+        bool clicked = false; //Button "Paint" is clicked or not
+        PointF p;// = new PointF(x, y);
+        bool mousedown = false;
+        Pen pen = new Pen(Color.Black);
+
+
+        //Create an image relative to the mouse positions, which the method gets from pictureBoxRight_MouseMove
+        public void addPath(PointF p)
+        {
+            points[i] = p;
+            graph = Graphics.FromImage(skizze);
+            first = points[0];
+
+
+            if (i == 1)
+            {
+                second = points[1];
+
+                graph.DrawLine(pen, first, second);
+                points[0] = second;
+                i = 0;
+            }
+
+        }
+
+        // creates an empty image and prepares rightPictureBox for drawing
+        private void painttoolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            skizze = new Bitmap(500, 800);
+            graph = Graphics.FromImage(skizze);
+            graph.FillRectangle(Brushes.White, 0, 0, 500, 800);
+            pictureBoxRight.Image = skizze;
+            timer2.Enabled = !clicked;
+            clicked = !clicked;
+        }
+
+        //add a Point on every tick to the Drawpath
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            timer2.Interval = 100;
+            if (clicked && mousedown)
+            {
+                addPath(p);
+                pictureBoxRight.Image = skizze;
+                i++;
+            }
+        }
+
+        //get current Mouse positon
+        private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
+        {
+            x = e.X;
+            y = e.Y;
+            p = new PointF(x, y);
+        }
+
+        //hold left mouse button to draw.
+        private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
+        {
+            mousedown = true;
+        }
+
+        //Lift left mouse button to stop drawing.
+        private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
+        {
+            mousedown = false;
+        }
+
+        //Ende userstory4
     }
 }
