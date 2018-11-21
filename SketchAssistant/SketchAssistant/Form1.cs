@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-//using SvgNet;
+
 
 // This is the code for your desktop app.
 // Press Ctrl+F5 (or go to Debug > Start Without Debugging) to run your app.
@@ -36,6 +36,12 @@ namespace SketchAssistant
             pictureBoxRight.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxRight_Paint);
         }
 
+        //Resize Function connected to the form resize event, will refresh the form when it is resized
+        private void Form1_Resize(object sender, System.EventArgs e)
+        {
+            this.Refresh();
+        }
+
         private void pictureBoxLeft_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
         {
             //Draw the left image
@@ -43,7 +49,6 @@ namespace SketchAssistant
             {
                 pictureBoxLeft.Image = leftImage;
             }
-
         }
 
         private void pictureBoxRight_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -77,9 +82,9 @@ namespace SketchAssistant
             {
                 toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
                 leftImage = Image.FromFile(openFileDialogLeft.FileName);
-                //The following line is needed, as else on first image load
-                //the image will only be shown after resizing the window.
+                //Refresh the left image box when the content is changed
                 this.Refresh();
+                pictureBoxLeft.Refresh();
             }
         }
 
@@ -91,14 +96,6 @@ namespace SketchAssistant
         private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
 
-        }
-
-        //Timer that refreshes the left picture box, so that it will always show the right contents in the right size
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            this.Refresh();
-            pictureBoxLeft.Refresh();
-            pictureBoxRight.Refresh();
         }
 
         private void pictureBoxLeft_Click(object sender, EventArgs e)
@@ -128,6 +125,8 @@ namespace SketchAssistant
                 }
             }
             this.Refresh();
+            pictureBoxRight.Refresh();
         }
+        
     }
 }
