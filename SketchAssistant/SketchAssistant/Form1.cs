@@ -103,7 +103,7 @@ namespace SketchAssistant
 
         }
 
-<<<<<<< HEAD
+
         //Beginn userstory4
         Bitmap skizze = null;
         Graphics graph = null;
@@ -182,7 +182,7 @@ namespace SketchAssistant
         }
 
         //Ende userstory4
-=======
+
         //Button to create a new Canvas. Will create an empty image 
         //which is the size of the left image, if there is one.
         //If there is no image loaded the canvas will be the size of the right picture box
@@ -208,6 +208,6 @@ namespace SketchAssistant
             pictureBoxRight.Refresh();
         }
         
->>>>>>> develop
+
     }
 }
