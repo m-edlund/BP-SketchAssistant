@@ -33,7 +33,7 @@ namespace SketchAssistant
             this.DoubleBuffered = true;
             //Connect the Paint event of the left picture box to the event handler method.
             pictureBoxLeft.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxLeft_Paint);
-            pictureBoxRight.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxRight_Paint);
+            //pictureBoxRight.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxRight_Paint);
         }
 
         //Resize Function connected to the form resize event, will refresh the form when it is resized
@@ -47,7 +47,7 @@ namespace SketchAssistant
             //Draw the left image
             if(leftImage != null)
             {
-                pictureBoxLeft.Image = leftImage;
+                //pictureBoxLeft.Image = leftImage;
             }
         }
 
@@ -56,7 +56,7 @@ namespace SketchAssistant
             //Draw the right image
             if (rightImage != null)
             {
-                pictureBoxRight.Image = rightImage;
+                //pictureBoxRight.Image = rightImage;
             }
         }
 
@@ -82,6 +82,7 @@ namespace SketchAssistant
             {
                 toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
                 leftImage = Image.FromFile(openFileDialogLeft.FileName);
+                pictureBoxLeft.Image = leftImage;
                 //Refresh the left image box when the content is changed
                 this.Refresh();
                 pictureBoxLeft.Refresh();
@@ -105,7 +106,7 @@ namespace SketchAssistant
 
 
         //Beginn userstory4
-        Bitmap skizze = null;
+        //Bitmap skizze = null;
         Graphics graph = null;
         int x = 0;
         int y = 0;
@@ -123,7 +124,7 @@ namespace SketchAssistant
         public void addPath(PointF p)
         {
             points[i] = p;
-            graph = Graphics.FromImage(skizze);
+            graph = Graphics.FromImage(rightImage);
             first = points[0];
 
 
@@ -141,10 +142,10 @@ namespace SketchAssistant
         // creates an empty image and prepares rightPictureBox for drawing
         private void painttoolStripMenuItem_Click(object sender, EventArgs e)
         {
-            skizze = new Bitmap(500, 800);
-            graph = Graphics.FromImage(skizze);
-            graph.FillRectangle(Brushes.White, 0, 0, 500, 800);
-            pictureBoxRight.Image = skizze;
+            //rightImage = new Bitmap(500, 800);
+            //graph = Graphics.FromImage(rightImage);
+            //graph.FillRectangle(Brushes.White, 0, 0, 500, 800);
+            //pictureBoxRight.Image = rightImage;
             timer2.Enabled = !clicked;
             clicked = !clicked;
         }
@@ -156,7 +157,7 @@ namespace SketchAssistant
             if (clicked && mousedown)
             {
                 addPath(p);
-                pictureBoxRight.Image = skizze;
+                pictureBoxRight.Image = rightImage;
                 i++;
             }
         }
@@ -191,18 +192,24 @@ namespace SketchAssistant
             if (leftImage == null)
             {
                 rightImage = new Bitmap(pictureBoxRight.Width, pictureBoxRight.Height);
-                using (Graphics grp = Graphics.FromImage(rightImage))
+                graph = Graphics.FromImage(rightImage);
+                graph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
+                pictureBoxRight.Image = rightImage;
+                /*using (Graphics grp = Graphics.FromImage(rightImage))
                 {
                     grp.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
-                }
+                }*/
             }
             else
             {
                 rightImage = new Bitmap(leftImage.Width, leftImage.Height);
-                using (Graphics grp = Graphics.FromImage(rightImage))
+                graph = Graphics.FromImage(rightImage);
+                graph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
+                pictureBoxRight.Image = rightImage;
+                /*using (Graphics grp = Graphics.FromImage(rightImage))
                 {
                     grp.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
-                }
+                }*/
             }
             this.Refresh();
             pictureBoxRight.Refresh();
