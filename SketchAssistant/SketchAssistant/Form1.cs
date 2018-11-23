@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-//using SvgNet;
+
 
 // This is the code for your desktop app.
 // Press Ctrl+F5 (or go to Debug > Start Without Debugging) to run your app.
@@ -25,12 +25,21 @@ namespace SketchAssistant
         OpenFileDialog openFileDialogLeft = new OpenFileDialog();
         //Image loaded on the left
         Image leftImage = null;
+        //Image on the right
+        Image rightImage = null;
 
         private void Form1_Load(object sender, EventArgs e)
         {
             this.DoubleBuffered = true;
             //Connect the Paint event of the left picture box to the event handler method.
             pictureBoxLeft.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxLeft_Paint);
+            pictureBoxRight.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxRight_Paint);
+        }
+
+        //Resize Function connected to the form resize event, will refresh the form when it is resized
+        private void Form1_Resize(object sender, System.EventArgs e)
+        {
+            this.Refresh();
         }
 
         private void pictureBoxLeft_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
@@ -40,13 +49,15 @@ namespace SketchAssistant
             {
                 pictureBoxLeft.Image = leftImage;
             }
-
         }
 
-        //TODO: Remove this placeholder when real buttons are in place
-        private void toolStripLabel1_Click(object sender, EventArgs e)
+        private void pictureBoxRight_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
         {
-
+            //Draw the right image
+            if (rightImage != null)
+            {
+                pictureBoxRight.Image = rightImage;
+            }
         }
 
         // A Table Layout with one row and two columns. 
@@ -71,9 +82,9 @@ namespace SketchAssistant
             {
                 toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
                 leftImage = Image.FromFile(openFileDialogLeft.FileName);
-                //The following line is needed, as else on first image load
-                //the image will only be shown after resizing the window.
+                //Refresh the left image box when the content is changed
                 this.Refresh();
+                pictureBoxLeft.Refresh();
             }
         }
 
@@ -86,18 +97,13 @@ namespace SketchAssistant
         {
 
         }
-        
-        //Timer that refreshes the picture box, so that it will always show the right contents in the right size
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            pictureBoxLeft.Update();
-        }
 
         private void pictureBoxLeft_Click(object sender, EventArgs e)
         {
 
         }
 
+<<<<<<< HEAD
         //Beginn userstory4
         Bitmap skizze = null;
         Graphics graph = null;
@@ -176,5 +182,32 @@ namespace SketchAssistant
         }
 
         //Ende userstory4
+=======
+        //Button to create a new Canvas. Will create an empty image 
+        //which is the size of the left image, if there is one.
+        //If there is no image loaded the canvas will be the size of the right picture box
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            if (leftImage == null)
+            {
+                rightImage = new Bitmap(pictureBoxRight.Width, pictureBoxRight.Height);
+                using (Graphics grp = Graphics.FromImage(rightImage))
+                {
+                    grp.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
+                }
+            }
+            else
+            {
+                rightImage = new Bitmap(leftImage.Width, leftImage.Height);
+                using (Graphics grp = Graphics.FromImage(rightImage))
+                {
+                    grp.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
+                }
+            }
+            this.Refresh();
+            pictureBoxRight.Refresh();
+        }
+        
+>>>>>>> develop
     }
 }
