@@ -117,22 +117,25 @@ namespace SketchAssistant
         //Beginn userstory4
         //Bitmap skizze = null;
         Graphics graph = null;
-        PointF[] points = new PointF[10]; //array Mousepositons
+        Point[] points = new Point[10]; //array Mousepositons
         int i = 0;
-        PointF first;
-        PointF second;
-        PointF p;// = new PointF(x, y);
-        bool mousedown = false;
-        Pen pen = new Pen(Color.Black);
 
+        Point p;// = new PointF(x, y);
+        bool mousedown = false;
+
+
+        List<Point> currentLine = new List<Point>();
 
         //Create an image relative to the mouse positions, which the method gets from pictureBoxRight_MouseMove
-        public void addPath(PointF p)
+        public void addPath(Point p)
         {
+            Pen pen = new Pen(Color.White);
+            Point first;
+            Point second;
             points[i] = p;
             graph = Graphics.FromImage(rightImage);
             first = points[0];
-
+            currentLine.Add(p);
 
             if (i == 1)
             {
@@ -174,6 +177,8 @@ namespace SketchAssistant
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
             mousedown = false;
+            Line linecs = new Line(currentLine);
+            linecs.DrawLine(graph);
         }
 
         //Ende userstory4

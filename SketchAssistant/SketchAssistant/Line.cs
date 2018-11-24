@@ -35,11 +35,11 @@ namespace SketchAssistant
         public Graphics DrawLine(Graphics canvas)
         {
             Pen thePen = new Pen(Color.Black);
-            for(int i = 0; i < linePoints.Count; i++)
+            for(int i = 0; i < linePoints.Count - 1 ; i++)
             {
                 canvas.DrawLine(thePen, linePoints[i], linePoints[i + 1]);
             }
-            canvas.DrawLine(thePen, linePoints[linePoints.Count-1], linePoints[linePoints.Count]);
+            //canvas.DrawLine(thePen, linePoints[linePoints.Count-1], linePoints[linePoints.Count]);
             return canvas;
         }
     }
