@@ -210,6 +210,10 @@ namespace SketchAssistant
                 pictureBoxRight.Image = rightImage;
                 i++;
             }
+            if (!mousedown)
+            {
+                points[0] = p;
+            }
         }
 
         /// <summary>
