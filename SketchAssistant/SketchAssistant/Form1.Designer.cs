@@ -38,14 +38,12 @@ namespace SketchAssistant
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.toolStripButton1 = new System.Windows.Forms.ToolStripButton();
+            this.canvasButton = new System.Windows.Forms.ToolStripButton();
+            this.drawButton = new System.Windows.Forms.ToolStripButton();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripLoadStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
-            this.edittoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.painttoolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.timer2 = new System.Windows.Forms.Timer(this.components);
+            this.drawTimer = new System.Windows.Forms.Timer(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLeft)).BeginInit();
@@ -104,8 +102,7 @@ namespace SketchAssistant
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.edittoolStripMenuItem});
+            this.fileToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.MaximumSize = new System.Drawing.Size(1000, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -132,22 +129,33 @@ namespace SketchAssistant
             // toolStrip1
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripButton1});
+            this.canvasButton,
+            this.drawButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(696, 25);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // toolStripButton1
+            // canvasButton
             // 
-            this.toolStripButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.toolStripButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripButton1.Image")));
-            this.toolStripButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripButton1.Name = "toolStripButton1";
-            this.toolStripButton1.Size = new System.Drawing.Size(76, 22);
-            this.toolStripButton1.Text = "New Canvas";
-            this.toolStripButton1.Click += new System.EventHandler(this.toolStripButton1_Click);
+            this.canvasButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.canvasButton.Image = ((System.Drawing.Image)(resources.GetObject("canvasButton.Image")));
+            this.canvasButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.canvasButton.Name = "canvasButton";
+            this.canvasButton.Size = new System.Drawing.Size(76, 22);
+            this.canvasButton.Text = "New Canvas";
+            this.canvasButton.Click += new System.EventHandler(this.canvasButton_Click);
+            // 
+            // drawButton
+            // 
+            this.drawButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.drawButton.Image = ((System.Drawing.Image)(resources.GetObject("drawButton.Image")));
+            this.drawButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.drawButton.Name = "drawButton";
+            this.drawButton.Size = new System.Drawing.Size(38, 22);
+            this.drawButton.Text = "Draw";
+            this.drawButton.Click += new System.EventHandler(this.drawButton_Click);
             // 
             // statusStrip1
             // 
@@ -167,29 +175,10 @@ namespace SketchAssistant
             this.toolStripLoadStatus.Text = "no file";
             this.toolStripLoadStatus.Click += new System.EventHandler(this.toolStripStatusLabel1_Click);
             // 
-            // timer1
+            // drawTimer
             // 
-            this.timer1.Interval = 10;
-            //this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
-            // edittoolStripMenuItem
-            // 
-            this.edittoolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.painttoolStripMenuItem});
-            this.edittoolStripMenuItem.Name = "edittoolStripMenuItem";
-            this.edittoolStripMenuItem.Size = new System.Drawing.Size(39, 20);
-            this.edittoolStripMenuItem.Text = "Edit";
-            // 
-            // painttoolStripMenuItem
-            // 
-            this.painttoolStripMenuItem.Name = "painttoolStripMenuItem";
-            this.painttoolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.painttoolStripMenuItem.Text = "Paint";
-            this.painttoolStripMenuItem.Click += new System.EventHandler(this.painttoolStripMenuItem_Click);
-            // 
-            // timer2
-            // 
-            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
+            this.drawTimer.Interval = 2;
+            this.drawTimer.Tick += new System.EventHandler(this.drawTimer_Tick);
             // 
             // Form1
             // 
@@ -235,11 +224,9 @@ namespace SketchAssistant
         private System.ComponentModel.BackgroundWorker backgroundWorker2;
         private System.Windows.Forms.PictureBox pictureBoxRight;
         private System.Windows.Forms.PictureBox pictureBoxLeft;
-        private System.Windows.Forms.Timer timer1;
-        private System.Windows.Forms.ToolStripMenuItem edittoolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem painttoolStripMenuItem;
-        private System.Windows.Forms.Timer timer2;
-        private System.Windows.Forms.ToolStripButton toolStripButton1;
+        private System.Windows.Forms.Timer drawTimer;
+        private System.Windows.Forms.ToolStripButton canvasButton;
+        private System.Windows.Forms.ToolStripButton drawButton;
     }
 }
 

@@ -21,6 +21,14 @@ namespace SketchAssistant
             InitializeComponent();
         }
 
+        //Different Program States
+        public enum ProgramState
+        {
+            Idle,
+            Draw
+        }
+        //Current Program State
+        private ProgramState currentState;
         //Dialog to select a file.
         OpenFileDialog openFileDialogLeft = new OpenFileDialog();
         //Image loaded on the left
@@ -30,10 +38,11 @@ namespace SketchAssistant
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
             //Connect the Paint event of the left picture box to the event handler method.
             pictureBoxLeft.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxLeft_Paint);
-            //pictureBoxRight.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxRight_Paint);
+            pictureBoxRight.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxRight_Paint);
         }
 
         //Resize Function connected to the form resize event, will refresh the form when it is resized
@@ -85,7 +94,7 @@ namespace SketchAssistant
                 pictureBoxLeft.Image = leftImage;
                 //Refresh the left image box when the content is changed
                 this.Refresh();
-                pictureBoxLeft.Refresh();
+                //pictureBoxLeft.Refresh();
             }
         }
 
@@ -108,13 +117,10 @@ namespace SketchAssistant
         //Beginn userstory4
         //Bitmap skizze = null;
         Graphics graph = null;
-        int x = 0;
-        int y = 0;
         PointF[] points = new PointF[10]; //array Mousepositons
         int i = 0;
         PointF first;
         PointF second;
-        bool clicked = false; //Button "Paint" is clicked or not
         PointF p;// = new PointF(x, y);
         bool mousedown = false;
         Pen pen = new Pen(Color.Black);
@@ -139,35 +145,23 @@ namespace SketchAssistant
 
         }
 
-        // creates an empty image and prepares rightPictureBox for drawing
-        private void painttoolStripMenuItem_Click(object sender, EventArgs e)
+        //Changes The State of the Program to drawing
+        private void drawButton_Click(object sender, EventArgs e)
         {
-            //rightImage = new Bitmap(500, 800);
-            //graph = Graphics.FromImage(rightImage);
-            //graph.FillRectangle(Brushes.White, 0, 0, 500, 800);
-            //pictureBoxRight.Image = rightImage;
-            timer2.Enabled = !clicked;
-            clicked = !clicked;
-        }
-
-        //add a Point on every tick to the Drawpath
-        private void timer2_Tick(object sender, EventArgs e)
-        {
-            timer2.Interval = 100;
-            if (clicked && mousedown)
+            if (currentState.Equals(ProgramState.Draw))
             {
-                addPath(p);
-                pictureBoxRight.Image = rightImage;
-                i++;
+                changeState(ProgramState.Idle);
+            }
+            else
+            {
+                changeState(ProgramState.Draw);
             }
         }
 
         //get current Mouse positon
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
-            x = e.X;
-            y = e.Y;
-            p = new PointF(x, y);
+            p = convertCoordinates(new Point(e.X, e.Y));
         }
 
         //hold left mouse button to draw.
@@ -187,7 +181,7 @@ namespace SketchAssistant
         //Button to create a new Canvas. Will create an empty image 
         //which is the size of the left image, if there is one.
         //If there is no image loaded the canvas will be the size of the right picture box
-        private void toolStripButton1_Click(object sender, EventArgs e)
+        private void canvasButton_Click(object sender, EventArgs e)
         {
             if (leftImage == null)
             {
@@ -195,10 +189,6 @@ namespace SketchAssistant
                 graph = Graphics.FromImage(rightImage);
                 graph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
                 pictureBoxRight.Image = rightImage;
-                /*using (Graphics grp = Graphics.FromImage(rightImage))
-                {
-                    grp.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
-                }*/
             }
             else
             {
@@ -206,15 +196,90 @@ namespace SketchAssistant
                 graph = Graphics.FromImage(rightImage);
                 graph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
                 pictureBoxRight.Image = rightImage;
-                /*using (Graphics grp = Graphics.FromImage(rightImage))
-                {
-                    grp.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
-                }*/
             }
             this.Refresh();
             pictureBoxRight.Refresh();
         }
-        
 
+        //add a Point on every tick to the Drawpath
+        private void drawTimer_Tick(object sender, EventArgs e)
+        {
+            if (currentState.Equals(ProgramState.Draw) && mousedown)
+            {
+                addPath(p);
+                pictureBoxRight.Image = rightImage;
+                i++;
+            }
+        }
+
+        /// <summary>
+        /// A helper function which handles tasks associated witch changing states, 
+        /// such as checking and unchecking buttons and changing the state.
+        /// </summary>
+        /// <param name="newState">The new state of the program</param>
+        private void changeState(ProgramState newState)
+        {
+            switch (currentState)
+            {
+                case ProgramState.Draw:
+                    drawButton.CheckState = CheckState.Unchecked;
+                    drawTimer.Enabled = false;
+                    break;
+                default:
+                    break;
+            }
+            switch (newState)
+            {
+                case ProgramState.Draw:
+                    drawButton.CheckState = CheckState.Checked;
+                    drawTimer.Enabled = true;
+                    break;
+                default:
+                    break;
+            }
+            currentState = newState;
+        }
+
+        /// <summary>
+        /// A function that calculates the coordinates of a point on a zoomed in image.
+        /// </summary>
+        /// <param name="">The position of the mouse cursor</param>
+        /// <returns>The real coordinates of the mouse cursor on the image</returns>
+        private Point convertCoordinates(Point cursorPosition)
+        {
+            Point realCoordinates = new Point(5,3);
+            if(pictureBoxRight.Image == null)
+            {
+                return cursorPosition;
+            }
+
+            int widthImage = pictureBoxRight.Image.Width;
+            int heightImage = pictureBoxRight.Image.Height;
+            int widthBox = pictureBoxRight.Width;
+            int heightBox = pictureBoxRight.Height;
+
+            float imageRatio = (float)widthImage / (float)heightImage;
+            float containerRatio = (float)widthBox / (float)heightBox;
+
+            if (imageRatio >= containerRatio)
+            {
+                //Image is wider than it is high
+                float zoomFactor = (float)widthImage / (float)widthBox;
+                float scaledHeight = heightImage / zoomFactor;
+                float filler = (heightBox - scaledHeight) / 2;
+                realCoordinates.X = (int)(cursorPosition.X * zoomFactor);
+                realCoordinates.Y = (int)((cursorPosition.Y - filler) * zoomFactor);
+            }
+            else
+            {
+                //Image is higher than it is wide
+                float zoomFactor = (float)heightImage / (float)heightBox;
+                float scaledWidth = widthImage / zoomFactor;
+                float filler = (widthBox - scaledWidth) / 2;
+                realCoordinates.X = (int)((cursorPosition.X - filler) * zoomFactor);
+                realCoordinates.Y = (int)(cursorPosition.Y * zoomFactor);
+            }
+            return realCoordinates;
+        }
     }
 }
