@@ -35,38 +35,29 @@ namespace SketchAssistant
         Image leftImage = null;
         //Image on the right
         Image rightImage = null;
+        //Current Line being Drawn
+        List<Point> currentLine;
+        //All Lines in the current session
+        List<Line> lineList = new List<Line>();
+        //Whether the Mouse is currently pressed in the rightPictureBox
+        bool mousePressed = false;
+        //Pen used to draw graphics
+        Pen pen = new Pen(Color.Black);
+        //The Position of the Cursor in the right picture box
+        Point currentCursorPosition;
+        //The graphic representation of the right image
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
             currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
-            //Connect the Paint event of the left picture box to the event handler method.
-            pictureBoxLeft.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxLeft_Paint);
-            pictureBoxRight.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureBoxRight_Paint);
         }
 
         //Resize Function connected to the form resize event, will refresh the form when it is resized
         private void Form1_Resize(object sender, System.EventArgs e)
         {
             this.Refresh();
-        }
-
-        private void pictureBoxLeft_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-        {
-            //Draw the left image
-            if(leftImage != null)
-            {
-                //pictureBoxLeft.Image = leftImage;
-            }
-        }
-
-        private void pictureBoxRight_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-        {
-            //Draw the right image
-            if (rightImage != null)
-            {
-                //pictureBoxRight.Image = rightImage;
-            }
         }
 
         // A Table Layout with one row and two columns. 
@@ -94,7 +85,6 @@ namespace SketchAssistant
                 pictureBoxLeft.Image = leftImage;
                 //Refresh the left image box when the content is changed
                 this.Refresh();
-                //pictureBoxLeft.Refresh();
             }
         }
 
@@ -113,75 +103,69 @@ namespace SketchAssistant
 
         }
 
-
-        //Beginn userstory4
-        //Bitmap skizze = null;
+        //Variables needed for Drawing
         Graphics graph = null;
-        Point[] points = new Point[10]; //array Mousepositons
+        Point[] points = new Point[2];
         int i = 0;
-
-        Point p;// = new PointF(x, y);
-        bool mousedown = false;
-
-
-        List<Point> currentLine = new List<Point>();
-
         //Create an image relative to the mouse positions, which the method gets from pictureBoxRight_MouseMove
-        public void addPath(Point p)
+        private void addPath(Point p)
         {
-            Pen pen = new Pen(Color.White);
+            graph = Graphics.FromImage(rightImage);
             Point first;
             Point second;
-            points[i] = p;
-            graph = Graphics.FromImage(rightImage);
+            points[i] = currentCursorPosition;
             first = points[0];
             currentLine.Add(p);
-
             if (i == 1)
             {
                 second = points[1];
-
                 graph.DrawLine(pen, first, second);
                 points[0] = second;
                 i = 0;
             }
-
         }
 
         //Changes The State of the Program to drawing
         private void drawButton_Click(object sender, EventArgs e)
         {
-            if (currentState.Equals(ProgramState.Draw))
+            if(rightImage != null)
             {
-                changeState(ProgramState.Idle);
-            }
-            else
-            {
-                changeState(ProgramState.Draw);
+                if (currentState.Equals(ProgramState.Draw))
+                {
+                    changeState(ProgramState.Idle);
+                }
+                else
+                {
+                    changeState(ProgramState.Draw);
+                }
             }
         }
 
-        //get current Mouse positon
+        //get current Mouse positon within the right picture box
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
-            p = convertCoordinates(new Point(e.X, e.Y));
+            currentCursorPosition = convertCoordinates(new Point(e.X, e.Y));
         }
 
         //hold left mouse button to draw.
         private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
         {
-            mousedown = true;
+            mousePressed = true;
+            if (currentState.Equals(ProgramState.Draw))
+            {
+                currentLine = new List<Point>();
+            }
         }
 
         //Lift left mouse button to stop drawing.
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
-            mousedown = false;
-            Line linecs = new Line(currentLine);
-            linecs.DrawLine(graph);
+            mousePressed = false;
+            if (currentState.Equals(ProgramState.Draw))
+            {
+                lineList.Add(new Line(currentLine));
+            }
         }
-
-        //Ende userstory4
 
         //Button to create a new Canvas. Will create an empty image 
         //which is the size of the left image, if there is one.
@@ -209,15 +193,15 @@ namespace SketchAssistant
         //add a Point on every tick to the Drawpath
         private void drawTimer_Tick(object sender, EventArgs e)
         {
-            if (currentState.Equals(ProgramState.Draw) && mousedown)
+            if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
-                addPath(p);
+                addPath(currentCursorPosition);
                 pictureBoxRight.Image = rightImage;
                 i++;
             }
-            if (!mousedown)
+            if (!mousePressed)
             {
-                points[0] = p;
+                points[0] = currentCursorPosition;
             }
         }
 
