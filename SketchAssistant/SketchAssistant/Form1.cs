@@ -148,6 +148,13 @@ namespace SketchAssistant
             //pictureBoxRight.Image = rightImage;
             timer2.Enabled = !clicked;
             clicked = !clicked;
+
+            if (clicked)
+            {
+                painttoolStripMenuItem.BackColor = Color.Aqua;
+            }
+            else
+                painttoolStripMenuItem.BackColor = Color.White;
         }
 
         //add a Point on every tick to the Drawpath
@@ -159,6 +166,10 @@ namespace SketchAssistant
                 addPath(p);
                 pictureBoxRight.Image = rightImage;
                 i++;
+            }
+            if (!mousedown)
+            {
+                points[0] = p;
             }
         }
 
