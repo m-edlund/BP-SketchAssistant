@@ -21,6 +21,10 @@ namespace SketchAssistant
             InitializeComponent();
         }
 
+        /**********************************/
+        /*** CLASS VARIABLES START HERE ***/
+        /**********************************/
+
         //Different Program States
         public enum ProgramState
         {
@@ -38,7 +42,7 @@ namespace SketchAssistant
         //Current Line being Drawn
         List<Point> currentLine;
         //All Lines in the current session
-        List<Line> lineList = new List<Line>();
+        List<Tuple<bool,Line>> lineList = new List<Tuple<bool, Line>>();
         //Whether the Mouse is currently pressed in the rightPictureBox
         bool mousePressed = false;
         //Pen used to draw graphics
@@ -46,7 +50,11 @@ namespace SketchAssistant
         //The Position of the Cursor in the right picture box
         Point currentCursorPosition;
         //The graphic representation of the right image
+        Graphics graph = null;
 
+        /******************************************/
+        /*** FORM SPECIFIC FUNCTIONS START HERE ***/
+        /******************************************/
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -58,20 +66,6 @@ namespace SketchAssistant
         private void Form1_Resize(object sender, System.EventArgs e)
         {
             this.Refresh();
-        }
-
-        // A Table Layout with one row and two columns. 
-        // Columns are 50% so that the window is evenly split.
-        // The size is manually set relative to the window size. 
-        // TODO: Maybe change this to automatically be the size of a parent container...
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-
-        private void fileToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-
         }
         
         //Load button, will open an OpenFileDialog
@@ -88,43 +82,6 @@ namespace SketchAssistant
             }
         }
 
-        private void toolStripStatusLabel1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        {
-
-        }
-
-        private void pictureBoxLeft_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        //Variables needed for Drawing
-        Graphics graph = null;
-        Point[] points = new Point[2];
-        int i = 0;
-        //Create an image relative to the mouse positions, which the method gets from pictureBoxRight_MouseMove
-        private void addPath(Point p)
-        {
-            graph = Graphics.FromImage(rightImage);
-            Point first;
-            Point second;
-            points[i] = currentCursorPosition;
-            first = points[0];
-            currentLine.Add(p);
-            if (i == 1)
-            {
-                second = points[1];
-                graph.DrawLine(pen, first, second);
-                points[0] = second;
-                i = 0;
-            }
-        }
-
         //Changes The State of the Program to drawing
         private void drawButton_Click(object sender, EventArgs e)
         {
@@ -132,11 +89,11 @@ namespace SketchAssistant
             {
                 if (currentState.Equals(ProgramState.Draw))
                 {
-                    changeState(ProgramState.Idle);
+                    ChangeState(ProgramState.Idle);
                 }
                 else
                 {
-                    changeState(ProgramState.Draw);
+                    ChangeState(ProgramState.Draw);
                 }
             }
         }
@@ -144,7 +101,7 @@ namespace SketchAssistant
         //get current Mouse positon within the right picture box
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
-            currentCursorPosition = convertCoordinates(new Point(e.X, e.Y));
+            currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
         }
 
         //hold left mouse button to draw.
@@ -163,7 +120,7 @@ namespace SketchAssistant
             mousePressed = false;
             if (currentState.Equals(ProgramState.Draw))
             {
-                lineList.Add(new Line(currentLine));
+                lineList.Add(new Tuple<bool, Line>(true, new Line(currentLine)));
             }
         }
 
@@ -171,6 +128,30 @@ namespace SketchAssistant
         //which is the size of the left image, if there is one.
         //If there is no image loaded the canvas will be the size of the right picture box
         private void canvasButton_Click(object sender, EventArgs e)
+        {
+            DrawEmptyCanvas();
+        }
+
+        //add a Point on every tick to the Drawpath
+        private void drawTimer_Tick(object sender, EventArgs e)
+        {
+            if (currentState.Equals(ProgramState.Draw) && mousePressed)
+            {
+                currentLine.Add(currentCursorPosition);
+                Line drawline = new Line(currentLine);
+                drawline.DrawLine(graph);
+                pictureBoxRight.Image = rightImage;
+            }
+        }
+
+        /***********************************/
+        /*** HELPER FUNCTIONS START HERE ***/
+        /***********************************/
+
+        /// <summary>
+        /// Creates an empty Canvas
+        /// </summary>
+        private void DrawEmptyCanvas()
         {
             if (leftImage == null)
             {
@@ -190,25 +171,18 @@ namespace SketchAssistant
             pictureBoxRight.Refresh();
         }
 
-        //add a Point on every tick to the Drawpath
-        private void drawTimer_Tick(object sender, EventArgs e)
+        /// <summary>
+        /// Redraws all lines in lineList, for which their associated boolean value equals true.
+        /// </summary>
+        private void RedrawRightImage()
         {
-            if (currentState.Equals(ProgramState.Draw) && mousePressed)
+            DrawEmptyCanvas();
+            foreach (Tuple<bool, Line> lineBoolTuple in lineList)
             {
-                /*
-                addPath(currentCursorPosition);
-                pictureBoxRight.Image = rightImage;
-                i++;
-                */
-                currentLine.Add(currentCursorPosition);
-                Line drawline = new Line(currentLine);
-                drawline.DrawLine(graph);
-                pictureBoxRight.Image = rightImage;
-
-            }
-            if (!mousePressed)
-            {
-                points[0] = currentCursorPosition;
+                if (lineBoolTuple.Item1)
+                {
+                    lineBoolTuple.Item2.DrawLine(graph);
+                }
             }
         }
 
@@ -217,7 +191,7 @@ namespace SketchAssistant
         /// such as checking and unchecking buttons and changing the state.
         /// </summary>
         /// <param name="newState">The new state of the program</param>
-        private void changeState(ProgramState newState)
+        private void ChangeState(ProgramState newState)
         {
             switch (currentState)
             {
@@ -238,6 +212,7 @@ namespace SketchAssistant
                     break;
             }
             currentState = newState;
+            pictureBoxRight.Refresh();
         }
 
         /// <summary>
@@ -245,7 +220,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="">The position of the mouse cursor</param>
         /// <returns>The real coordinates of the mouse cursor on the image</returns>
-        private Point convertCoordinates(Point cursorPosition)
+        private Point ConvertCoordinates(Point cursorPosition)
         {
             Point realCoordinates = new Point(5,3);
             if(pictureBoxRight.Image == null)

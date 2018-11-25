@@ -70,7 +70,6 @@ namespace SketchAssistant
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(696, 440);
             this.tableLayoutPanel1.TabIndex = 1;
-            this.tableLayoutPanel1.Paint += new System.Windows.Forms.PaintEventHandler(this.tableLayoutPanel1_Paint);
             // 
             // pictureBoxRight
             // 
@@ -97,7 +96,6 @@ namespace SketchAssistant
             this.pictureBoxLeft.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxLeft.TabIndex = 5;
             this.pictureBoxLeft.TabStop = false;
-            this.pictureBoxLeft.Click += new System.EventHandler(this.pictureBoxLeft_Click);
             // 
             // menuStrip1
             // 
@@ -117,12 +115,11 @@ namespace SketchAssistant
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
-            this.fileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
             // 
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.loadToolStripMenuItem.Text = "Load...";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
@@ -166,14 +163,12 @@ namespace SketchAssistant
             this.statusStrip1.Size = new System.Drawing.Size(696, 22);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
-            this.statusStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.statusStrip1_ItemClicked);
             // 
             // toolStripLoadStatus
             // 
             this.toolStripLoadStatus.Name = "toolStripLoadStatus";
             this.toolStripLoadStatus.Size = new System.Drawing.Size(40, 17);
             this.toolStripLoadStatus.Text = "no file";
-            this.toolStripLoadStatus.Click += new System.EventHandler(this.toolStripStatusLabel1_Click);
             // 
             // drawTimer
             // 
