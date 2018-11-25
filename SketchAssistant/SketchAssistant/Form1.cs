@@ -45,8 +45,6 @@ namespace SketchAssistant
         List<Tuple<bool,Line>> lineList = new List<Tuple<bool, Line>>();
         //Whether the Mouse is currently pressed in the rightPictureBox
         bool mousePressed = false;
-        //Pen used to draw graphics
-        Pen pen = new Pen(Color.White);
         //The Position of the Cursor in the right picture box
         Point currentCursorPosition;
         //The graphic representation of the right image
