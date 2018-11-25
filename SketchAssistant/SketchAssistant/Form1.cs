@@ -42,7 +42,7 @@ namespace SketchAssistant
         //Whether the Mouse is currently pressed in the rightPictureBox
         bool mousePressed = false;
         //Pen used to draw graphics
-        Pen pen = new Pen(Color.Black);
+        Pen pen = new Pen(Color.White);
         //The Position of the Cursor in the right picture box
         Point currentCursorPosition;
         //The graphic representation of the right image
@@ -195,9 +195,16 @@ namespace SketchAssistant
         {
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
+                /*
                 addPath(currentCursorPosition);
                 pictureBoxRight.Image = rightImage;
                 i++;
+                */
+                currentLine.Add(currentCursorPosition);
+                Line drawline = new Line(currentLine);
+                drawline.DrawLine(graph);
+                pictureBoxRight.Image = rightImage;
+
             }
             if (!mousePressed)
             {
