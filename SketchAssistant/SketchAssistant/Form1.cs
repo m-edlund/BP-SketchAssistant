@@ -29,7 +29,8 @@ namespace SketchAssistant
         public enum ProgramState
         {
             Idle,
-            Draw
+            Draw,
+            Delete
         }
         //Current Program State
         private ProgramState currentState;
@@ -49,6 +50,11 @@ namespace SketchAssistant
         Point currentCursorPosition;
         //The graphic representation of the right image
         Graphics graph = null;
+        //Deletion Matrixes for checking postions of lines in the image
+        bool[,] isFilledMatrix;
+        List<int>[,] linesMatrix;
+        //Size of deletion area
+        int deletionSize = 10;
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -80,7 +86,7 @@ namespace SketchAssistant
             }
         }
 
-        //Changes The State of the Program to drawing
+        //Changes the state of the program to drawing
         private void drawButton_Click(object sender, EventArgs e)
         {
             if(rightImage != null)
@@ -92,6 +98,22 @@ namespace SketchAssistant
                 else
                 {
                     ChangeState(ProgramState.Draw);
+                }
+            }
+        }
+
+        //Changes the state of the program to deletion
+        private void deleteButton_Click(object sender, EventArgs e)
+        {
+            if (rightImage != null)
+            {
+                if (currentState.Equals(ProgramState.Delete))
+                {
+                    ChangeState(ProgramState.Idle);
+                }
+                else
+                {
+                    ChangeState(ProgramState.Delete);
                 }
             }
         }
@@ -112,13 +134,15 @@ namespace SketchAssistant
             }
         }
 
-        //Lift left mouse button to stop drawing.
+        //Lift left mouse button to stop drawing and add a new Line.
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
             mousePressed = false;
             if (currentState.Equals(ProgramState.Draw))
             {
-                lineList.Add(new Tuple<bool, Line>(true, new Line(currentLine)));
+                Line newLine = new Line(currentLine, lineList.Count);
+                lineList.Add(new Tuple<bool, Line>(true, newLine));
+                newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
             }
         }
 
@@ -131,7 +155,7 @@ namespace SketchAssistant
         }
 
         //add a Point on every tick to the Drawpath
-        private void drawTimer_Tick(object sender, EventArgs e)
+        private void mouseTimer_Tick(object sender, EventArgs e)
         {
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
@@ -139,6 +163,23 @@ namespace SketchAssistant
                 Line drawline = new Line(currentLine);
                 drawline.DrawLine(graph);
                 pictureBoxRight.Image = rightImage;
+            }
+            if (currentState.Equals(ProgramState.Delete) && mousePressed)
+            {
+                if (currentCursorPosition.X < rightImage.Width - 1 && currentCursorPosition.Y < rightImage.Height- 1
+                    && currentCursorPosition.X >= 0 && currentCursorPosition.Y >= 0)
+                {
+
+                    if (isFilledMatrix[currentCursorPosition.X, currentCursorPosition.Y])
+                    {
+                        foreach (int lineid in linesMatrix[currentCursorPosition.X, currentCursorPosition.Y])
+                        {
+                            lineList[lineid] = new Tuple<bool, Line>(false, lineList[lineid].Item2);
+                        }
+                        RepopulateDeletionMatrixes();
+                        RedrawRightImage();
+                    }
+                }
             }
         }
 
@@ -165,6 +206,8 @@ namespace SketchAssistant
                 graph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
                 pictureBoxRight.Image = rightImage;
             }
+            isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
+            linesMatrix = new List<int>[rightImage.Width, rightImage.Height];
             this.Refresh();
             pictureBoxRight.Refresh();
         }
@@ -182,6 +225,7 @@ namespace SketchAssistant
                     lineBoolTuple.Item2.DrawLine(graph);
                 }
             }
+            pictureBoxRight.Refresh();
         }
 
         /// <summary>
@@ -195,7 +239,11 @@ namespace SketchAssistant
             {
                 case ProgramState.Draw:
                     drawButton.CheckState = CheckState.Unchecked;
-                    drawTimer.Enabled = false;
+                    mouseTimer.Enabled = false;
+                    break;
+                case ProgramState.Delete:
+                    deleteButton.CheckState = CheckState.Unchecked;
+                    mouseTimer.Enabled = false;
                     break;
                 default:
                     break;
@@ -204,7 +252,11 @@ namespace SketchAssistant
             {
                 case ProgramState.Draw:
                     drawButton.CheckState = CheckState.Checked;
-                    drawTimer.Enabled = true;
+                    mouseTimer.Enabled = true;
+                    break;
+                case ProgramState.Delete:
+                    deleteButton.CheckState = CheckState.Checked;
+                    mouseTimer.Enabled = true;
                     break;
                 default:
                     break;
@@ -253,6 +305,25 @@ namespace SketchAssistant
                 realCoordinates.Y = (int)(cursorPosition.Y * zoomFactor);
             }
             return realCoordinates;
+        }
+
+        /// <summary>
+        /// A function that populates the matrixes needed for deletion detection with line data.
+        /// </summary>
+        private void RepopulateDeletionMatrixes()
+        {
+            if(rightImage != null)
+            {
+                isFilledMatrix = new bool[rightImage.Width,rightImage.Height];
+                linesMatrix = new List<int>[rightImage.Width, rightImage.Height];
+                foreach(Tuple<bool,Line> lineTuple in lineList)
+                {
+                    if (lineTuple.Item1)
+                    {
+                        lineTuple.Item2.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                    }
+                }
+            }
         }
     }
 }
