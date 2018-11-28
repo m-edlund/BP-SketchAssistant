@@ -122,6 +122,7 @@ namespace SketchAssistant
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
             currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
+            Console.WriteLine(currentCursorPosition.ToString());
         }
 
         //hold left mouse button to draw.

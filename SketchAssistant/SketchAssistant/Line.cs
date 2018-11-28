@@ -84,7 +84,9 @@ namespace SketchAssistant
         private void CleanPoints()
         {
             List<Point> newList = new List<Point>();
+            List<Point> tempList = new List<Point>();
             Point nullPoint = new Point(-1, -1);
+            //Remove duplicate points
             for (int i = 1; i < linePoints.Count; i++)
             {
                 if ((linePoints[i].X == linePoints[i - 1].X) && (linePoints[i].Y == linePoints[i - 1].Y))
@@ -96,10 +98,117 @@ namespace SketchAssistant
             {
                 if (!(linepoint.X == -1))
                 {
-                    newList.Add(linepoint);
+                    tempList.Add(linepoint);
                 }
             }
+            //Fill the gaps between points
+            for (int i = 0; i < tempList.Count - 1; i++)
+            {
+                List<Point> partialList = BresenhamLineAlgorithm(tempList[i], tempList[i + 1]);
+                partialList.RemoveAt(partialList.Count - 1);
+                newList.AddRange(partialList);
+            }
+            newList.Add(tempList.Last<Point>());
             linePoints = newList;
+        }
+
+        /// <summary>
+        /// An implementation of the Bresenham Line Algorithm, 
+        /// which calculates all points between two points in a straight line.
+        /// </summary>
+        /// <param name="p0">The start point</param>
+        /// <param name="p1">The end point</param>
+        /// <returns>All points between p0 and p1 (including p0 and p1)</returns>
+        public static List<Point> BresenhamLineAlgorithm(Point p0, Point p1)
+        {
+            List<Point> returnList = new List<Point>();
+            int deltaX = p1.X - p0.X;
+            int deltaY = p1.Y - p0.Y;
+            if(deltaX != 0 && deltaY != 0)
+            {
+                //line is not horizontal or vertical
+                //Bresenham Implementation taken from Wikipedia
+                float deltaErr = Math.Abs(deltaY / deltaX);
+                float error = 0;
+                int y = p0.Y;
+                if (deltaX > 0)
+                {
+                    for (int x = p0.X; x <= p1.X; x++)
+                    {
+                        returnList.Add(new Point(x, y));
+                        error += deltaErr;
+                        if (error >= 0.5)
+                        {
+                            y = y + Math.Sign(deltaY) * 1;
+                            error -= 1;
+                        }
+                    }
+                }
+                else if(deltaX < 0)
+                {
+                    for (int x = p0.X; x >= p1.X; x--)
+                    {
+                        returnList.Add(new Point(x, y));
+                        error += deltaErr;
+                        if (error >= 0.5)
+                        {
+                            y = y + Math.Sign(deltaY) * 1;
+                            error -= 1;
+                        }
+                    }
+                }
+                return returnList;
+            }
+            else if(deltaX == 0 && deltaY != 0)
+            {
+                //line is vertical
+                if (deltaY < 0)
+                {
+                    //p1 is above of p0
+                    for (int i = p0.Y; i >= p1.Y; i--)
+                    {
+                        returnList.Add(new Point(p0.X, i));
+                    }
+                    return returnList;
+                }
+                else
+                {
+                    //p1 is below of p0
+                    for (int i = p0.Y; i <= p1.Y; i++)
+                    {
+                        returnList.Add(new Point(p0.X, i));
+                    }
+                    return returnList;
+                }
+            }
+            else if(deltaX != 0 && deltaY == 0)
+            {
+                //line is horizontal
+                if(deltaX < 0)
+                {
+                    //p1 is left of p0
+                    for(int i = p0.X; i >= p1.X; i--)
+                    {
+                        returnList.Add(new Point(i, p0.Y));
+                    }
+                    return returnList;
+                }
+                else
+                {
+                    //p1 is right of p0
+                    for (int i = p0.X; i <= p1.X; i++)
+                    {
+                        returnList.Add(new Point(i, p0.Y));
+                    }
+                    return returnList;
+                }
+            }
+            else
+            {
+                //both points are the same
+                returnList.Add(p0);
+                return returnList;
+            }
         }
     }
 }
