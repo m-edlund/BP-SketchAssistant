@@ -7,21 +7,35 @@ using System.Drawing;
 
 namespace SketchAssistant
 {
-    class Line
+    public class Line
     {
         private List<Point> linePoints;
         private int identifier;
+        private bool isTemporary;
 
+        /// <summary>
+        /// The constructor for lines which are only temporary.
+        /// If you want nice lines use the other constructor.
+        /// </summary>
+        /// <param name="points">The points of the line</param>
         public Line(List<Point> points)
         {
             linePoints = new List<Point>(points);
+            isTemporary = true;
         }
 
+        /// <summary>
+        /// The constructor for lines, which will be more resource efficient 
+        /// and have the ability to populate deletion matrixes.
+        /// </summary>
+        /// <param name="points">The points of the line</param>
+        /// <param name="id">The identifier of the line</param>
         public Line(List<Point> points, int id)
         {
             linePoints = new List<Point>(points);
             identifier = id;
             CleanPoints();
+            isTemporary = false;
         }
 
         public Point GetStartPoint()
@@ -32,6 +46,11 @@ namespace SketchAssistant
         public Point GetEndPoint()
         {
             return linePoints.Last();
+        }
+
+        public List<Point> GetPoints()
+        {
+            return linePoints;
         }
 
         /// <summary>
@@ -52,28 +71,28 @@ namespace SketchAssistant
 
         /// <summary>
         /// A function that will take to matrixes and populate the with the line data of this line object
-        /// Exceptions:
-        ///     Will throw IndexOutOfRangeException if any of the points of this line are 
-        ///     outside of the given matrixes.
         /// </summary>
         /// <param name="boolMatrix">The Matrix of booleans, in which is saved wether there is a line at this position.</param>
         /// <param name="listMatrix">The Matrix of Lists of integers, in which is saved which lines are at this position</param>
         public void PopulateMatrixes(bool[,] boolMatrix, List<int>[,] listMatrix)
         {
-            foreach(Point currPoint in linePoints)
+            if(!isTemporary)
             {
-                try
+                foreach (Point currPoint in linePoints)
                 {
-                    boolMatrix[currPoint.X, currPoint.Y] = true;
-                    if (listMatrix[currPoint.X, currPoint.Y] == null)
+                    try
                     {
-                        listMatrix[currPoint.X, currPoint.Y] = new List<int>();
+                        boolMatrix[currPoint.X, currPoint.Y] = true;
+                        if (listMatrix[currPoint.X, currPoint.Y] == null)
+                        {
+                            listMatrix[currPoint.X, currPoint.Y] = new List<int>();
+                        }
+                        listMatrix[currPoint.X, currPoint.Y].Add(identifier);
                     }
-                    listMatrix[currPoint.X, currPoint.Y].Add(identifier);
-                }
-                catch(IndexOutOfRangeException e)
-                {
+                    catch (IndexOutOfRangeException e)
+                    {
 
+                    }
                 }
             }
         }
