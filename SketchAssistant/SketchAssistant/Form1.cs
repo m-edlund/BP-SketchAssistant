@@ -57,6 +57,8 @@ namespace SketchAssistant
         List<int>[,] linesMatrix;
         //Size of deletion area
         int deletionSize = 10;
+        //List with all cursorPositions
+        List<Point> cursorPositions = new List<Point>();
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -172,18 +174,26 @@ namespace SketchAssistant
             }
             if (currentState.Equals(ProgramState.Delete) && mousePressed)
             {
+
                 if (currentCursorPosition.X < rightImage.Width - 1 && currentCursorPosition.Y < rightImage.Height- 1
                     && currentCursorPosition.X >= 0 && currentCursorPosition.Y >= 0)
                 {
-                    if (isFilledMatrix[currentCursorPosition.X, currentCursorPosition.Y])
+                    cursorPositions.Add(currentCursorPosition);
+                    if (cursorPositions.Count > 1)
                     {
-                        foreach (int lineid in linesMatrix[currentCursorPosition.X, currentCursorPosition.Y])
+                        previousCursorPosition = cursorPositions[cursorPositions.Count - 2];
+
+                        if (isFilledMatrix[currentCursorPosition.X, currentCursorPosition.Y])
                         {
-                            lineList[lineid] = new Tuple<bool, Line>(false, lineList[lineid].Item2);
+                            foreach (int lineid in linesMatrix[currentCursorPosition.X, currentCursorPosition.Y])
+                            {
+                                lineList[lineid] = new Tuple<bool, Line>(false, lineList[lineid].Item2);
+                            }
+                            RepopulateDeletionMatrixes();
+                            RedrawRightImage();
                         }
-                        RepopulateDeletionMatrixes();
-                        RedrawRightImage();
                     }
+
                 }
             }
         }
