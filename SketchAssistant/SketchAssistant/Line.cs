@@ -66,6 +66,8 @@ namespace SketchAssistant
             {
                 canvas.DrawLine(thePen, linePoints[i], linePoints[i + 1]);
             }
+            //If there is only one point
+            if(linePoints.Count == 1){ canvas.FillRectangle(Brushes.Black, linePoints[0].X, linePoints[0].Y, 1, 1); }
             return canvas;
         }
 
@@ -74,24 +76,21 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="boolMatrix">The Matrix of booleans, in which is saved wether there is a line at this position.</param>
         /// <param name="listMatrix">The Matrix of Lists of integers, in which is saved which lines are at this position</param>
-        public void PopulateMatrixes(bool[,] boolMatrix, List<int>[,] listMatrix)
+        public void PopulateMatrixes(bool[,] boolMatrix, HashSet<int>[,] listMatrix)
         {
             if(!isTemporary)
             {
                 foreach (Point currPoint in linePoints)
                 {
-                    try
+                    if (currPoint.X >= 0 && currPoint.Y >= 0 && 
+                        currPoint.X < boolMatrix.GetLength(0) && currPoint.Y < boolMatrix.GetLength(1))
                     {
                         boolMatrix[currPoint.X, currPoint.Y] = true;
                         if (listMatrix[currPoint.X, currPoint.Y] == null)
                         {
-                            listMatrix[currPoint.X, currPoint.Y] = new List<int>();
+                            listMatrix[currPoint.X, currPoint.Y] = new HashSet<int>();
                         }
                         listMatrix[currPoint.X, currPoint.Y].Add(identifier);
-                    }
-                    catch (IndexOutOfRangeException e)
-                    {
-
                     }
                 }
             }
@@ -102,36 +101,39 @@ namespace SketchAssistant
         /// </summary>
         private void CleanPoints()
         {
-            List<Point> newList = new List<Point>();
-            List<Point> tempList = new List<Point>();
-            //Since Point is non-nullable, we must ensure the nullPoints, 
-            //which we remove can not possibly be points of the original given line.
-            int nullValue = linePoints[0].X + 1;
-            //Fill the gaps between points
-            for (int i = 0; i < linePoints.Count - 1; i++)
+            if (linePoints.Count > 1)
             {
-                nullValue += linePoints[i + 1].X;
-                List<Point> partialList = BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
-                tempList.AddRange(partialList);
-            }
-            Point nullPoint = new Point(nullValue, 0);
-            //Set duplicate points to the null point
-            for (int i = 1; i < tempList.Count; i++)
-            {
-                if ((tempList[i].X == tempList[i - 1].X) && (tempList[i].Y == tempList[i - 1].Y))
+                List<Point> newList = new List<Point>();
+                List<Point> tempList = new List<Point>();
+                //Since Point is non-nullable, we must ensure the nullPoints, 
+                //which we remove can not possibly be points of the original given line.
+                int nullValue = linePoints[0].X + 1;
+                //Fill the gaps between points
+                for (int i = 0; i < linePoints.Count - 1; i++)
                 {
-                    tempList[i - 1] = nullPoint;
+                    nullValue += linePoints[i + 1].X;
+                    List<Point> partialList = BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
+                    tempList.AddRange(partialList);
                 }
-            }
-            //remove the null points
-            foreach(Point tempPoint in tempList)
-            {
-                if (tempPoint.X != nullValue)
+                Point nullPoint = new Point(nullValue, 0);
+                //Set duplicate points to the null point
+                for (int i = 1; i < tempList.Count; i++)
                 {
-                    newList.Add(tempPoint);
+                    if ((tempList[i].X == tempList[i - 1].X) && (tempList[i].Y == tempList[i - 1].Y))
+                    {
+                        tempList[i - 1] = nullPoint;
+                    }
                 }
+                //remove the null points
+                foreach (Point tempPoint in tempList)
+                {
+                    if (tempPoint.X != nullValue)
+                    {
+                        newList.Add(tempPoint);
+                    }
+                }
+                linePoints = new List<Point>(newList);
             }
-            linePoints = new List<Point>(newList);
         }
 
         /// <summary>

@@ -125,7 +125,7 @@ namespace SketchAssistantTestSuite
             bool[,] testBoolMatrix = new bool[5, 5];
             List<int>[,] testLineMatrix = new List<int>[5, 5];
             bool[,] resultBoolMatrix = new bool[5, 5];
-            List<int>[,] resultLineMatrix = new List<int>[5, 5];
+            HashSet<int>[,] resultLineMatrix = new HashSet<int>[5, 5];
             Line testLine = new Line(thePoints);
             testLine.PopulateMatrixes(resultBoolMatrix, resultLineMatrix);
             for (int i = 0; i < 5; i++)
@@ -146,16 +146,16 @@ namespace SketchAssistantTestSuite
             thePoints.Add(new Point(1, 1));
             thePoints.Add(new Point(3, 3));
             bool[,] testBoolMatrix = new bool[5, 5];
-            List<int>[,] testLineMatrix = new List<int>[5, 5];
+            HashSet<int>[,] testLineMatrix = new HashSet<int>[5, 5];
             for (int i = 1; i <= 3; i++)
             {
                 testBoolMatrix[i, i] = true;
-                List<int> temp = new List<int>();
+                HashSet<int> temp = new HashSet<int>();
                 temp.Add(5);
                 testLineMatrix[i, i] = temp;
             }
             bool[,] resultBoolMatrix = new bool[5, 5];
-            List<int>[,] resultLineMatrix = new List<int>[5, 5];
+            HashSet<int>[,] resultLineMatrix = new HashSet<int>[5, 5];
             Line testLine = new Line(thePoints, 5);
             testLine.PopulateMatrixes(resultBoolMatrix, resultLineMatrix);
             for (int i = 0; i < 5; i++)
@@ -167,7 +167,7 @@ namespace SketchAssistantTestSuite
                     {
                         for (int k = 0; k < resultLineMatrix[i, j].Count; k++)
                         {
-                            Assert.AreEqual(testLineMatrix[i, j][k], resultLineMatrix[i, j][k]);
+                            Assert.AreEqual(true, testLineMatrix[i, j].SetEquals(resultLineMatrix[i, j]));
                         }
                     }
                 }

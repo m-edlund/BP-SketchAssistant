@@ -50,15 +50,15 @@ namespace SketchAssistant
         Point currentCursorPosition;
         //The Previous Cursor Position in the right picture box
         Point previousCursorPosition;
+        //Queue for the cursorPositions
+        Queue<Point> cursorPositions = new Queue<Point>();
         //The graphic representation of the right image
         Graphics graph = null;
         //Deletion Matrixes for checking postions of lines in the image
         bool[,] isFilledMatrix;
-        List<int>[,] linesMatrix;
+        HashSet<int>[,] linesMatrix;
         //Size of deletion area
-        int deletionSize = 10;
-        //List with all cursorPositions
-        List<Point> cursorPositions = new List<Point>();
+        uint deletionSize = 2;
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -138,11 +138,24 @@ namespace SketchAssistant
             }
         }
 
+        //when the picture box is clicked, add a point to the current line. Occurs f.ex. when using drawing tablets
+        private void pictureBoxRight_Click(object sender, EventArgs e)
+        {
+            if (currentState.Equals(ProgramState.Draw))
+            {
+                List<Point> singlePoint = new List<Point> { currentCursorPosition };
+                Line singlePointLine = new Line(singlePoint, lineList.Count);
+                singlePointLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                singlePointLine.DrawLine(graph);
+                pictureBoxRight.Image = rightImage;
+            }
+        }
+
         //Lift left mouse button to stop drawing and add a new Line.
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
             mousePressed = false;
-            if (currentState.Equals(ProgramState.Draw))
+            if (currentState.Equals(ProgramState.Draw) && currentLine.Count > 0)
             {
                 Line newLine = new Line(currentLine, lineList.Count);
                 lineList.Add(new Tuple<bool, Line>(true, newLine));
@@ -158,12 +171,14 @@ namespace SketchAssistant
             DrawEmptyCanvas();
             //The following lines cannot be in DrawEmptyCanvas()
             isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
-            linesMatrix = new List<int>[rightImage.Width, rightImage.Height];
+            linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
         }
 
         //add a Point on every tick to the Drawpath
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
+            cursorPositions.Enqueue(currentCursorPosition);
+            previousCursorPosition = cursorPositions.Dequeue();
 
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
@@ -174,26 +189,19 @@ namespace SketchAssistant
             }
             if (currentState.Equals(ProgramState.Delete) && mousePressed)
             {
-
-                if (currentCursorPosition.X < rightImage.Width - 1 && currentCursorPosition.Y < rightImage.Height- 1
-                    && currentCursorPosition.X >= 0 && currentCursorPosition.Y >= 0)
+                List<Point> uncheckedPoints = Line.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                foreach (Point currPoint in uncheckedPoints)
                 {
-                    cursorPositions.Add(currentCursorPosition);
-                    if (cursorPositions.Count > 1)
+                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
+                    if (linesToDelete.Count > 0)
                     {
-                        previousCursorPosition = cursorPositions[cursorPositions.Count - 2];
-
-                        if (isFilledMatrix[currentCursorPosition.X, currentCursorPosition.Y])
+                        foreach (int lineID in linesToDelete)
                         {
-                            foreach (int lineid in linesMatrix[currentCursorPosition.X, currentCursorPosition.Y])
-                            {
-                                lineList[lineid] = new Tuple<bool, Line>(false, lineList[lineid].Item2);
-                            }
-                            RepopulateDeletionMatrixes();
-                            RedrawRightImage();
+                            lineList[lineID] = new Tuple<bool, Line>(false, lineList[lineID].Item2);
                         }
+                        RepopulateDeletionMatrixes();
+                        RedrawRightImage();
                     }
-
                 }
             }
         }
@@ -328,7 +336,7 @@ namespace SketchAssistant
             if(rightImage != null)
             {
                 isFilledMatrix = new bool[rightImage.Width,rightImage.Height];
-                linesMatrix = new List<int>[rightImage.Width, rightImage.Height];
+                linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
                 foreach(Tuple<bool,Line> lineTuple in lineList)
                 {
                     if (lineTuple.Item1)
@@ -337,6 +345,40 @@ namespace SketchAssistant
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// A function that checks the deletion matrixes at a certain point 
+        /// and returns all Line ids at that point and in a square around it in a certain range.
+        /// </summary>
+        /// <param name="p">The point around which to check.</param>
+        /// <param name="range">The range around the point. If range is 0, only the point is checked.</param>
+        /// <returns>A List of all lines.</returns>
+        private HashSet<int> CheckDeletionMatrixesAroundPoint(Point p, uint range)
+        {
+            HashSet<int> returnSet = new HashSet<int>();
+
+            if (p.X >= 0 && p.Y >= 0 && p.X < rightImage.Width && p.Y < rightImage.Height)
+            {
+                if (isFilledMatrix[p.X, p.Y])
+                {
+                    returnSet.UnionWith(linesMatrix[p.X, p.Y]);
+                }
+            }
+            for (int x_mod = (int)range*(-1); x_mod < range; x_mod++)
+            {
+                for (int y_mod = (int)range * (-1); y_mod < range; y_mod++)
+                {
+                    if (p.X + x_mod >= 0 && p.Y + y_mod >= 0 && p.X + x_mod < rightImage.Width && p.Y + y_mod < rightImage.Height)
+                    {
+                        if (isFilledMatrix[p.X + x_mod, p.Y + y_mod])
+                        {
+                            returnSet.UnionWith(linesMatrix[p.X + x_mod, p.Y + y_mod]);
+                        }
+                    }
+                }
+            }
+            return returnSet;
         }
     }
 }
