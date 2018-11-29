@@ -48,6 +48,8 @@ namespace SketchAssistant
         bool mousePressed = false;
         //The Position of the Cursor in the right picture box
         Point currentCursorPosition;
+        //The Previous Cursor Position in the right picture box
+        Point previousCursorPosition;
         //The graphic representation of the right image
         Graphics graph = null;
         //Deletion Matrixes for checking postions of lines in the image
@@ -122,7 +124,6 @@ namespace SketchAssistant
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
             currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
-            Console.WriteLine(currentCursorPosition.ToString());
         }
 
         //hold left mouse button to draw.
@@ -153,11 +154,15 @@ namespace SketchAssistant
         private void canvasButton_Click(object sender, EventArgs e)
         {
             DrawEmptyCanvas();
+            //The following lines cannot be in DrawEmptyCanvas()
+            isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
+            linesMatrix = new List<int>[rightImage.Width, rightImage.Height];
         }
 
         //add a Point on every tick to the Drawpath
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
+
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
                 currentLine.Add(currentCursorPosition);
@@ -170,7 +175,6 @@ namespace SketchAssistant
                 if (currentCursorPosition.X < rightImage.Width - 1 && currentCursorPosition.Y < rightImage.Height- 1
                     && currentCursorPosition.X >= 0 && currentCursorPosition.Y >= 0)
                 {
-
                     if (isFilledMatrix[currentCursorPosition.X, currentCursorPosition.Y])
                     {
                         foreach (int lineid in linesMatrix[currentCursorPosition.X, currentCursorPosition.Y])
@@ -207,8 +211,6 @@ namespace SketchAssistant
                 graph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
                 pictureBoxRight.Image = rightImage;
             }
-            isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
-            linesMatrix = new List<int>[rightImage.Width, rightImage.Height];
             this.Refresh();
             pictureBoxRight.Refresh();
         }

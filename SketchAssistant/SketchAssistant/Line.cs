@@ -104,130 +104,147 @@ namespace SketchAssistant
         {
             List<Point> newList = new List<Point>();
             List<Point> tempList = new List<Point>();
-            Point nullPoint = new Point(-1, -1);
-            //Remove duplicate points
-            for (int i = 1; i < linePoints.Count; i++)
-            {
-                if ((linePoints[i].X == linePoints[i - 1].X) && (linePoints[i].Y == linePoints[i - 1].Y))
-                {
-                    linePoints[i - 1] = nullPoint;
-                }
-            }
-            foreach(Point linepoint in linePoints)
-            {
-                if (!(linepoint.X == -1))
-                {
-                    tempList.Add(linepoint);
-                }
-            }
+            //Since Point is non-nullable, we must ensure the nullPoints, 
+            //which we remove can not possibly be points of the original given line.
+            int nullValue = linePoints[0].X + 1;
             //Fill the gaps between points
-            for (int i = 0; i < tempList.Count - 1; i++)
+            for (int i = 0; i < linePoints.Count - 1; i++)
             {
-                List<Point> partialList = BresenhamLineAlgorithm(tempList[i], tempList[i + 1]);
-                partialList.RemoveAt(partialList.Count - 1);
-                newList.AddRange(partialList);
+                nullValue += linePoints[i + 1].X;
+                List<Point> partialList = BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
+                tempList.AddRange(partialList);
             }
-            newList.Add(tempList.Last<Point>());
-            linePoints = newList;
+            Point nullPoint = new Point(nullValue, 0);
+            //Set duplicate points to the null point
+            for (int i = 1; i < tempList.Count; i++)
+            {
+                if ((tempList[i].X == tempList[i - 1].X) && (tempList[i].Y == tempList[i - 1].Y))
+                {
+                    tempList[i - 1] = nullPoint;
+                }
+            }
+            //remove the null points
+            foreach(Point tempPoint in tempList)
+            {
+                if (tempPoint.X != nullValue)
+                {
+                    newList.Add(tempPoint);
+                }
+            }
+            linePoints = new List<Point>(newList);
         }
 
         /// <summary>
         /// An implementation of the Bresenham Line Algorithm, 
         /// which calculates all points between two points in a straight line.
+        /// Implemented using the pseudocode on Wikipedia.
         /// </summary>
         /// <param name="p0">The start point</param>
         /// <param name="p1">The end point</param>
         /// <returns>All points between p0 and p1 (including p0 and p1)</returns>
         public static List<Point> BresenhamLineAlgorithm(Point p0, Point p1)
         {
-            List<Point> returnList = new List<Point>();
             int deltaX = p1.X - p0.X;
             int deltaY = p1.Y - p0.Y;
-            if(deltaX != 0 && deltaY != 0)
+            List<Point> returnList;
+
+            if (Math.Abs(deltaY) < Math.Abs(deltaX))
             {
-                //line is not horizontal or vertical
-                //Bresenham Implementation taken from Wikipedia
-                float deltaErr = Math.Abs(deltaY / deltaX);
-                float error = 0;
-                int y = p0.Y;
-                if (deltaX > 0)
+                if(p0.X > p1.X)
                 {
-                    for (int x = p0.X; x <= p1.X; x++)
-                    {
-                        returnList.Add(new Point(x, y));
-                        error += deltaErr;
-                        if (error >= 0.5)
-                        {
-                            y = y + Math.Sign(deltaY) * 1;
-                            error -= 1;
-                        }
-                    }
-                }
-                else if(deltaX < 0)
-                {
-                    for (int x = p0.X; x >= p1.X; x--)
-                    {
-                        returnList.Add(new Point(x, y));
-                        error += deltaErr;
-                        if (error >= 0.5)
-                        {
-                            y = y + Math.Sign(deltaY) * 1;
-                            error -= 1;
-                        }
-                    }
-                }
-                return returnList;
-            }
-            else if(deltaX == 0 && deltaY != 0)
-            {
-                //line is vertical
-                if (deltaY < 0)
-                {
-                    //p1 is above of p0
-                    for (int i = p0.Y; i >= p1.Y; i--)
-                    {
-                        returnList.Add(new Point(p0.X, i));
-                    }
-                    return returnList;
+                    returnList = GetLineLow(p1.X, p1.Y, p0.X, p0.Y);
+                    returnList.Reverse();
                 }
                 else
                 {
-                    //p1 is below of p0
-                    for (int i = p0.Y; i <= p1.Y; i++)
-                    {
-                        returnList.Add(new Point(p0.X, i));
-                    }
-                    return returnList;
-                }
-            }
-            else if(deltaX != 0 && deltaY == 0)
-            {
-                //line is horizontal
-                if(deltaX < 0)
-                {
-                    //p1 is left of p0
-                    for(int i = p0.X; i >= p1.X; i--)
-                    {
-                        returnList.Add(new Point(i, p0.Y));
-                    }
-                    return returnList;
-                }
-                else
-                {
-                    //p1 is right of p0
-                    for (int i = p0.X; i <= p1.X; i++)
-                    {
-                        returnList.Add(new Point(i, p0.Y));
-                    }
-                    return returnList;
+                    returnList = GetLineLow(p0.X, p0.Y, p1.X, p1.Y);
                 }
             }
             else
             {
-                //both points are the same
-                returnList.Add(p0);
-                return returnList;
+                if (p0.Y > p1.Y)
+                {
+                    returnList = GetLineHigh(p1.X, p1.Y, p0.X, p0.Y);
+                    returnList.Reverse();
+                }
+                else
+                {
+                    returnList = GetLineHigh(p0.X, p0.Y, p1.X, p1.Y);
+                }
             }
+            return returnList;
+        }
+
+        /// <summary>
+        /// Helping function of the Bresenham Line algorithm,
+        /// under the assumption that abs(deltaY) is smaller than abs(deltX)
+        /// and x0 is smaller than x1
+        /// </summary>
+        /// <param name="x0">x value of point 0</param>
+        /// <param name="y0">y value of point 0</param>
+        /// <param name="x1">x value of point 1</param>
+        /// <param name="y1">y value of point 1</param>
+        /// <returns>All points on the line between the two points</returns>
+        private static List<Point> GetLineLow(int x0, int y0, int x1, int y1)
+        {
+            List<Point> returnList = new List<Point>();
+            int dx = x1 - x0;
+            int dy = y1 - y0;
+            int yi = 1;
+            if(dy < 0)
+            {
+                yi = -1;
+                dy = -dy;
+            }
+            int D = 2 * dy - dx;
+            int y = y0;
+            for (int x = x0; x <= x1; x++)
+            {
+                returnList.Add(new Point(x, y));
+                if (D > 0)
+                {
+                    y = y + yi;
+                    D = D - 2 * dx;
+                }
+                D = D + 2 * dy;
+            }
+            return returnList;
+        }
+
+        /// <summary>
+        /// Helping function of the Bresenham Line algorithm,
+        /// under the assumption that abs(deltaY) is larger or equal than abs(deltX)
+        /// and y0 is smaller than y1
+        /// </summary>
+        /// <param name="x0">x value of point 0</param>
+        /// <param name="y0">y value of point 0</param>
+        /// <param name="x1">x value of point 1</param>
+        /// <param name="y1">y value of point 1</param>
+        /// <returns>All points on the line between the two points</returns>
+        private static List<Point> GetLineHigh(int x0, int y0, int x1, int y1)
+        {
+            List<Point> returnList = new List<Point>();
+            int dx = x1 - x0;
+            int dy = y1 - y0;
+            int xi = 1;
+            if (dx < 0)
+            {
+                xi = -1;
+                dx = -dx;
+            }
+            int D = 2 * dx - dy;
+            int x = x0;
+            for (int y = y0; y <= y1; y++)
+            {
+                returnList.Add(new Point(x, y));
+                if (D > 0)
+                {
+                    x = x + xi;
+                    D = D - 2 * dy;
+                }
+                D = D + 2 * dx;
+            }
+            return returnList;
         }
     }
 }
