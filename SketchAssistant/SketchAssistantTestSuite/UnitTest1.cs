@@ -21,7 +21,7 @@ namespace SketchAssistantTestSuite
             expectedResult.Add(new Point(1, 2));
             List<Point> actualResult = SketchAssistant.Line.BresenhamLineAlgorithm(new Point(1, 2), new Point(1, 2));
             Assert.AreEqual(1, actualResult.Count);
-            for(int i = 0; i < actualResult.Count; i++)
+            for (int i = 0; i < actualResult.Count; i++)
             {
                 Assert.AreEqual(expectedResult[i], actualResult[i]);
             }
@@ -128,7 +128,7 @@ namespace SketchAssistantTestSuite
             List<int>[,] resultLineMatrix = new List<int>[5, 5];
             Line testLine = new Line(thePoints);
             testLine.PopulateMatrixes(resultBoolMatrix, resultLineMatrix);
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 for (int j = 0; j < 5; j++)
                 {
@@ -163,7 +163,7 @@ namespace SketchAssistantTestSuite
                 for (int j = 0; j < 5; j++)
                 {
                     Assert.AreEqual(testBoolMatrix[i, j], resultBoolMatrix[i, j]);
-                    if(testLineMatrix[i, j] != null && resultLineMatrix[i, j] != null)
+                    if (testLineMatrix[i, j] != null && resultLineMatrix[i, j] != null)
                     {
                         for (int k = 0; k < resultLineMatrix[i, j].Count; k++)
                         {
@@ -171,6 +171,32 @@ namespace SketchAssistantTestSuite
                         }
                     }
                 }
+            }
+        }
+
+        //=========================//
+        //= Line Constructor Test =//
+        //=========================//
+
+        [TestMethod]
+        public void ConstructorTest()
+        {
+            //Create non-temporary Line and check points
+            //reference Points
+            List<Point> comparisonPoints = new List<Point> {new Point(2,2), new Point(3, 1), new Point(4, 1), new Point(5, 1), new Point(6, 2),
+                new Point(7, 3), new Point(8, 4), new Point(9, 5), new Point(10, 6), new Point(11, 5), new Point(11, 4), new Point(11, 3),
+                new Point(10, 2), new Point(9, 1), new Point(8, 2), new Point(7, 3), new Point(6, 4), new Point(5, 5), new Point(4, 5),
+                new Point(3, 5), new Point(2, 5), new Point(1, 4)};
+            //test Points, with intermediate points missing & duplicate points
+            List<Point> testPoints = new List<Point> {new Point(2,2), new Point(3, 1), new Point(5, 1), new Point(5, 1), new Point(5, 1),
+                new Point(8, 4), new Point(10, 6), new Point(11, 5), new Point(11, 3), new Point(9, 1), new Point(9, 1), new Point(9, 1),
+                new Point(5, 5), new Point(2, 5), new Point(2, 5), new Point(1, 4) };
+            Line testLine = new Line(testPoints, 0);
+            List<Point> returnedPoints = testLine.GetPoints();
+            Assert.AreEqual(comparisonPoints.Count, returnedPoints.Count);
+            for (int i = 0; i < returnedPoints.Count; i++)
+            {
+                Assert.AreEqual(comparisonPoints[i],returnedPoints[i]);
             }
         }
     }
