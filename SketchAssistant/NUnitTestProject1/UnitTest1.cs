@@ -1,19 +1,18 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
+using System.Drawing;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using SketchAssistant;
 
-namespace SketchAssistantTestSuite
+namespace Tests
 {
-    [TestClass]
-    public class LineTests
+    class LineTests
     {
         //========================//
         //= Bresenham Line Tests =//
         //========================//
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest1()
         {
             //Test point
@@ -27,7 +26,7 @@ namespace SketchAssistantTestSuite
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest2()
         {
             //Test line going from left to right
@@ -41,7 +40,7 @@ namespace SketchAssistantTestSuite
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest3()
         {
             //Test line going from right to left
@@ -55,7 +54,7 @@ namespace SketchAssistantTestSuite
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest4()
         {
             //Test line going from top to bottom
@@ -69,7 +68,7 @@ namespace SketchAssistantTestSuite
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest5()
         {
             //Test line going from bottom to top
@@ -83,7 +82,7 @@ namespace SketchAssistantTestSuite
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest6()
         {
             //Test exactly diagonal line from top left to bottom right
@@ -97,7 +96,7 @@ namespace SketchAssistantTestSuite
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest7()
         {
             //Test exactly diagonal line from bottom right to top left
@@ -115,7 +114,7 @@ namespace SketchAssistantTestSuite
         //= Matrix Population Tests =//
         //===========================//
 
-        [TestMethod]
+        [Test]
         public void MatrixTest1()
         {
             //Populate Matrix for temporary Line
@@ -138,7 +137,7 @@ namespace SketchAssistantTestSuite
             }
         }
 
-        [TestMethod]
+        [Test]
         public void MatrixTest2()
         {
             //Populate Matrix for non-temporary Line
@@ -178,7 +177,7 @@ namespace SketchAssistantTestSuite
         //= Line Constructor Test =//
         //=========================//
 
-        [TestMethod]
+        [Test]
         public void ConstructorTest()
         {
             //Create non-temporary Line and check points
@@ -196,7 +195,7 @@ namespace SketchAssistantTestSuite
             Assert.AreEqual(comparisonPoints.Count, returnedPoints.Count);
             for (int i = 0; i < returnedPoints.Count; i++)
             {
-                Assert.AreEqual(comparisonPoints[i],returnedPoints[i]);
+                Assert.AreEqual(comparisonPoints[i], returnedPoints[i]);
             }
         }
     }
