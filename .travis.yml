@@ -2,9 +2,8 @@ language: csharp
 solution: "./SketchAssistant/SketchAssistant.sln"
 
 install:
-  - sudo apt-get install nunit-console
   - nuget restore "./SketchAssistant/SketchAssistant.sln"
-  
+  - nuget install NUnit.ConsoleRunner -Version 3.9.0 -OutputDirectory testrunner
 script:
-  - xbuild "./SketchAssistant/SketchAssistant.sln"
-  - nunit-console "./SketchAssistant/NUnitTestProject1/bin/Debug/netcoreapp2/NUnitTestProject1.dll"
+  - xbuild /p:Configuration=Release "./SketchAssistant/SketchAssistant.sln"
+  - mono ./testrunner/NUnit.ConsoleRunner.3.9.0/tools/nunit-console.exe "./SketchAssistant/NUnitTestProject1/bin/Debug/netcoreapp2/NUnitTestProject1.dll"
