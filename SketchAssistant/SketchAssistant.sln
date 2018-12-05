@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2050
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistant", "SketchAssistant\SketchAssistant.csproj", "{0336F628-A2F7-4170-8B2E-9277C23118D4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnitTestProject1", "NUnitTestProject1\NUnitTestProject1.csproj", "{F94A09DE-004E-421A-A4BE-961AD5CEC809}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{0336F628-A2F7-4170-8B2E-9277C23118D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0336F628-A2F7-4170-8B2E-9277C23118D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0336F628-A2F7-4170-8B2E-9277C23118D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F94A09DE-004E-421A-A4BE-961AD5CEC809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F94A09DE-004E-421A-A4BE-961AD5CEC809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F94A09DE-004E-421A-A4BE-961AD5CEC809}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F94A09DE-004E-421A-A4BE-961AD5CEC809}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

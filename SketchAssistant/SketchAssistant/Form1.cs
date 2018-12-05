@@ -29,7 +29,8 @@ namespace SketchAssistant
         public enum ProgramState
         {
             Idle,
-            Draw
+            Draw,
+            Delete
         }
         //Current Program State
         private ProgramState currentState;
@@ -47,8 +48,17 @@ namespace SketchAssistant
         bool mousePressed = false;
         //The Position of the Cursor in the right picture box
         Point currentCursorPosition;
+        //The Previous Cursor Position in the right picture box
+        Point previousCursorPosition;
+        //Queue for the cursorPositions
+        Queue<Point> cursorPositions = new Queue<Point>();
         //The graphic representation of the right image
         Graphics graph = null;
+        //Deletion Matrixes for checking postions of lines in the image
+        bool[,] isFilledMatrix;
+        HashSet<int>[,] linesMatrix;
+        //Size of deletion area
+        uint deletionSize = 2;
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -80,7 +90,7 @@ namespace SketchAssistant
             }
         }
 
-        //Changes The State of the Program to drawing
+        //Changes the state of the program to drawing
         private void drawButton_Click(object sender, EventArgs e)
         {
             if(rightImage != null)
@@ -92,6 +102,22 @@ namespace SketchAssistant
                 else
                 {
                     ChangeState(ProgramState.Draw);
+                }
+            }
+        }
+
+        //Changes the state of the program to deletion
+        private void deleteButton_Click(object sender, EventArgs e)
+        {
+            if (rightImage != null)
+            {
+                if (currentState.Equals(ProgramState.Delete))
+                {
+                    ChangeState(ProgramState.Idle);
+                }
+                else
+                {
+                    ChangeState(ProgramState.Delete);
                 }
             }
         }
@@ -112,13 +138,28 @@ namespace SketchAssistant
             }
         }
 
-        //Lift left mouse button to stop drawing.
+        //when the picture box is clicked, add a point to the current line. Occurs f.ex. when using drawing tablets
+        private void pictureBoxRight_Click(object sender, EventArgs e)
+        {
+            if (currentState.Equals(ProgramState.Draw))
+            {
+                List<Point> singlePoint = new List<Point> { currentCursorPosition };
+                Line singlePointLine = new Line(singlePoint, lineList.Count);
+                singlePointLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                singlePointLine.DrawLine(graph);
+                pictureBoxRight.Image = rightImage;
+            }
+        }
+
+        //Lift left mouse button to stop drawing and add a new Line.
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
             mousePressed = false;
-            if (currentState.Equals(ProgramState.Draw))
+            if (currentState.Equals(ProgramState.Draw) && currentLine.Count > 0)
             {
-                lineList.Add(new Tuple<bool, Line>(true, new Line(currentLine)));
+                Line newLine = new Line(currentLine, lineList.Count);
+                lineList.Add(new Tuple<bool, Line>(true, newLine));
+                newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
             }
         }
 
@@ -128,17 +169,40 @@ namespace SketchAssistant
         private void canvasButton_Click(object sender, EventArgs e)
         {
             DrawEmptyCanvas();
+            //The following lines cannot be in DrawEmptyCanvas()
+            isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
+            linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
         }
 
         //add a Point on every tick to the Drawpath
-        private void drawTimer_Tick(object sender, EventArgs e)
+        private void mouseTimer_Tick(object sender, EventArgs e)
         {
+            cursorPositions.Enqueue(currentCursorPosition);
+            previousCursorPosition = cursorPositions.Dequeue();
+
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
                 currentLine.Add(currentCursorPosition);
                 Line drawline = new Line(currentLine);
                 drawline.DrawLine(graph);
                 pictureBoxRight.Image = rightImage;
+            }
+            if (currentState.Equals(ProgramState.Delete) && mousePressed)
+            {
+                List<Point> uncheckedPoints = Line.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                foreach (Point currPoint in uncheckedPoints)
+                {
+                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
+                    if (linesToDelete.Count > 0)
+                    {
+                        foreach (int lineID in linesToDelete)
+                        {
+                            lineList[lineID] = new Tuple<bool, Line>(false, lineList[lineID].Item2);
+                        }
+                        RepopulateDeletionMatrixes();
+                        RedrawRightImage();
+                    }
+                }
             }
         }
 
@@ -182,6 +246,7 @@ namespace SketchAssistant
                     lineBoolTuple.Item2.DrawLine(graph);
                 }
             }
+            pictureBoxRight.Refresh();
         }
 
         /// <summary>
@@ -195,7 +260,11 @@ namespace SketchAssistant
             {
                 case ProgramState.Draw:
                     drawButton.CheckState = CheckState.Unchecked;
-                    drawTimer.Enabled = false;
+                    mouseTimer.Enabled = false;
+                    break;
+                case ProgramState.Delete:
+                    deleteButton.CheckState = CheckState.Unchecked;
+                    mouseTimer.Enabled = false;
                     break;
                 default:
                     break;
@@ -204,7 +273,11 @@ namespace SketchAssistant
             {
                 case ProgramState.Draw:
                     drawButton.CheckState = CheckState.Checked;
-                    drawTimer.Enabled = true;
+                    mouseTimer.Enabled = true;
+                    break;
+                case ProgramState.Delete:
+                    deleteButton.CheckState = CheckState.Checked;
+                    mouseTimer.Enabled = true;
                     break;
                 default:
                     break;
@@ -253,6 +326,59 @@ namespace SketchAssistant
                 realCoordinates.Y = (int)(cursorPosition.Y * zoomFactor);
             }
             return realCoordinates;
+        }
+
+        /// <summary>
+        /// A function that populates the matrixes needed for deletion detection with line data.
+        /// </summary>
+        private void RepopulateDeletionMatrixes()
+        {
+            if(rightImage != null)
+            {
+                isFilledMatrix = new bool[rightImage.Width,rightImage.Height];
+                linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
+                foreach(Tuple<bool,Line> lineTuple in lineList)
+                {
+                    if (lineTuple.Item1)
+                    {
+                        lineTuple.Item2.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// A function that checks the deletion matrixes at a certain point 
+        /// and returns all Line ids at that point and in a square around it in a certain range.
+        /// </summary>
+        /// <param name="p">The point around which to check.</param>
+        /// <param name="range">The range around the point. If range is 0, only the point is checked.</param>
+        /// <returns>A List of all lines.</returns>
+        private HashSet<int> CheckDeletionMatrixesAroundPoint(Point p, uint range)
+        {
+            HashSet<int> returnSet = new HashSet<int>();
+
+            if (p.X >= 0 && p.Y >= 0 && p.X < rightImage.Width && p.Y < rightImage.Height)
+            {
+                if (isFilledMatrix[p.X, p.Y])
+                {
+                    returnSet.UnionWith(linesMatrix[p.X, p.Y]);
+                }
+            }
+            for (int x_mod = (int)range*(-1); x_mod < range; x_mod++)
+            {
+                for (int y_mod = (int)range * (-1); y_mod < range; y_mod++)
+                {
+                    if (p.X + x_mod >= 0 && p.Y + y_mod >= 0 && p.X + x_mod < rightImage.Width && p.Y + y_mod < rightImage.Height)
+                    {
+                        if (isFilledMatrix[p.X + x_mod, p.Y + y_mod])
+                        {
+                            returnSet.UnionWith(linesMatrix[p.X + x_mod, p.Y + y_mod]);
+                        }
+                    }
+                }
+            }
+            return returnSet;
         }
     }
 }

@@ -40,10 +40,11 @@ namespace SketchAssistant
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.canvasButton = new System.Windows.Forms.ToolStripButton();
             this.drawButton = new System.Windows.Forms.ToolStripButton();
+            this.deleteButton = new System.Windows.Forms.ToolStripButton();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripLoadStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.drawTimer = new System.Windows.Forms.Timer(this.components);
+            this.mouseTimer = new System.Windows.Forms.Timer(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLeft)).BeginInit();
@@ -81,6 +82,7 @@ namespace SketchAssistant
             this.pictureBoxRight.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxRight.TabIndex = 6;
             this.pictureBoxRight.TabStop = false;
+            this.pictureBoxRight.Click += new System.EventHandler(this.pictureBoxRight_Click);
             this.pictureBoxRight.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseDown);
             this.pictureBoxRight.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseMove);
             this.pictureBoxRight.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseUp);
@@ -119,7 +121,7 @@ namespace SketchAssistant
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.loadToolStripMenuItem.Text = "Load...";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
@@ -127,7 +129,8 @@ namespace SketchAssistant
             // 
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.canvasButton,
-            this.drawButton});
+            this.drawButton,
+            this.deleteButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(696, 25);
@@ -154,6 +157,16 @@ namespace SketchAssistant
             this.drawButton.Text = "Draw";
             this.drawButton.Click += new System.EventHandler(this.drawButton_Click);
             // 
+            // deleteButton
+            // 
+            this.deleteButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.deleteButton.Image = ((System.Drawing.Image)(resources.GetObject("deleteButton.Image")));
+            this.deleteButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.deleteButton.Name = "deleteButton";
+            this.deleteButton.Size = new System.Drawing.Size(44, 22);
+            this.deleteButton.Text = "Delete";
+            this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
+            // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -170,10 +183,10 @@ namespace SketchAssistant
             this.toolStripLoadStatus.Size = new System.Drawing.Size(40, 17);
             this.toolStripLoadStatus.Text = "no file";
             // 
-            // drawTimer
+            // mouseTimer
             // 
-            this.drawTimer.Interval = 2;
-            this.drawTimer.Tick += new System.EventHandler(this.drawTimer_Tick);
+            this.mouseTimer.Interval = 1;
+            this.mouseTimer.Tick += new System.EventHandler(this.mouseTimer_Tick);
             // 
             // Form1
             // 
@@ -219,9 +232,10 @@ namespace SketchAssistant
         private System.ComponentModel.BackgroundWorker backgroundWorker2;
         private System.Windows.Forms.PictureBox pictureBoxRight;
         private System.Windows.Forms.PictureBox pictureBoxLeft;
-        private System.Windows.Forms.Timer drawTimer;
+        private System.Windows.Forms.Timer mouseTimer;
         private System.Windows.Forms.ToolStripButton canvasButton;
         private System.Windows.Forms.ToolStripButton drawButton;
+        private System.Windows.Forms.ToolStripButton deleteButton;
     }
 }
 
