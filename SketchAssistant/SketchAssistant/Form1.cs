@@ -150,7 +150,7 @@ namespace SketchAssistant
                 Line newLine = new Line(currentLine, lineList.Count);
                 lineList.Add(new Tuple<bool, Line>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
-                historyOfActions.AddNewAction(new Action(Action.ActionType.Draw, newLine.GetID()));
+                historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
             }
         }
 
@@ -201,7 +201,7 @@ namespace SketchAssistant
                 foreach (Point currPoint in uncheckedPoints)
                 {
                     HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
-                    historyOfActions.AddNewAction(new Action(Action.ActionType.Delete, linesToDelete));
+                    historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
                     if (linesToDelete.Count > 0)
                     {
                         foreach (int lineID in linesToDelete)

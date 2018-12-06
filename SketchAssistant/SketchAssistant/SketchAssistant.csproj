@@ -67,7 +67,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Action.cs" />
+    <Compile Include="SketchAction.cs" />
     <Compile Include="ActionHistory.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="Form1.cs">

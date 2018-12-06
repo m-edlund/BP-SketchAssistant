@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SketchAssistant
 {
-    class Action
+    public class SketchAction
     {
         //Types of possible actions
         public enum ActionType
@@ -25,7 +25,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="theAction">The type of action, if it is ActionType.Start the affectedIDs will be ignored.</param>
         /// <param name="affectedID">The IDs of the lines affected.</param>
-        public Action(ActionType theAction, HashSet<int> affectedIDs)
+        public SketchAction(ActionType theAction, HashSet<int> affectedIDs)
         {
             thisAction = theAction;
             if (theAction.Equals(ActionType.Start)) { lineIDs = new HashSet<int>(); }
@@ -37,7 +37,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="theAction">The type of action, if it is ActionType.Start the affectedID will be ignored.</param>
         /// <param name="affectedID">The ID of the affected line.</param>
-        public Action(ActionType theAction, int affectedID)
+        public SketchAction(ActionType theAction, int affectedID)
         {
             thisAction = theAction;
             if (theAction.Equals(ActionType.Start)) { lineIDs = new HashSet<int>(); }
@@ -61,7 +61,7 @@ namespace SketchAssistant
         /// Fetches the IDs of the lines affected by this action.
         /// </summary>
         /// <returns>The IDs of the lines affected by this action. An empty set if there is no line affected.</returns>
-        public HashSet<int> GetLineID()
+        public HashSet<int> GetLineIDs()
         {
             return lineIDs;
         }

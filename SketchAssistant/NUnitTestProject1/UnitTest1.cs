@@ -199,4 +199,38 @@ namespace Tests
             }
         }
     }
+
+    class ActionHistoryTests
+    {
+        [TestCase(SketchAction.ActionType.Start, 5, -1, "The beginning of the current image")]
+        [TestCase(SketchAction.ActionType.Draw, 5, 5, "Line number 5 was drawn.")]
+        [TestCase(SketchAction.ActionType.Delete, 10, 10, "Line number 10 was deleted.")]
+        public void ScetchActionTest1(SketchAction.ActionType type, int id, int exit, String response)
+        {
+            HashSet<int> actualResult = new HashSet<int>();
+            if(!type.Equals(SketchAction.ActionType.Start)) { actualResult.Add(id); }
+            SketchAction testAction = new SketchAction(type, id);
+            Assert.AreEqual(type, testAction.GetActionType());
+            Assert.AreEqual(true, actualResult.SetEquals(testAction.GetLineIDs()));
+            Assert.AreEqual(response, testAction.GetActionInformation());
+        }
+
+        [TestCase(SketchAction.ActionType.Start, 1, 2, 3, "The beginning of the current image")]
+        [TestCase(SketchAction.ActionType.Draw, 3, 3, 3, "Line number 3 was drawn.")]
+        [TestCase(SketchAction.ActionType.Delete, 20, 30, 40, "Several Lines were deleted.")]
+        public void ScetchActionTest2(SketchAction.ActionType type, int id1, int id2, int id3, String response)
+        {
+            HashSet<int> actualResult = new HashSet<int>();
+            if (!type.Equals(SketchAction.ActionType.Start))
+            {
+                actualResult.Add(id1);
+                actualResult.Add(id2);
+                actualResult.Add(id3);
+            }
+            SketchAction testAction = new SketchAction(type, actualResult);
+            Assert.AreEqual(type, testAction.GetActionType());
+            Assert.AreEqual(true, actualResult.SetEquals(testAction.GetLineIDs()));
+            Assert.AreEqual(response, testAction.GetActionInformation());
+        }
+    }
 }

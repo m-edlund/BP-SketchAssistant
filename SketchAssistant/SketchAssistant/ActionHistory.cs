@@ -6,25 +6,25 @@ using System.Threading.Tasks;
 
 namespace SketchAssistant
 {
-    class ActionHistory
+    public class ActionHistory
     {
         //History of Actions taken
-        List<Action> actionHistory;
+        List<SketchAction> actionHistory;
         //The current position in the actionHistory
-        Tuple<int, Action> currentAction;
+        Tuple<int, SketchAction> currentAction;
 
         public ActionHistory()
         {
-            actionHistory = new List<Action>();
-            currentAction = new Tuple<int, Action>(-1, null);
-            AddNewAction(new Action(Action.ActionType.Start, -1));
+            actionHistory = new List<SketchAction>();
+            currentAction = new Tuple<int, SketchAction>(-1, null);
+            AddNewAction(new SketchAction(SketchAction.ActionType.Start, -1));
         }
 
         /// <summary>
         /// Adds a new action to the action history.
         /// </summary>
         /// <param name="newAction">The newly added action.</param>
-        public void AddNewAction(Action newAction)
+        public void AddNewAction(SketchAction newAction)
         {
             //The current Action is before the last action taken, delete everything after the current action.
             if (currentAction.Item1 < actionHistory.Count - 1)
@@ -32,7 +32,7 @@ namespace SketchAssistant
                 actionHistory.RemoveRange(currentAction.Item1 + 1, actionHistory.Count - currentAction.Item1 + 1);
             }
             actionHistory.Add(newAction);
-            currentAction = new Tuple<int, Action>(actionHistory.Count - 1, newAction);
+            currentAction = new Tuple<int, SketchAction>(actionHistory.Count - 1, newAction);
         }
 
         /// <summary>
