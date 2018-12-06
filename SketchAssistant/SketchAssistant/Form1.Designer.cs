@@ -82,7 +82,6 @@ namespace SketchAssistant
             this.pictureBoxRight.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxRight.TabIndex = 6;
             this.pictureBoxRight.TabStop = false;
-            this.pictureBoxRight.Click += new System.EventHandler(this.pictureBoxRight_Click);
             this.pictureBoxRight.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseDown);
             this.pictureBoxRight.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseMove);
             this.pictureBoxRight.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseUp);
