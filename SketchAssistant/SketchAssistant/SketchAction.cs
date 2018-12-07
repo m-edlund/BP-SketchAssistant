@@ -76,7 +76,7 @@ namespace SketchAssistant
             switch (thisAction)
             {
                 case ActionType.Start:
-                    ReturnString = "The beginning of the current image";
+                    ReturnString = "A new canvas was created.";
                     break;
                 case ActionType.Draw:
                     ReturnString = "Line number " + lineIDs.First().ToString() + " was drawn.";

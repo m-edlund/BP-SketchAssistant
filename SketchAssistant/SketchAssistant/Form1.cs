@@ -71,6 +71,7 @@ namespace SketchAssistant
             currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
             historyOfActions = new ActionHistory();
+            UpdateButtonStatus();
         }
 
         //Resize Function connected to the form resize event, will refresh the form when it is resized
@@ -91,6 +92,7 @@ namespace SketchAssistant
                 //Refresh the left image box when the content is changed
                 this.Refresh();
             }
+            UpdateButtonStatus();
         }
 
         //Changes the state of the program to drawing
@@ -107,6 +109,7 @@ namespace SketchAssistant
                     ChangeState(ProgramState.Draw);
                 }
             }
+            UpdateButtonStatus();
         }
 
         //Changes the state of the program to deletion
@@ -122,6 +125,70 @@ namespace SketchAssistant
                 {
                     ChangeState(ProgramState.Delete);
                 }
+            }
+            UpdateButtonStatus();
+        }
+
+        //Undo an action
+        private void undoButton_Click(object sender, EventArgs e)
+        {
+            if (historyOfActions.CanUndo())
+            {
+                HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
+                SketchAction.ActionType  undoAction = historyOfActions.GetCurrentAction().GetActionType();
+                switch (undoAction)
+                {
+                    case SketchAction.ActionType.Delete:
+                        //Deleted Lines need to be shown
+                        ChangeLines(affectedLines, true);
+                        break;
+                    case SketchAction.ActionType.Draw:
+                        //Drawn lines need to be hidden
+                        ChangeLines(affectedLines, false);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            historyOfActions.MoveAction(true);
+            UpdateButtonStatus();
+        }
+
+        //Redo an action
+        private void redoButton_Click(object sender, EventArgs e)
+        {
+            if (historyOfActions.CanRedo())
+            {
+                historyOfActions.MoveAction(false);
+                HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
+                SketchAction.ActionType redoAction = historyOfActions.GetCurrentAction().GetActionType();
+                switch (redoAction)
+                {
+                    case SketchAction.ActionType.Delete:
+                        //Deleted Lines need to be redeleted
+                        ChangeLines(affectedLines, false);
+                        break;
+                    case SketchAction.ActionType.Draw:
+                        //Drawn lines need to be redrawn
+                        ChangeLines(affectedLines, true);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            UpdateButtonStatus();
+        }
+
+        //Detect Keyboard Shortcuts
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Z)
+            {
+                undoButton_Click(sender, e);
+            }
+            if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Y)
+            {
+                redoButton_Click(sender, e);
             }
         }
 
@@ -152,6 +219,7 @@ namespace SketchAssistant
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
             }
+            UpdateButtonStatus();
         }
 
         //Button to create a new Canvas. Will create an empty image 
@@ -164,7 +232,7 @@ namespace SketchAssistant
                 if (MessageBox.Show("You have unsaved changes, creating a new canvas will discard these.", 
                     "Attention", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
-                    historyOfActions = new ActionHistory();
+                    historyOfActions = new ActionHistory(lastActionTakenLabel);
                     DrawEmptyCanvas();
                     //The following lines cannot be in DrawEmptyCanvas()
                     isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
@@ -174,12 +242,14 @@ namespace SketchAssistant
             }
             else
             {
+                historyOfActions = new ActionHistory(lastActionTakenLabel);
                 DrawEmptyCanvas();
                 //The following lines cannot be in DrawEmptyCanvas()
                 isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
                 lineList = new List<Tuple<bool, Line>>();
             }
+            UpdateButtonStatus();
         }
 
         //add a Point on every tick to the Drawpath
@@ -187,7 +257,6 @@ namespace SketchAssistant
         {
             cursorPositions.Enqueue(currentCursorPosition);
             previousCursorPosition = cursorPositions.Dequeue();
-
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
                 currentLine.Add(currentCursorPosition);
@@ -201,9 +270,9 @@ namespace SketchAssistant
                 foreach (Point currPoint in uncheckedPoints)
                 {
                     HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
-                    historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
                     if (linesToDelete.Count > 0)
                     {
+                        historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
                         foreach (int lineID in linesToDelete)
                         {
                             lineList[lineID] = new Tuple<bool, Line>(false, lineList[lineID].Item2);
@@ -256,6 +325,34 @@ namespace SketchAssistant
                 }
             }
             pictureBoxRight.Refresh();
+        }
+
+        /// <summary>
+        /// Change the status of whether or not the lines are shown.
+        /// </summary>
+        /// <param name="lines">The HashSet containing the affected Line IDs.</param>
+        /// <param name="shown">True if the lines should be shown, false if they should be hidden.</param>
+        private void ChangeLines(HashSet<int> lines, bool shown)
+        {
+            foreach (int lineId in lines)
+            {
+                if (lineId <= lineList.Count - 1 && lineId >= 0)
+                {
+                    lineList[lineId] = new Tuple<bool, Line>(shown, lineList[lineId].Item2);
+                }
+            }
+            RedrawRightImage();
+        }
+
+        /// <summary>
+        /// Updates the active status of buttons. Currently draw, delete, undo and redo button.
+        /// </summary>
+        private void UpdateButtonStatus()
+        {
+            undoButton.Enabled = historyOfActions.CanUndo();
+            redoButton.Enabled = historyOfActions.CanRedo();
+            drawButton.Enabled = (rightImage != null);
+            deleteButton.Enabled = (rightImage != null);
         }
 
         /// <summary>

@@ -202,7 +202,7 @@ namespace Tests
 
     class ActionHistoryTests
     {
-        [TestCase(SketchAction.ActionType.Start, 5, -1, "The beginning of the current image")]
+        [TestCase(SketchAction.ActionType.Start, 5, -1, "A new canvas was created.")]
         [TestCase(SketchAction.ActionType.Draw, 5, 5, "Line number 5 was drawn.")]
         [TestCase(SketchAction.ActionType.Delete, 10, 10, "Line number 10 was deleted.")]
         public void ScetchActionTest1(SketchAction.ActionType type, int id, int exit, String response)
@@ -215,7 +215,7 @@ namespace Tests
             Assert.AreEqual(response, testAction.GetActionInformation());
         }
 
-        [TestCase(SketchAction.ActionType.Start, 1, 2, 3, "The beginning of the current image")]
+        [TestCase(SketchAction.ActionType.Start, 1, 2, 3, "A new canvas was created.")]
         [TestCase(SketchAction.ActionType.Draw, 3, 3, 3, "Line number 3 was drawn.")]
         [TestCase(SketchAction.ActionType.Delete, 20, 30, 40, "Several Lines were deleted.")]
         public void ScetchActionTest2(SketchAction.ActionType type, int id1, int id2, int id3, String response)
@@ -231,6 +231,16 @@ namespace Tests
             Assert.AreEqual(type, testAction.GetActionType());
             Assert.AreEqual(true, actualResult.SetEquals(testAction.GetLineIDs()));
             Assert.AreEqual(response, testAction.GetActionInformation());
+        }
+
+        [TestCase(SketchAction.ActionType.Start, SketchAction.ActionType.Start, true)]
+        [TestCase(SketchAction.ActionType.Draw, SketchAction.ActionType.Delete, false)]
+        public void ActionHistoryTest1(SketchAction.ActionType action1, SketchAction.ActionType action2, bool isEmpty)
+        {
+            ActionHistory testHistory = new ActionHistory();
+            if(action1 != SketchAction.ActionType.Start) { testHistory.AddNewAction(new SketchAction(action1, 5)); }
+            if(action2 != SketchAction.ActionType.Start) { testHistory.AddNewAction(new SketchAction(action2, 5)); }
+            Assert.AreEqual(isEmpty, testHistory.IsEmpty());
         }
     }
 }
