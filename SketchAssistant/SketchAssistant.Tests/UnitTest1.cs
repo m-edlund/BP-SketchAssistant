@@ -1,19 +1,20 @@
-using NUnit.Framework;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Drawing;
-using System;
 using System.Collections.Generic;
 using SketchAssistant;
 using System.Windows.Forms;
 
 namespace Tests
 {
-    class LineTests
+    [TestClass]
+    public class LineTests
     {
         //========================//
         //= Bresenham Line Tests =//
         //========================//
 
-        [Test]
+        [TestMethod]
         public void BresenhamLineTest1()
         {
             //Test point
@@ -27,7 +28,7 @@ namespace Tests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void BresenhamLineTest2()
         {
             //Test line going from left to right
@@ -41,7 +42,7 @@ namespace Tests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void BresenhamLineTest3()
         {
             //Test line going from right to left
@@ -55,7 +56,7 @@ namespace Tests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void BresenhamLineTest4()
         {
             //Test line going from top to bottom
@@ -69,7 +70,7 @@ namespace Tests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void BresenhamLineTest5()
         {
             //Test line going from bottom to top
@@ -83,7 +84,7 @@ namespace Tests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void BresenhamLineTest6()
         {
             //Test exactly diagonal line from top left to bottom right
@@ -97,7 +98,7 @@ namespace Tests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void BresenhamLineTest7()
         {
             //Test exactly diagonal line from bottom right to top left
@@ -115,7 +116,7 @@ namespace Tests
         //= Matrix Population Tests =//
         //===========================//
 
-        [Test]
+        [TestMethod]
         public void MatrixTest1()
         {
             //Populate Matrix for temporary Line
@@ -138,7 +139,7 @@ namespace Tests
             }
         }
 
-        [Test]
+        [TestMethod]
         public void MatrixTest2()
         {
             //Populate Matrix for non-temporary Line
@@ -178,7 +179,7 @@ namespace Tests
         //= Line Constructor Test =//
         //=========================//
 
-        [Test]
+        [TestMethod]
         public void ConstructorTest()
         {
             //Create non-temporary Line and check points
@@ -201,7 +202,8 @@ namespace Tests
         }
     }
 
-    class ActionHistoryTests
+    [TestClass]
+    public class ActionHistoryTests
     {
         ToolStripStatusLabel testLabel = new ToolStripStatusLabel();
 
@@ -210,22 +212,24 @@ namespace Tests
             return new ActionHistory(testLabel);
         }
 
-        [TestCase(SketchAction.ActionType.Start, 5, -1, "A new canvas was created.")]
-        [TestCase(SketchAction.ActionType.Draw, 5, 5, "Line number 5 was drawn.")]
-        [TestCase(SketchAction.ActionType.Delete, 10, 10, "Line number 10 was deleted.")]
+        [DataTestMethod]
+        [DataRow(SketchAction.ActionType.Start, 5, -1, "A new canvas was created.")]
+        [DataRow(SketchAction.ActionType.Draw, 5, 5, "Line number 5 was drawn.")]
+        [DataRow(SketchAction.ActionType.Delete, 10, 10, "Line number 10 was deleted.")]
         public void ScetchActionTest1(SketchAction.ActionType type, int id, int exit, String response)
         {
             HashSet<int> actualResult = new HashSet<int>();
-            if(!type.Equals(SketchAction.ActionType.Start)) { actualResult.Add(id); }
+            if (!type.Equals(SketchAction.ActionType.Start)) { actualResult.Add(id); }
             SketchAction testAction = new SketchAction(type, id);
             Assert.AreEqual(type, testAction.GetActionType());
             Assert.AreEqual(true, actualResult.SetEquals(testAction.GetLineIDs()));
             Assert.AreEqual(response, testAction.GetActionInformation());
         }
 
-        [TestCase(SketchAction.ActionType.Start, 1, 2, 3, "A new canvas was created.")]
-        [TestCase(SketchAction.ActionType.Draw, 3, 3, 3, "Line number 3 was drawn.")]
-        [TestCase(SketchAction.ActionType.Delete, 20, 30, 40, "Several Lines were deleted.")]
+        [DataTestMethod]
+        [DataRow(SketchAction.ActionType.Start, 1, 2, 3, "A new canvas was created.")]
+        [DataRow(SketchAction.ActionType.Draw, 3, 3, 3, "Line number 3 was drawn.")]
+        [DataRow(SketchAction.ActionType.Delete, 20, 30, 40, "Several Lines were deleted.")]
         public void ScetchActionTest2(SketchAction.ActionType type, int id1, int id2, int id3, String response)
         {
             HashSet<int> actualResult = new HashSet<int>();
@@ -241,13 +245,14 @@ namespace Tests
             Assert.AreEqual(response, testAction.GetActionInformation());
         }
 
-        [TestCase(SketchAction.ActionType.Start, SketchAction.ActionType.Start, true)]
-        [TestCase(SketchAction.ActionType.Draw, SketchAction.ActionType.Delete, false)]
+        [DataTestMethod]
+        [DataRow(SketchAction.ActionType.Start, SketchAction.ActionType.Start, true)]
+        [DataRow(SketchAction.ActionType.Draw, SketchAction.ActionType.Delete, false)]
         public void ActionHistoryTest1(SketchAction.ActionType action1, SketchAction.ActionType action2, bool isEmpty)
         {
             ActionHistory testHistory = GetActionHistory();
-            if(!action1.Equals(SketchAction.ActionType.Start)) { testHistory.AddNewAction(new SketchAction(action1, 5)); }
-            if(!action2.Equals(SketchAction.ActionType.Start)) { testHistory.AddNewAction(new SketchAction(action2, 5)); }
+            if (!action1.Equals(SketchAction.ActionType.Start)) { testHistory.AddNewAction(new SketchAction(action1, 5)); }
+            if (!action2.Equals(SketchAction.ActionType.Start)) { testHistory.AddNewAction(new SketchAction(action2, 5)); }
             Assert.AreEqual(isEmpty, testHistory.IsEmpty());
         }
     }
