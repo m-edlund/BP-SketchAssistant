@@ -7,7 +7,7 @@
 |**Akzeptanzkriterium**|Wenn eine Aktion im Bezug zur Leinwand durchgeführt wird, wird dass in einem Protokoll gespeichert. Diese Aktionen wären: Eine Neue Leinwand zu erstellen und verschiedene Interaktionen mit der Leinwand in verschiedenen Modi (Zeichenmodus, Löschmodus, etc.). Es wird die chronologische Reinfolge der Aktionen, die Änderungen die durch diese Aktion stattfand, eine kurze Beschreibung der Aktion, sowie die Art der Aktion gespeichert. Wenn das Programm geschlossen wird, verfällt das Aktionsprotokoll. Jedes mal wenn eine Änderung stattfindet, wird die letzte Aktion im Fenster angezeigt.|
 |Geschätzter Aufwand (Story Points)|20|
 |Entwickler|Martin Edlund|
-|Umgesetzt in Iteration|keine|
-|Tatsächlicher Aufwand (Std.)|keine|
-|Velocity (Std./Story Point)|keine|
+|Umgesetzt in Iteration|3|
+|Tatsächlicher Aufwand (Std.)|5|
+|Velocity (Std./Story Point)|0,25|
 |Bemerkungen|Keine|

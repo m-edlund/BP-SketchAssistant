@@ -7,7 +7,7 @@
 |**Akzeptanzkriterium**|Wenn Ereignisse im Aktionsprotokoll vorhanden sind, kann man mit Strg+y oder einem Knopf in der Toolbar das verworfene Ereignis wiederherstellen.|
 |Geschätzter Aufwand (Story Points)|2|
 |Entwickler|Martin Edlund|
-|Umgesetzt in Iteration|keine|
-|Tatsächlicher Aufwand (Std.)|keine|
-|Velocity (Std./Story Point)|keine|
+|Umgesetzt in Iteration|3|
+|Tatsächlicher Aufwand (Std.)|1.5|
+|Velocity (Std./Story Point)|0.75|
 |Bemerkungen|Keine|
