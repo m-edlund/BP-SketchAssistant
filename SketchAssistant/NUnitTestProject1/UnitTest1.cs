@@ -3,6 +3,7 @@ using System.Drawing;
 using System;
 using System.Collections.Generic;
 using SketchAssistant;
+using System.Windows.Forms;
 
 namespace Tests
 {
@@ -202,6 +203,13 @@ namespace Tests
 
     class ActionHistoryTests
     {
+        ToolStripStatusLabel testLabel = new ToolStripStatusLabel();
+
+        private ActionHistory GetActionHistory()
+        {
+            return new ActionHistory(testLabel);
+        }
+
         [TestCase(SketchAction.ActionType.Start, 5, -1, "A new canvas was created.")]
         [TestCase(SketchAction.ActionType.Draw, 5, 5, "Line number 5 was drawn.")]
         [TestCase(SketchAction.ActionType.Delete, 10, 10, "Line number 10 was deleted.")]
@@ -237,9 +245,9 @@ namespace Tests
         [TestCase(SketchAction.ActionType.Draw, SketchAction.ActionType.Delete, false)]
         public void ActionHistoryTest1(SketchAction.ActionType action1, SketchAction.ActionType action2, bool isEmpty)
         {
-            ActionHistory testHistory = new ActionHistory();
-            if(action1 != SketchAction.ActionType.Start) { testHistory.AddNewAction(new SketchAction(action1, 5)); }
-            if(action2 != SketchAction.ActionType.Start) { testHistory.AddNewAction(new SketchAction(action2, 5)); }
+            ActionHistory testHistory = GetActionHistory();
+            if(!action1.Equals(SketchAction.ActionType.Start)) { testHistory.AddNewAction(new SketchAction(action1, 5)); }
+            if(!action2.Equals(SketchAction.ActionType.Start)) { testHistory.AddNewAction(new SketchAction(action2, 5)); }
             Assert.AreEqual(isEmpty, testHistory.IsEmpty());
         }
     }

@@ -70,7 +70,7 @@ namespace SketchAssistant
         {
             currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
-            historyOfActions = new ActionHistory();
+            historyOfActions = new ActionHistory(null);
             UpdateButtonStatus();
         }
 

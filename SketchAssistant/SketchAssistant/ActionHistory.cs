@@ -16,14 +16,6 @@ namespace SketchAssistant
         //The label in which the current action is displayed
         ToolStripStatusLabel displayLabel;
 
-        public ActionHistory()
-        {
-            actionHistory = new List<SketchAction>();
-            currentAction = new Tuple<int, SketchAction>(-1, null);
-            AddNewAction(new SketchAction(SketchAction.ActionType.Start, -1));
-            displayLabel = null;
-        }
-
         public ActionHistory(ToolStripStatusLabel displayPosition)
         {
             displayLabel = displayPosition;
