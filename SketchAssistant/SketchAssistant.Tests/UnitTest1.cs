@@ -255,5 +255,22 @@ namespace Tests
             if (!action2.Equals(SketchAction.ActionType.Start)) { testHistory.AddNewAction(new SketchAction(action2, 5)); }
             Assert.AreEqual(isEmpty, testHistory.IsEmpty());
         }
+
+        [DataTestMethod]
+        [DataRow(SketchAction.ActionType.Draw, "Last Action: Line number 0 was drawn.")]
+        [DataRow(SketchAction.ActionType.Delete, "Last Action: Line number 0 was deleted.")]
+        public void ActionHistoryUndoRedoTest(SketchAction.ActionType actionType, String message)
+        {
+            ActionHistory testHistory = GetActionHistory();
+            SketchAction testAction = new SketchAction(actionType, 0);
+            testHistory.AddNewAction(testAction);
+            Assert.AreEqual(true, testHistory.CanUndo());
+            testHistory.MoveAction(true);
+            Assert.AreEqual(true, testHistory.CanRedo());
+            testHistory.MoveAction(false);
+            Assert.AreEqual(actionType, testHistory.GetCurrentAction().GetActionType());
+            String currLabel = testLabel.Text;
+            Assert.AreEqual(currLabel, message);
+        }
     }
 }
