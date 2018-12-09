@@ -20,6 +20,7 @@ namespace SketchAssistant
         public Form1()
         {
             InitializeComponent();
+            fileImporter = new FileImporter(this);
         }
 
         /**********************************/
@@ -35,10 +36,16 @@ namespace SketchAssistant
         }
         //Current Program State
         private ProgramState currentState;
+        /// <summary>
+        /// instance of FileImporter to handle drawing imports
+        /// </summary>
+        private FileImporter fileImporter;
         //Dialog to select a file.
         OpenFileDialog openFileDialogLeft = new OpenFileDialog();
-        //Image loaded on the left
-        Image leftImage = null;
+        /// <summary>
+        /// Image loaded on the left
+        /// </summary>
+        public Image leftImage { get; private set; } = null;
         /// <summary>
         /// the graphic shown in the left window, represented as a list of polylines
         /// </summary>
@@ -109,7 +116,7 @@ namespace SketchAssistant
 
                 string[] allLines = System.IO.File.ReadAllLines(openFileDialogLeft.FileName);
 
-                ParseISADInput(allLines);
+                fileImporter.ParseISADInput(allLines);
 
                 this.Refresh();
             }
@@ -263,7 +270,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="width"> width of the new canvas in pixels </param>
         /// <param name="height"> height of the new canvas in pixels </param>
-        private void DrawEmptyCanvasLeft(int width, int height)
+        public void DrawEmptyCanvasLeft(int width, int height)
         {
             if (width == 0)
             {
@@ -433,7 +440,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="newTemplatePicture"> the new template picture, represented as a list of polylines </param>
         /// <returns></returns>
-        private Boolean BindTemplatePicture(List<Line> newTemplatePicture)
+        public Boolean BindTemplatePicture(List<Line> newTemplatePicture)
         {
             templatePicture = newTemplatePicture;
             foreach(Line l in templatePicture)
@@ -443,109 +450,15 @@ namespace SketchAssistant
             return true;
         }
 
-        private void ParseISADInput(String[] allLines)
+        /// <summary>
+        /// shows the given info message in a popup and asks the user to aknowledge it
+        /// </summary>
+        /// <param name="message">teh message to show</param>
+        public void ShowInfoMessage(String message)
         {
-
-
-            if (allLines.Length == 0)
-            {
-                MessageBox.Show("Could not import file:\n file is empty");
-                return;
-            }
-            if (!"drawing".Equals(allLines[0]))
-            {
-                MessageBox.Show("Could not import file:\n file is not an interactive sketch assistant drawing\n (Hint: .isad files ave to start with the 'drawing' token)");
-                return;
-            }
-            if (!"enddrawing".Equals(allLines[allLines.Length - 1]))
-            {
-                MessageBox.Show("Could not import file:\n unterminated drawing definition\n (Hint: .isad files ave to end with the 'enddrawing' token)");
-                return;
-            }
-
-            if (!parseISADHeader(allLines))
-            {
-                return;
-            }
-
-            if (!parseISADBody(allLines))
-            {
-                return;
-            }
-
-            
-            
+            MessageBox.Show(message);
         }
 
-        private bool parseISADHeader(String[] allLines)
-        {
 
-            int width;
-            int height;
-
-            if (!(allLines.Length > 1) || !Regex.Match(allLines[1], @"(\d?\d*x?\d?\d*?)?", RegexOptions.None).Success)
-            {
-                MessageBox.Show("Could not import file:\n invalid or missing canvas size definition\n (Line: 2)");
-                return false;
-            }
-            String[] size = allLines[1].Split('x');
-            width = Convert.ToInt32(size[0]);
-            height = Convert.ToInt32(size[1]);
-
-            DrawEmptyCanvasLeft(width, height);
-
-            return true;
-        }
-
-        private bool parseISADBody(String[] allLines)
-        {
-
-            String lineStartString = "line";
-            String lineEndString = "endline";
-            
-            List<Line> drawing = new List<Line>();
-
-            int i = 2;
-            //parse 'line' token and complete line definition
-            while (lineStartString.Equals(allLines[i]))
-            {
-                i++;
-                List<Point> newLine = new List<Point>();
-                while (!lineEndString.Equals(allLines[i]))
-                {
-                    if (i == allLines.Length)
-                    {
-                        MessageBox.Show("Could not import file:\n unterminated line definition\n (Line: " + (i + 1) + ")");
-                        return false;
-                    }
-                    //parse single point definition
-                    if (!Regex.Match(allLines[i], @"(\d?\d*;?\d?\d*?)?", RegexOptions.None).Success)
-                    {
-                        MessageBox.Show("Could not import file:\n invalid Point definition: wrong format\n (Line: " + (i + 1) + ")");
-                        return false;
-                    }
-                    String[] coordinates = allLines[i].Split(';');
-                    //no errors possible, convertability to string already checked above
-                    int xCoordinate = Convert.ToInt32(coordinates[0]);
-                    int yCoordinate = Convert.ToInt32(coordinates[1]);
-                    if (xCoordinate < 0 || yCoordinate < 0 || xCoordinate > leftImage.Width - 1 || yCoordinate > leftImage.Height - 1)
-                    {
-                        MessageBox.Show("Could not import file:\n invalid Point definition: point out of bounds\n (Line: " + (i + 1) + ")");
-                        return false;
-                    }
-                    newLine.Add(new Point(xCoordinate, yCoordinate));
-                    i++;
-                }
-                //parse 'endline' token
-                i++;
-                //add line to drawing
-                drawing.Add(new Line(newLine));
-            }
-
-            //save parsed drawing to instance variable and draw it
-            BindTemplatePicture(drawing);
-
-            return true;
-        }
     }
 }
