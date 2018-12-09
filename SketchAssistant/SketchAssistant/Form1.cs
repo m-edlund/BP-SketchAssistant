@@ -545,7 +545,7 @@ namespace SketchAssistant
         }
 
         /// <summary>
-        /// checks that all lines of the given picture are inside the constraints of the left canvas and binds it to templatePicture
+        /// binds the given picture to templatePicture and draws it
         /// </summary>
         /// <param name="newTemplatePicture"> the new template picture, represented as a list of polylines </param>
         /// <returns></returns>

@@ -82,10 +82,12 @@ namespace SketchAssistant
 
             List<Line> drawing = new List<Line>();
 
+            //number of the line currently being parsed, enumeration starting at 0, body starts at the third line, therefore lin number 2
             int i = 2;
             //parse 'line' token and complete line definition
             while (lineStartString.Equals(allLines[i]))
             {
+                //start parsing next line
                 i++;
                 List<Point> newLine = new List<Point>();
                 while (!lineEndString.Equals(allLines[i]))
@@ -100,7 +102,7 @@ namespace SketchAssistant
                         throw new FileImporterException("invalid Point definition: wrong format", "format: [xCoordinate];[yCoordinate]", (i + 1) );
                     }
                     String[] coordinates = allLines[i].Split(';');
-                    //no errors possible, convertability to string already checked above
+                    //no errors possible, convertability to int already checked above
                     int xCoordinate = Convert.ToInt32(coordinates[0]);
                     int yCoordinate = Convert.ToInt32(coordinates[1]);
                     if (xCoordinate < 0 || yCoordinate < 0 || xCoordinate > width - 1 || yCoordinate > height - 1)
@@ -108,9 +110,10 @@ namespace SketchAssistant
                         throw new FileImporterException("invalid Point definition: point out of bounds", null, (i + 1) );
                     }
                     newLine.Add(new Point(xCoordinate, yCoordinate));
+                    //start parsing next line
                     i++;
                 }
-                //parse 'endline' token
+                //"parse" 'endline' token, syntax already checked at the beginning,  and start parsing next line
                 i++;
                 //add line to drawing
                 drawing.Add(new Line(newLine));
