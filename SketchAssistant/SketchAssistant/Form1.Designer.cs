@@ -47,6 +47,9 @@ namespace SketchAssistant
             this.toolStripLoadStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
             this.mouseTimer = new System.Windows.Forms.Timer(this.components);
+            this.lastActionTakenLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.undoButton = new System.Windows.Forms.ToolStripButton();
+            this.redoButton = new System.Windows.Forms.ToolStripButton();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLeft)).BeginInit();
@@ -84,7 +87,6 @@ namespace SketchAssistant
             this.pictureBoxRight.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxRight.TabIndex = 6;
             this.pictureBoxRight.TabStop = false;
-            this.pictureBoxRight.Click += new System.EventHandler(this.pictureBoxRight_Click);
             this.pictureBoxRight.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseDown);
             this.pictureBoxRight.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseMove);
             this.pictureBoxRight.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseUp);
@@ -148,7 +150,9 @@ namespace SketchAssistant
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.canvasButton,
             this.drawButton,
-            this.deleteButton});
+            this.deleteButton,
+            this.undoButton,
+            this.redoButton});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(696, 25);
@@ -188,23 +192,52 @@ namespace SketchAssistant
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripLoadStatus});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 493);
+            this.toolStripLoadStatus,
+            this.lastActionTakenLabel});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 491);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(696, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(696, 24);
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
             // 
             // toolStripLoadStatus
             // 
             this.toolStripLoadStatus.Name = "toolStripLoadStatus";
-            this.toolStripLoadStatus.Size = new System.Drawing.Size(40, 17);
+            this.toolStripLoadStatus.Size = new System.Drawing.Size(40, 19);
             this.toolStripLoadStatus.Text = "no file";
             // 
             // mouseTimer
             // 
             this.mouseTimer.Interval = 1;
             this.mouseTimer.Tick += new System.EventHandler(this.mouseTimer_Tick);
+            // 
+            // lastActionTakenLabel
+            // 
+            this.lastActionTakenLabel.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.lastActionTakenLabel.Name = "lastActionTakenLabel";
+            this.lastActionTakenLabel.Size = new System.Drawing.Size(38, 19);
+            this.lastActionTakenLabel.Text = "none";
+            this.lastActionTakenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // undoButton
+            // 
+            this.undoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.undoButton.Image = ((System.Drawing.Image)(resources.GetObject("undoButton.Image")));
+            this.undoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.undoButton.Name = "undoButton";
+            this.undoButton.Size = new System.Drawing.Size(40, 22);
+            this.undoButton.Text = "Undo";
+            this.undoButton.Click += new System.EventHandler(this.undoButton_Click);
+            // 
+            // redoButton
+            // 
+            this.redoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.redoButton.Image = ((System.Drawing.Image)(resources.GetObject("redoButton.Image")));
+            this.redoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.redoButton.Name = "redoButton";
+            this.redoButton.Size = new System.Drawing.Size(38, 22);
+            this.redoButton.Text = "Redo";
+            this.redoButton.Click += new System.EventHandler(this.redoButton_Click);
             // 
             // Form1
             // 
@@ -216,6 +249,7 @@ namespace SketchAssistant
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Controls.Add(this.menuStrip1);
+            this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
@@ -224,6 +258,7 @@ namespace SketchAssistant
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.Form1_Load);
             this.SizeChanged += new System.EventHandler(this.Form1_Resize);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
             this.tableLayoutPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRight)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLeft)).EndInit();
@@ -256,6 +291,9 @@ namespace SketchAssistant
         private System.Windows.Forms.ToolStripButton deleteButton;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem examplePictureToolStripMenuItem;
+        private System.Windows.Forms.ToolStripStatusLabel lastActionTakenLabel;
+        private System.Windows.Forms.ToolStripButton undoButton;
+        private System.Windows.Forms.ToolStripButton redoButton;
     }
 }
 
