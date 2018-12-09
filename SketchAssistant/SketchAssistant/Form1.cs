@@ -55,7 +55,7 @@ namespace SketchAssistant
         /// <summary>
         /// the graphic shown in the left window, represented as a list of polylines
         /// </summary>
-        private List<Line> templatePicture;
+        private List<Line> leftLineList;
         /// <summary>
         /// Image on the right
         /// </summary>
@@ -67,7 +67,7 @@ namespace SketchAssistant
         /// <summary>
         /// All Lines in the current session
         /// </summary>
-        List<Tuple<bool,Line>> lineList = new List<Tuple<bool, Line>>();
+        List<Tuple<bool,Line>> rightLineList = new List<Tuple<bool, Line>>();
         /// <summary>
         /// Whether the Mouse is currently pressed in the rightPictureBox
         /// </summary>
@@ -87,7 +87,7 @@ namespace SketchAssistant
         /// <summary>
         /// The graphic representation of the right image
         /// </summary>
-        Graphics graph = null;
+        Graphics rightGraph = null;
         /// <summary>
         /// Deletion Matrixes for checking postions of lines in the image
         /// </summary>
@@ -258,7 +258,7 @@ namespace SketchAssistant
         //get current Mouse positon within the right picture box
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
-            currentCursorPosition = ConvertCoordinatesRight(new Point(e.X, e.Y));
+            currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
         }
 
         //hold left mouse button to draw.
@@ -277,8 +277,8 @@ namespace SketchAssistant
             mousePressed = false;
             if (currentState.Equals(ProgramState.Draw) && currentLine.Count > 0)
             {
-                Line newLine = new Line(currentLine, lineList.Count);
-                lineList.Add(new Tuple<bool, Line>(true, newLine));
+                Line newLine = new Line(currentLine, rightLineList.Count);
+                rightLineList.Add(new Tuple<bool, Line>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
             }
@@ -300,7 +300,7 @@ namespace SketchAssistant
                     //The following lines cannot be in DrawEmptyCanvas()
                     isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                     linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                    lineList = new List<Tuple<bool, Line>>();
+                    rightLineList = new List<Tuple<bool, Line>>();
                 }
             }
             else
@@ -310,7 +310,7 @@ namespace SketchAssistant
                 //The following lines cannot be in DrawEmptyCanvas()
                 isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                lineList = new List<Tuple<bool, Line>>();
+                rightLineList = new List<Tuple<bool, Line>>();
             }
             UpdateButtonStatus();
         }
@@ -324,7 +324,7 @@ namespace SketchAssistant
             {
                 currentLine.Add(currentCursorPosition);
                 Line drawline = new Line(currentLine);
-                drawline.DrawLine(graph);
+                drawline.DrawLine(rightGraph);
                 pictureBoxRight.Image = rightImage;
             }
             if (currentState.Equals(ProgramState.Delete) && mousePressed)
@@ -338,7 +338,7 @@ namespace SketchAssistant
                         historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
                         foreach (int lineID in linesToDelete)
                         {
-                            lineList[lineID] = new Tuple<bool, Line>(false, lineList[lineID].Item2);
+                            rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
                         RedrawRightImage();
@@ -359,15 +359,15 @@ namespace SketchAssistant
             if (leftImage == null)
             {
                 rightImage = new Bitmap(pictureBoxRight.Width, pictureBoxRight.Height);
-                graph = Graphics.FromImage(rightImage);
-                graph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
+                rightGraph = Graphics.FromImage(rightImage);
+                rightGraph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
                 pictureBoxRight.Image = rightImage;
             }
             else
             {
                 rightImage = new Bitmap(leftImage.Width, leftImage.Height);
-                graph = Graphics.FromImage(rightImage);
-                graph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
+                rightGraph = Graphics.FromImage(rightImage);
+                rightGraph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
                 pictureBoxRight.Image = rightImage;
             }
             this.Refresh();
@@ -402,11 +402,11 @@ namespace SketchAssistant
         private void RedrawRightImage()
         {
             DrawEmptyCanvasRight();
-            foreach (Tuple<bool, Line> lineBoolTuple in lineList)
+            foreach (Tuple<bool, Line> lineBoolTuple in rightLineList)
             {
                 if (lineBoolTuple.Item1)
                 {
-                    lineBoolTuple.Item2.DrawLine(graph);
+                    lineBoolTuple.Item2.DrawLine(rightGraph);
                 }
             }
             pictureBoxRight.Refresh();
@@ -421,9 +421,9 @@ namespace SketchAssistant
         {
             foreach (int lineId in lines)
             {
-                if (lineId <= lineList.Count - 1 && lineId >= 0)
+                if (lineId <= rightLineList.Count - 1 && lineId >= 0)
                 {
-                    lineList[lineId] = new Tuple<bool, Line>(shown, lineList[lineId].Item2);
+                    rightLineList[lineId] = new Tuple<bool, Line>(shown, rightLineList[lineId].Item2);
                 }
             }
             RedrawRightImage();
@@ -482,7 +482,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="">The position of the mouse cursor</param>
         /// <returns>The real coordinates of the mouse cursor on the image</returns>
-        private Point ConvertCoordinatesRight(Point cursorPosition)
+        private Point ConvertCoordinates(Point cursorPosition)
         {
             Point realCoordinates = new Point(5,3);
             if(pictureBoxRight.Image == null)
@@ -528,7 +528,7 @@ namespace SketchAssistant
             {
                 isFilledMatrix = new bool[rightImage.Width,rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                foreach(Tuple<bool,Line> lineTuple in lineList)
+                foreach(Tuple<bool,Line> lineTuple in rightLineList)
                 {
                     if (lineTuple.Item1)
                     {
@@ -579,8 +579,8 @@ namespace SketchAssistant
         /// <returns></returns>
         private void BindAndDrawLeftImage(List<Line> newTemplatePicture)
         {
-            templatePicture = newTemplatePicture;
-            foreach(Line l in templatePicture)
+            leftLineList = newTemplatePicture;
+            foreach(Line l in leftLineList)
             {
                 l.DrawLine(Graphics.FromImage(leftImage));
             }
