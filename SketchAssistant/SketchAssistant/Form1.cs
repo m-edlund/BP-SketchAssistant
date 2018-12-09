@@ -45,11 +45,11 @@ namespace SketchAssistant
         /// <summary>
         /// Image loaded on the left
         /// </summary>
-        public Image leftImage { get; private set; } = null;
+        private Image leftImage = null;
         /// <summary>
         /// the graphic shown in the left window, represented as a list of polylines
         /// </summary>
-        public List<Line> templatePicture { get; private set; }
+        private List<Line> templatePicture;
         //Image on the right
         Image rightImage = null;
         //Current Line being Drawn
