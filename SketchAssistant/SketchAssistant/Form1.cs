@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -59,12 +60,14 @@ namespace SketchAssistant
         HashSet<int>[,] linesMatrix;
         //Size of deletion area
         uint deletionSize = 2;
+		//Dialog to save a file
+		SaveFileDialog saveFileDialogRight = new SaveFileDialog();
 
-        /******************************************/
-        /*** FORM SPECIFIC FUNCTIONS START HERE ***/
-        /******************************************/
+		/******************************************/
+		/*** FORM SPECIFIC FUNCTIONS START HERE ***/
+		/******************************************/
 
-        private void Form1_Load(object sender, EventArgs e)
+		private void Form1_Load(object sender, EventArgs e)
         {
             currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
@@ -79,7 +82,7 @@ namespace SketchAssistant
         //Load button, will open an OpenFileDialog
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialogLeft.Filter = "Image|*.jpg;*.png;*.jpeg";
+            openFileDialogLeft.Filter = "Image (*.jpg, *.png, *.jpeg)|*.jpg;*.png;*.jpeg";
             if(openFileDialogLeft.ShowDialog() == DialogResult.OK)
             {
                 toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
@@ -90,8 +93,74 @@ namespace SketchAssistant
             }
         }
 
-        //Changes the state of the program to drawing
-        private void drawButton_Click(object sender, EventArgs e)
+		//Save button, will open an SaveFileDialog
+		private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			/*if (rightImage != null)
+			{
+				saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "All files (*.*)|*.*";
+				ImageFormat format = ImageFormat.Jpeg;
+
+				if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
+				{
+
+					switch (saveFileDialogRight.Filter)
+					{
+						case ".png":
+
+							format = ImageFormat.Png;
+							break;
+
+						case ".bmp":
+
+							format = ImageFormat.Bmp;
+							break;
+					}
+
+
+					pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+				}
+			}
+			else
+			{
+				MessageBox.Show("The right picture box can't be empty");	
+			}
+			*/
+			if (rightImage != null)
+			{
+				saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "All files (*.*)|*.*";
+				ImageFormat format = ImageFormat.Jpeg;
+
+				if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
+				{
+
+					switch (saveFileDialogRight.Filter)
+					{
+						case ".png":
+
+							format = ImageFormat.Png;
+							break;
+
+						case ".bmp":
+
+							format = ImageFormat.Bmp;
+							break;
+					}
+
+
+					pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+				}
+			}
+			else
+			{
+				MessageBox.Show("The right picture box can't be empty");	
+			}
+			
+
+		}
+
+		//Changes the state of the program to drawing
+		private void drawButton_Click(object sender, EventArgs e)
         {
             if(rightImage != null)
             {
@@ -206,14 +275,16 @@ namespace SketchAssistant
             }
         }
 
-        /***********************************/
-        /*** HELPER FUNCTIONS START HERE ***/
-        /***********************************/
+		
 
-        /// <summary>
-        /// Creates an empty Canvas
-        /// </summary>
-        private void DrawEmptyCanvas()
+		/***********************************/
+		/*** HELPER FUNCTIONS START HERE ***/
+		/***********************************/
+
+		/// <summary>
+		/// Creates an empty Canvas
+		/// </summary>
+		private void DrawEmptyCanvas()
         {
             if (leftImage == null)
             {
@@ -380,5 +451,6 @@ namespace SketchAssistant
             }
             return returnSet;
         }
-    }
+
+	}
 }
