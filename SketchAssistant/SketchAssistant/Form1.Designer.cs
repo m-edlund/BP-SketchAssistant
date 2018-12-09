@@ -45,7 +45,6 @@ namespace SketchAssistant
 			this.toolStripLoadStatus = new System.Windows.Forms.ToolStripStatusLabel();
 			this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
 			this.mouseTimer = new System.Windows.Forms.Timer(this.components);
-			this.saveToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.tableLayoutPanel1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBoxRight)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBoxLeft)).BeginInit();
@@ -114,8 +113,7 @@ namespace SketchAssistant
 			// fileToolStripMenuItem
 			// 
 			this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadToolStripMenuItem,
-            this.saveToolStripMenuItem});
+            this.loadToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
 			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
 			this.fileToolStripMenuItem.Text = "File";
@@ -190,13 +188,6 @@ namespace SketchAssistant
 			this.mouseTimer.Interval = 1;
 			this.mouseTimer.Tick += new System.EventHandler(this.mouseTimer_Tick);
 			// 
-			// saveToolStripMenuItem
-			// 
-			this.saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-			this.saveToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-			this.saveToolStripMenuItem.Text = "Save...";
-			this.saveToolStripMenuItem.Click += new System.EventHandler(this.saveToolStripMenuItem_Click);
-			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -245,7 +236,6 @@ namespace SketchAssistant
         private System.Windows.Forms.ToolStripButton canvasButton;
         private System.Windows.Forms.ToolStripButton drawButton;
         private System.Windows.Forms.ToolStripButton deleteButton;
-		private System.Windows.Forms.ToolStripMenuItem saveToolStripMenuItem;
 	}
 }
 

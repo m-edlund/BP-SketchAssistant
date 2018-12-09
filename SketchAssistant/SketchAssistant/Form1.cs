@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.IO;
+
 
 
 // This is the code for your desktop app.
@@ -98,7 +100,7 @@ namespace SketchAssistant
 		{
 			if (rightImage != null)
 			{
-				saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "All files (*.*)|*.*";
+				saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "Vector Graphics (*svg|*.svg" + "All files (*.*)|*.*" ;
 				ImageFormat format = ImageFormat.Jpeg;
 
 				if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
@@ -106,6 +108,11 @@ namespace SketchAssistant
 
 					switch (saveFileDialogRight.Filter)
 					{
+						case ".svg":
+							String returnString = createSvgTxt();
+							File.WriteAllText(saveFileDialogRight.FileName, returnString);
+							return;
+
 						case ".png":
 
 							format = ImageFormat.Png;
@@ -129,6 +136,7 @@ namespace SketchAssistant
 			
 
 		}
+
 
 		//Changes the state of the program to drawing
 		private void drawButton_Click(object sender, EventArgs e)
@@ -423,5 +431,25 @@ namespace SketchAssistant
             return returnSet;
         }
 
+
+		private String createSvgTxt()
+		{
+			String newString = String.Format(@"< svg viewBox = ""0 0 {0} {1}"" xmlns = ""http://www.w3.org/2000/svg"" >", rightImage.Width, rightImage.Height);
+			foreach (Tuple<bool,Line> lineTuple in lineList)
+			{
+				if(lineTuple.Item1 == true)
+				{
+					String nextLine = String.Format("\n" + @"<line x1 = ""{0}"" y1 = ""{1}""2 x2 = ""{2}"" y2 = ""{3}"" stroke = ""black"" />\n", 
+													lineTuple.Item2.GetStartPoint().X, lineTuple.Item2.GetStartPoint().Y, lineTuple.Item2.GetEndPoint().X, lineTuple.Item2.GetEndPoint().X);
+					newString += nextLine;
+				}
+			}
+			return newString;
+		}
+
+		private void saveToolStripMenuItem1_Click(object sender, EventArgs e)
+		{
+
+		}
 	}
 }
