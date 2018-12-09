@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Text.RegularExpressions;
 
 
 // This is the code for your desktop app.
@@ -19,47 +20,88 @@ namespace SketchAssistant
         public Form1()
         {
             InitializeComponent();
+            fileImporter = new FileImporter(this);
         }
 
         /**********************************/
         /*** CLASS VARIABLES START HERE ***/
         /**********************************/
 
-        //Different Program States
+        //important: add new variables only at the end of the list to keep the order of definition consistent with the order in which they are returned by GetAllVariables()
+
+        /// <summary>
+        /// Different Program States
+        /// </summary>
         public enum ProgramState
         {
             Idle,
             Draw,
             Delete
         }
-        //Current Program State
+        /// <summary>
+        /// Current Program State
+        /// </summary>
         private ProgramState currentState;
-        //Dialog to select a file.
-        OpenFileDialog openFileDialogLeft = new OpenFileDialog();
-        //Image loaded on the left
-        Image leftImage = null;
-        //Image on the right
+        /// <summary>
+        /// instance of FileImporter to handle drawing imports
+        /// </summary>
+        private FileImporter fileImporter;
+        /// <summary>
+        /// Dialog to select a file.
+        /// </summary>
+        OpenFileDialog openFileDialog = new OpenFileDialog();
+        /// <summary>
+        /// Image loaded on the left
+        /// </summary>
+        private Image leftImage = null;
+        /// <summary>
+        /// the graphic shown in the left window, represented as a list of polylines
+        /// </summary>
+        private List<Line> leftLineList;
+        /// <summary>
+        /// Image on the right
+        /// </summary>
         Image rightImage = null;
-        //Current Line being Drawn
+        /// <summary>
+        /// Current Line being Drawn
+        /// </summary>
         List<Point> currentLine;
-        //All Lines in the current session
-        List<Tuple<bool,Line>> lineList = new List<Tuple<bool, Line>>();
-        //Whether the Mouse is currently pressed in the rightPictureBox
+        /// <summary>
+        /// All Lines in the current session
+        /// </summary>
+        List<Tuple<bool,Line>> rightLineList = new List<Tuple<bool, Line>>();
+        /// <summary>
+        /// Whether the Mouse is currently pressed in the rightPictureBox
+        /// </summary>
         bool mousePressed = false;
-        //The Position of the Cursor in the right picture box
+        /// <summary>
+        /// The Position of the Cursor in the right picture box
+        /// </summary>
         Point currentCursorPosition;
-        //The Previous Cursor Position in the right picture box
+        /// <summary>
+        /// The Previous Cursor Position in the right picture box
+        /// </summary>
         Point previousCursorPosition;
-        //Queue for the cursorPositions
+        /// <summary>
+        /// Queue for the cursorPositions
+        /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
-        //The graphic representation of the right image
-        Graphics graph = null;
-        //Deletion Matrixes for checking postions of lines in the image
+        /// <summary>
+        /// The graphic representation of the right image
+        /// </summary>
+        Graphics rightGraph = null;
+        /// <summary>
+        /// Deletion Matrixes for checking postions of lines in the image
+        /// </summary>
         bool[,] isFilledMatrix;
         HashSet<int>[,] linesMatrix;
-        //Size of deletion area
+        /// <summary>
+        /// Size of deletion area
+        /// </summary>
         uint deletionSize = 2;
-        //History of Actions
+        /// <summary>
+        /// History of Actions
+        /// </summary>
         ActionHistory historyOfActions;
 
         /******************************************/
@@ -83,16 +125,39 @@ namespace SketchAssistant
         //Load button, will open an OpenFileDialog
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialogLeft.Filter = "Image|*.jpg;*.png;*.jpeg";
-            if(openFileDialogLeft.ShowDialog() == DialogResult.OK)
+            openFileDialog.Filter = "Image|*.jpg;*.png;*.jpeg";
+            if(openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
-                leftImage = Image.FromFile(openFileDialogLeft.FileName);
+                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
+                leftImage = Image.FromFile(openFileDialog.FileName);
                 pictureBoxLeft.Image = leftImage;
                 //Refresh the left image box when the content is changed
                 this.Refresh();
             }
             UpdateButtonStatus();
+        }
+
+        /// <summary>
+        /// Import button, will open an OpenFileDialog
+        /// </summary>
+        private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
+                try
+                {
+                    (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
+                    DrawEmptyCanvasLeft(values.Item1, values.Item2);
+                    BindAndDrawLeftImage(values.Item3);
+                    this.Refresh();
+                }
+                catch(FileImporterException ex)
+                {
+                    ShowInfoMessage(ex.ToString());
+                }
+            }
         }
 
         //Changes the state of the program to drawing
@@ -214,8 +279,8 @@ namespace SketchAssistant
             mousePressed = false;
             if (currentState.Equals(ProgramState.Draw) && currentLine.Count > 0)
             {
-                Line newLine = new Line(currentLine, lineList.Count);
-                lineList.Add(new Tuple<bool, Line>(true, newLine));
+                Line newLine = new Line(currentLine, rightLineList.Count);
+                rightLineList.Add(new Tuple<bool, Line>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
             }
@@ -233,21 +298,21 @@ namespace SketchAssistant
                     "Attention", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     historyOfActions = new ActionHistory(lastActionTakenLabel);
-                    DrawEmptyCanvas();
+                    DrawEmptyCanvasRight();
                     //The following lines cannot be in DrawEmptyCanvas()
                     isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                     linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                    lineList = new List<Tuple<bool, Line>>();
+                    rightLineList = new List<Tuple<bool, Line>>();
                 }
             }
             else
             {
                 historyOfActions = new ActionHistory(lastActionTakenLabel);
-                DrawEmptyCanvas();
+                DrawEmptyCanvasRight();
                 //The following lines cannot be in DrawEmptyCanvas()
                 isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                lineList = new List<Tuple<bool, Line>>();
+                rightLineList = new List<Tuple<bool, Line>>();
             }
             UpdateButtonStatus();
         }
@@ -261,7 +326,7 @@ namespace SketchAssistant
             {
                 currentLine.Add(currentCursorPosition);
                 Line drawline = new Line(currentLine);
-                drawline.DrawLine(graph);
+                drawline.DrawLine(rightGraph);
                 pictureBoxRight.Image = rightImage;
             }
             if (currentState.Equals(ProgramState.Delete) && mousePressed)
@@ -275,7 +340,7 @@ namespace SketchAssistant
                         historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
                         foreach (int lineID in linesToDelete)
                         {
-                            lineList[lineID] = new Tuple<bool, Line>(false, lineList[lineID].Item2);
+                            rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
                         RedrawRightImage();
@@ -291,20 +356,20 @@ namespace SketchAssistant
         /// <summary>
         /// Creates an empty Canvas
         /// </summary>
-        private void DrawEmptyCanvas()
+        private void DrawEmptyCanvasRight()
         {
             if (leftImage == null)
             {
                 rightImage = new Bitmap(pictureBoxRight.Width, pictureBoxRight.Height);
-                graph = Graphics.FromImage(rightImage);
-                graph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
+                rightGraph = Graphics.FromImage(rightImage);
+                rightGraph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
                 pictureBoxRight.Image = rightImage;
             }
             else
             {
                 rightImage = new Bitmap(leftImage.Width, leftImage.Height);
-                graph = Graphics.FromImage(rightImage);
-                graph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
+                rightGraph = Graphics.FromImage(rightImage);
+                rightGraph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
                 pictureBoxRight.Image = rightImage;
             }
             this.Refresh();
@@ -312,16 +377,38 @@ namespace SketchAssistant
         }
 
         /// <summary>
+        /// Creates an empty Canvas on the left
+        /// </summary>
+        /// <param name="width"> width of the new canvas in pixels </param>
+        /// <param name="height"> height of the new canvas in pixels </param>
+        private void DrawEmptyCanvasLeft(int width, int height)
+        {
+            if (width == 0)
+            {
+                leftImage = new Bitmap(pictureBoxLeft.Width, pictureBoxLeft.Height);
+            }
+            else
+            {
+                leftImage = new Bitmap(width, height);
+            }
+            Graphics.FromImage(leftImage).FillRectangle(Brushes.White, 0, 0, pictureBoxLeft.Width + 10, pictureBoxLeft.Height + 10);
+            pictureBoxLeft.Image = leftImage;
+            
+            this.Refresh();
+            pictureBoxLeft.Refresh();
+        }
+
+        /// <summary>
         /// Redraws all lines in lineList, for which their associated boolean value equals true.
         /// </summary>
         private void RedrawRightImage()
         {
-            DrawEmptyCanvas();
-            foreach (Tuple<bool, Line> lineBoolTuple in lineList)
+            DrawEmptyCanvasRight();
+            foreach (Tuple<bool, Line> lineBoolTuple in rightLineList)
             {
                 if (lineBoolTuple.Item1)
                 {
-                    lineBoolTuple.Item2.DrawLine(graph);
+                    lineBoolTuple.Item2.DrawLine(rightGraph);
                 }
             }
             pictureBoxRight.Refresh();
@@ -336,9 +423,9 @@ namespace SketchAssistant
         {
             foreach (int lineId in lines)
             {
-                if (lineId <= lineList.Count - 1 && lineId >= 0)
+                if (lineId <= rightLineList.Count - 1 && lineId >= 0)
                 {
-                    lineList[lineId] = new Tuple<bool, Line>(shown, lineList[lineId].Item2);
+                    rightLineList[lineId] = new Tuple<bool, Line>(shown, rightLineList[lineId].Item2);
                 }
             }
             RedrawRightImage();
@@ -443,7 +530,7 @@ namespace SketchAssistant
             {
                 isFilledMatrix = new bool[rightImage.Width,rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                foreach(Tuple<bool,Line> lineTuple in lineList)
+                foreach(Tuple<bool,Line> lineTuple in rightLineList)
                 {
                     if (lineTuple.Item1)
                     {
@@ -486,5 +573,51 @@ namespace SketchAssistant
             }
             return returnSet;
         }
+
+        /// <summary>
+        /// binds the given picture to templatePicture and draws it
+        /// </summary>
+        /// <param name="newTemplatePicture"> the new template picture, represented as a list of polylines </param>
+        /// <returns></returns>
+        private void BindAndDrawLeftImage(List<Line> newTemplatePicture)
+        {
+            leftLineList = newTemplatePicture;
+            foreach(Line l in leftLineList)
+            {
+                l.DrawLine(Graphics.FromImage(leftImage));
+            }
+        }
+
+        /// <summary>
+        /// shows the given info message in a popup and asks the user to aknowledge it
+        /// </summary>
+        /// <param name="message">the message to show</param>
+        private void ShowInfoMessage(String message)
+        {
+            MessageBox.Show(message);
+        }
+
+        /// <summary>
+        /// returns all instance variables in the order of their definition for testing
+        /// </summary>
+        /// <returns>all instance variables in the order of their definition</returns>
+        public Object[]/*(ProgramState, FileImporter, OpenFileDialog, Image, List<Line>, Image, List<Point>, List<Tuple<bool, Line>>, bool, Point, Point, Queue<Point>, Graphics, bool[,], HashSet<int>[,], uint, ActionHistory)*/ GetAllVariables()
+        {
+            return new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList, rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition, cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionSize, historyOfActions };
+        }
+
+        /// <summary>
+        /// public method wrapper for testing purposes, invoking DrawEmptyCanvas(...) and BindAndDrawLeftImage(...)
+        /// </summary>
+        /// <param name="width">width of the parsed image</param>
+        /// <param name="height">height of the parsed image</param>
+        /// <param name="newImage">the parsed image</param>
+        public void CreateCanvasAndSetPictureForTesting(int width, int height, List<Line> newImage)
+        {
+            DrawEmptyCanvasLeft(width, height);
+            BindAndDrawLeftImage(newImage);
+        }
+
+
     }
 }
