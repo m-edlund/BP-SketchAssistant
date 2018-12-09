@@ -349,7 +349,7 @@ namespace Tests
                 (int, int, List<Line>) values1 = uut.ParseISADInputForTesting(file);
                 program.CreateCanvasAndSetPictureForTesting(values1.Item1, values1.Item2, values1.Item3);
             }
-            catch(FileImporterException ex)
+            catch(FileImporterException)
             {
                 //save the occurence of an exception
                 exceptionThrown = true;

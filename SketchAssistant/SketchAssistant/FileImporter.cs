@@ -52,8 +52,8 @@ namespace SketchAssistant
                 throw new FileImporterException("unterminated drawing definition", ".isad files have to end with the 'enddrawing' token", allLines.Length);
             }
 
-            (int, int) dimensions = parseISADHeader(allLines);
-            List<Line> picture = parseISADBody(allLines, dimensions.Item1, dimensions.Item2);
+            (int, int) dimensions = ParseISADHeader(allLines);
+            List<Line> picture = ParseISADBody(allLines, dimensions.Item1, dimensions.Item2);
 
             return (dimensions.Item1, dimensions.Item2, picture);
         }
@@ -65,7 +65,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">the input file as an array of lines</param>
         /// <returns>the width and height of the left canvas</returns>
-        private (int, int) parseISADHeader(String[] allLines)
+        private (int, int) ParseISADHeader(String[] allLines)
         {
             int width;
             int height;
@@ -84,7 +84,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">the input file as an array of lines</param>
         /// <returns>the parsed picture as a list of lines</returns>
-        private List<Line> parseISADBody(String[] allLines, int width, int height)
+        private List<Line> ParseISADBody(String[] allLines, int width, int height)
         {
 
             String lineStartString = "line";
