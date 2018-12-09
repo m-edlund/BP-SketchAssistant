@@ -27,6 +27,8 @@ namespace SketchAssistant
         /*** CLASS VARIABLES START HERE ***/
         /**********************************/
 
+        //important: add new variables only at the end of the list to keep the order of definition consistent with the order in which they are returned by GetAllVariables()
+
         /// <summary>
         /// Different Program States
         /// </summary>
@@ -47,7 +49,7 @@ namespace SketchAssistant
         /// <summary>
         /// Dialog to select a file.
         /// </summary>
-        OpenFileDialog openFileDialogLeft = new OpenFileDialog();
+        OpenFileDialog openFileDialog = new OpenFileDialog();
         /// <summary>
         /// Image loaded on the left
         /// </summary>
@@ -123,11 +125,11 @@ namespace SketchAssistant
         //Load button, will open an OpenFileDialog
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialogLeft.Filter = "Image|*.jpg;*.png;*.jpeg";
-            if(openFileDialogLeft.ShowDialog() == DialogResult.OK)
+            openFileDialog.Filter = "Image|*.jpg;*.png;*.jpeg";
+            if(openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
-                leftImage = Image.FromFile(openFileDialogLeft.FileName);
+                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
+                leftImage = Image.FromFile(openFileDialog.FileName);
                 pictureBoxLeft.Image = leftImage;
                 //Refresh the left image box when the content is changed
                 this.Refresh();
@@ -140,13 +142,13 @@ namespace SketchAssistant
         /// </summary>
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialogLeft.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
-            if (openFileDialogLeft.ShowDialog() == DialogResult.OK)
+            openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
+                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
                 try
                 {
-                    (int, int, List<Line>) values = fileImporter.ParseISADInput(openFileDialogLeft.FileName);
+                    (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
                     DrawEmptyCanvasLeft(values.Item1, values.Item2);
                     BindAndDrawLeftImage(values.Item3);
                     this.Refresh();
@@ -593,6 +595,27 @@ namespace SketchAssistant
         private void ShowInfoMessage(String message)
         {
             MessageBox.Show(message);
+        }
+
+        /// <summary>
+        /// returns all instance variables in the order of their definition for testing
+        /// </summary>
+        /// <returns>all instance variables in the order of their definition</returns>
+        public Object[]/*(ProgramState, FileImporter, OpenFileDialog, Image, List<Line>, Image, List<Point>, List<Tuple<bool, Line>>, bool, Point, Point, Queue<Point>, Graphics, bool[,], HashSet<int>[,], uint, ActionHistory)*/ GetAllVariables()
+        {
+            return new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList, rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition, cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionSize, historyOfActions };
+        }
+
+        /// <summary>
+        /// public method wrapper for testing purposes, invoking DrawEmptyCanvas(...) and BindAndDrawLeftImage(...)
+        /// </summary>
+        /// <param name="width">width of the parsed image</param>
+        /// <param name="height">height of the parsed image</param>
+        /// <param name="newImage">the parsed image</param>
+        public void CreateCanvasAndSetPictureForTesting(int width, int height, List<Line> newImage)
+        {
+            DrawEmptyCanvasLeft(width, height);
+            BindAndDrawLeftImage(newImage);
         }
 
 

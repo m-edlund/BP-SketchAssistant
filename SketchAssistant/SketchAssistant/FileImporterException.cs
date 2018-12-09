@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SketchAssistant
 {
-    class FileImporterException : Exception
+    public class FileImporterException : Exception
     {
         /// <summary>
         /// the clean and formatted message to show to the user

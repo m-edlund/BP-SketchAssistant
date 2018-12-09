@@ -274,7 +274,6 @@ namespace Tests
         }
     }
 
-    /*
     [TestClass]
     public class FileImporterTests
     {
@@ -290,22 +289,23 @@ namespace Tests
             List<String> file = new List<string>();
             file.Add("drawing");
             file.Add("300x200");
-            for(int i = 0; i < xCoordinates.Length - 2; i++)
+            for (int i = 0; i < xCoordinates.Length - 2; i += 3)
             {
                 file.Add("line");
-                file.Add(xCoordinates[i - 2] + ";" + yCoordinates[i - 2]);
-                file.Add(xCoordinates[i - 1] + ";" + yCoordinates[i - 1]);
                 file.Add(xCoordinates[i] + ";" + yCoordinates[i]);
+                file.Add(xCoordinates[i + 1] + ";" + yCoordinates[i + 1]);
+                file.Add(xCoordinates[i + 2] + ";" + yCoordinates[i + 2]);
                 file.Add("endline");
             }
             file.Add("enddrawing");
 
-            uut.ParseISADInput(file.ToArray());
+            (int, int, List<Line>) values = uut.ParseISADInputForTesting(file.ToArray());
+            program.CreateCanvasAndSetPictureForTesting(values.Item1, values.Item2, values.Item3);
 
-            Line[] drawing = program.templatePicture.ToArray();
+            Line[] drawing = GetLeftImage(program).ToArray();
 
             Assert.AreEqual(xCoordinates.Length / 3, drawing.Length);
-            for(int i = 0; i < xCoordinates.Length - 2; i += 3)
+            for (int i = 0; i < xCoordinates.Length - 2; i += 3)
             {
                 Point[] currentLine = drawing[i / 3].GetPoints().ToArray();
                 Assert.AreEqual(3, currentLine.Length);
@@ -317,22 +317,57 @@ namespace Tests
         }
 
         [DataTestMethod]
-
-        public void ParseISADInputSuccessfulTest(String[] file)
+        [DataRow(new String[] {})]
+        [DataRow(new String[] { "begindrawing", "300x300", "line", "50;50", "100;50", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300;300", "line", "50;50", "100;50", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "30.5x300", "line", "50;50", "100;50", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "line", "50;50", "100;50", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "beginline", "50;50", "100;50", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "500;50", "100;50", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "50x50", "100;50", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "50", "100", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "50;50", "line", "endline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "50;50", "100;50", "stopline", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "50;50", "100;50", "enddrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "50;50", "100;50", "endline", "endrawing" })]
+        [DataRow(new String[] { "drawing", "300x300", "line", "50;50", "100;50", "endline" })]
+        public void ParseISADInputExceptionTest(String[] file)
         {
+            bool exceptionThrown = false;
             Form1 program = new Form1();
             FileImporter uut = new SketchAssistant.FileImporter(program);
+            //check that left image initially is uninitialized
+            Assert.IsNull(GetLeftImage(program));
+            //initialize left image with a valid isad drawing
+            (int, int, List<Line>) values = uut.ParseISADInputForTesting(new string[] { "drawing", "300x205", "line", "40;40", "140;140", "endline", "enddrawing" });
+            program.CreateCanvasAndSetPictureForTesting(values.Item1, values.Item2, values.Item3);
+            //save left image for later comparison
+            List<Line> oldLeftImage = GetLeftImage(program);
+            try
+            {
+                //try to initialize the left image with an invalid isad drawing
+                (int, int, List<Line>) values1 = uut.ParseISADInputForTesting(file);
+                program.CreateCanvasAndSetPictureForTesting(values1.Item1, values1.Item2, values1.Item3);
+            }
+            catch(FileImporterException ex)
+            {
+                //save the occurence of an exception
+                exceptionThrown = true;
+            }
+            //check that an exception has been thrown
+            Assert.IsTrue(exceptionThrown);
+            //check that the left image has not been changed by the failed image import
+            Assert.AreEqual(oldLeftImage, GetLeftImage(program));
+        }
 
-            Assert.IsNull(program.templatePicture);
-
-            uut.ParseISADInput(new string[] {"drawing", "300x205", "line", "40;40", "140;140", "endline", );
-
-            List<Line> oldTemplatePicture = program.templatePicture;
-
-            uut.ParseISADInput(file);
-
-            Assert.AreEqual(oldTemplatePicture, program.templatePicture);
+        /// <summary>
+        /// local helper method retrieving the left image from a Form1 instance
+        /// </summary>
+        /// <returns>the left image of the given Form1 instance</returns>
+        private List<Line> GetLeftImage(Form1 program)
+        {
+            //cast is save as long as Form1#GetAllVariables() is conform to its contract
+            return (List<Line>) program.GetAllVariables()[4];
         }
     }
-    */
 }
