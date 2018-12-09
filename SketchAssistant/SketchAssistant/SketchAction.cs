@@ -72,27 +72,27 @@ namespace SketchAssistant
         /// <returns>A String describing what happend at this action.</returns>
         public String GetActionInformation()
         {
-            String ReturnString;
+            String returnString;
             switch (thisAction)
             {
                 case ActionType.Start:
-                    ReturnString = "A new canvas was created.";
+                    returnString = "A new canvas was created.";
                     break;
                 case ActionType.Draw:
-                    ReturnString = "Line number " + lineIDs.First().ToString() + " was drawn.";
+                    returnString = "Line number " + lineIDs.First().ToString() + " was drawn.";
                     break;
                 case ActionType.Delete:
-                    if (lineIDs.Count == 1) { ReturnString = "Line number " + lineIDs.First().ToString() + " was deleted."; }
+                    if (lineIDs.Count == 1) { returnString = "Line number " + lineIDs.First().ToString() + " was deleted."; }
                     else
                     {
-                        ReturnString = "Several Lines were deleted.";
+                        returnString = "Several Lines were deleted.";
                     }
                     break;
                 default:
-                    ReturnString = "There is no information available for this action.";
+                    returnString = "There is no information available for this action.";
                     break;
             }
-            return ReturnString;
+            return returnString;
         }
     }
 }
