@@ -49,7 +49,7 @@ namespace SketchAssistant
         /// <summary>
         /// the graphic shown in the left window, represented as a list of polylines
         /// </summary>
-        List<Line> templatePicture;
+        public List<Line> templatePicture { get; private set; }
         //Image on the right
         Image rightImage = null;
         //Current Line being Drawn
@@ -112,18 +112,21 @@ namespace SketchAssistant
         /// </summary>
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-            
             openFileDialogLeft.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
             if (openFileDialogLeft.ShowDialog() == DialogResult.OK)
             {
                 toolStripLoadStatus.Text = openFileDialogLeft.SafeFileName;
-
-                string[] allLines = System.IO.File.ReadAllLines(openFileDialogLeft.FileName);
-
-                fileImporter.ParseISADInput(allLines);
-
-                this.Refresh();
+                try
+                {
+                    (int, int, List<Line>) values = fileImporter.ParseISADInput(openFileDialogLeft.FileName);
+                    DrawEmptyCanvasLeft(values.Item1, values.Item2);
+                    BindAndDrawLeftImage(values.Item3);
+                    this.Refresh();
+                }
+                catch(FileImporterException ex)
+                {
+                    ShowInfoMessage(ex.ToString());
+                }
             }
         }
 
@@ -348,7 +351,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="width"> width of the new canvas in pixels </param>
         /// <param name="height"> height of the new canvas in pixels </param>
-        public void DrawEmptyCanvasLeft(int width, int height)
+        private void DrawEmptyCanvasLeft(int width, int height)
         {
             if (width == 0)
             {
@@ -546,21 +549,20 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="newTemplatePicture"> the new template picture, represented as a list of polylines </param>
         /// <returns></returns>
-        public Boolean BindTemplatePicture(List<Line> newTemplatePicture)
+        private void BindAndDrawLeftImage(List<Line> newTemplatePicture)
         {
             templatePicture = newTemplatePicture;
             foreach(Line l in templatePicture)
             {
                 l.DrawLine(Graphics.FromImage(leftImage));
             }
-            return true;
         }
 
         /// <summary>
         /// shows the given info message in a popup and asks the user to aknowledge it
         /// </summary>
-        /// <param name="message">teh message to show</param>
-        public void ShowInfoMessage(String message)
+        /// <param name="message">the message to show</param>
+        private void ShowInfoMessage(String message)
         {
             MessageBox.Show(message);
         }

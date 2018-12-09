@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileImporter.cs" />
+    <Compile Include="FileImporterException.cs" />
     <Compile Include="SketchAction.cs" />
     <Compile Include="ActionHistory.cs" />
     <Compile Include="Line.cs" />

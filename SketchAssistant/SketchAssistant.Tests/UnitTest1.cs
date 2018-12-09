@@ -273,4 +273,66 @@ namespace Tests
             Assert.AreEqual(currLabel, message);
         }
     }
+
+    /*
+    [TestClass]
+    public class FileImporterTests
+    {
+        [DataTestMethod]
+        [DataRow(new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 })]
+        [DataRow(new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 })]
+        [DataRow(new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 })]
+        public void ParseISADInputSuccessfulTest(int[] xCoordinates, int[] yCoordinates)
+        {
+            Form1 program = new Form1();
+            FileImporter uut = new SketchAssistant.FileImporter(program);
+
+            List<String> file = new List<string>();
+            file.Add("drawing");
+            file.Add("300x200");
+            for(int i = 0; i < xCoordinates.Length - 2; i++)
+            {
+                file.Add("line");
+                file.Add(xCoordinates[i - 2] + ";" + yCoordinates[i - 2]);
+                file.Add(xCoordinates[i - 1] + ";" + yCoordinates[i - 1]);
+                file.Add(xCoordinates[i] + ";" + yCoordinates[i]);
+                file.Add("endline");
+            }
+            file.Add("enddrawing");
+
+            uut.ParseISADInput(file.ToArray());
+
+            Line[] drawing = program.templatePicture.ToArray();
+
+            Assert.AreEqual(xCoordinates.Length / 3, drawing.Length);
+            for(int i = 0; i < xCoordinates.Length - 2; i += 3)
+            {
+                Point[] currentLine = drawing[i / 3].GetPoints().ToArray();
+                Assert.AreEqual(3, currentLine.Length);
+                for (int j = 0; j < 3; j++)
+                {
+                    Assert.IsTrue(currentLine[j].X == xCoordinates[i + j] && currentLine[j].Y == yCoordinates[i + j]);
+                }
+            }
+        }
+
+        [DataTestMethod]
+
+        public void ParseISADInputSuccessfulTest(String[] file)
+        {
+            Form1 program = new Form1();
+            FileImporter uut = new SketchAssistant.FileImporter(program);
+
+            Assert.IsNull(program.templatePicture);
+
+            uut.ParseISADInput(new string[] {"drawing", "300x205", "line", "40;40", "140;140", "endline", );
+
+            List<Line> oldTemplatePicture = program.templatePicture;
+
+            uut.ParseISADInput(file);
+
+            Assert.AreEqual(oldTemplatePicture, program.templatePicture);
+        }
+    }
+    */
 }

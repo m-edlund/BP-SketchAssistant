@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SketchAssistant
 {
-    class FileImporter
+    public class FileImporter
     {
 
         /// <summary>
@@ -22,74 +22,59 @@ namespace SketchAssistant
         }
 
         /// <summary>
-        /// parses a drawing consisting of line objects, given in the proprietary .isad format
+        /// parses a drawing consisting of line objects, given in the application specific .isad format
         /// </summary>
-        /// <param name="allLines">the input file as an array of all lines in the .isad file</param>
-        public void ParseISADInput(String[] allLines)
+        /// <param name="fileName">the path of the input file</param>
+        /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
+        public (int, int, List<Line>) ParseISADInput(String fileName)
         {
 
+            String[] allLines = System.IO.File.ReadAllLines(fileName);
 
             if (allLines.Length == 0)
             {
-                program.ShowInfoMessage("Could not import file:\n file is empty");
-                return;
+                throw new FileImporterException("file is empty", "", -1);
             }
             if (!"drawing".Equals(allLines[0]))
             {
-                program.ShowInfoMessage("Could not import file:\n file is not an interactive sketch assistant drawing\n (Hint: .isad files ave to start with the 'drawing' token)");
-                return;
+                throw new FileImporterException("file is not an interactive sketch assistant drawing", ".isad files have to start with the 'drawing' token", 1);
             }
             if (!"enddrawing".Equals(allLines[allLines.Length - 1]))
             {
-                program.ShowInfoMessage("Could not import file:\n unterminated drawing definition\n (Hint: .isad files ave to end with the 'enddrawing' token)");
-                return;
+                throw new FileImporterException("unterminated drawing definition", ".isad files have to end with the 'enddrawing' token", allLines.Length);
             }
 
-            if (!parseISADHeader(allLines))
-            {
-                return;
-            }
+            (int, int) dimensions = parseISADHeader(allLines);
+            List<Line> picture = parseISADBody(allLines, dimensions.Item1, dimensions.Item2);
 
-            if (!parseISADBody(allLines))
-            {
-                return;
-            }
-
-
-
+            return (dimensions.Item1, dimensions.Item2, picture);
         }
 
         /// <summary>
-        /// parses the first two lines of an input file .isad format
+        /// parses the first two lines of an input file in .isad format
         /// </summary>
         /// <param name="allLines">the input file as an array of lines</param>
-        /// <returns></returns>
-        private bool parseISADHeader(String[] allLines)
+        /// <returns>the width and height of the left canvas</returns>
+        private (int, int) parseISADHeader(String[] allLines)
         {
-
             int width;
             int height;
-
             if (!(allLines.Length > 1) || !Regex.Match(allLines[1], @"(\d?\d*x?\d?\d*?)?", RegexOptions.None).Success)
             {
-                program.ShowInfoMessage("Could not import file:\n invalid or missing canvas size definition\n (Line: 2)");
-                return false;
+                throw new FileImporterException("invalid or missing canvas size definition", "format: [width]x[heigth]", 2);
             }
             String[] size = allLines[1].Split('x');
             width = Convert.ToInt32(size[0]);
             height = Convert.ToInt32(size[1]);
-
-            program.DrawEmptyCanvasLeft(width, height);
-
-            return true;
+            return (width, height);
         }
 
         /// <summary>
-        /// parses all line entries of an input file .isad format
+        /// parses all line entries of an input file in .isad format
         /// </summary>
         /// <param name="allLines">the input file as an array of lines</param>
-        /// <returns></returns>
-        private bool parseISADBody(String[] allLines)
+        /// <returns>the parsed picture as a list of lines</returns>
+        private List<Line> parseISADBody(String[] allLines, int width, int height)
         {
 
             String lineStartString = "line";
@@ -107,23 +92,20 @@ namespace SketchAssistant
                 {
                     if (i == allLines.Length)
                     {
-                        program.ShowInfoMessage("Could not import file:\n unterminated line definition\n (Line: " + (i + 1) + ")");
-                        return false;
+                        throw new FileImporterException("unterminated line definition", null, (i + 1));
                     }
                     //parse single point definition
                     if (!Regex.Match(allLines[i], @"(\d?\d*;?\d?\d*?)?", RegexOptions.None).Success)
                     {
-                        program.ShowInfoMessage("Could not import file:\n invalid Point definition: wrong format\n (Line: " + (i + 1) + ")");
-                        return false;
+                        throw new FileImporterException("invalid Point definition: wrong format", "format: [xCoordinate];[yCoordinate]", (i + 1) );
                     }
                     String[] coordinates = allLines[i].Split(';');
                     //no errors possible, convertability to string already checked above
                     int xCoordinate = Convert.ToInt32(coordinates[0]);
                     int yCoordinate = Convert.ToInt32(coordinates[1]);
-                    if (xCoordinate < 0 || yCoordinate < 0 || xCoordinate > program.leftImage.Width - 1 || yCoordinate > program.leftImage.Height - 1)
+                    if (xCoordinate < 0 || yCoordinate < 0 || xCoordinate > width - 1 || yCoordinate > height - 1)
                     {
-                        program.ShowInfoMessage("Could not import file:\n invalid Point definition: point out of bounds\n (Line: " + (i + 1) + ")");
-                        return false;
+                        throw new FileImporterException("invalid Point definition: point out of bounds", null, (i + 1) );
                     }
                     newLine.Add(new Point(xCoordinate, yCoordinate));
                     i++;
@@ -134,10 +116,8 @@ namespace SketchAssistant
                 drawing.Add(new Line(newLine));
             }
 
-            //save parsed drawing to instance variable and draw it
-            program.BindTemplatePicture(drawing);
-
-            return true;
+            //return parsed picture
+            return drawing;
         }
 
     }
