@@ -96,36 +96,6 @@ namespace SketchAssistant
 		//Save button, will open an SaveFileDialog
 		private void saveToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			/*if (rightImage != null)
-			{
-				saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "All files (*.*)|*.*";
-				ImageFormat format = ImageFormat.Jpeg;
-
-				if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
-				{
-
-					switch (saveFileDialogRight.Filter)
-					{
-						case ".png":
-
-							format = ImageFormat.Png;
-							break;
-
-						case ".bmp":
-
-							format = ImageFormat.Bmp;
-							break;
-					}
-
-
-					pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
-				}
-			}
-			else
-			{
-				MessageBox.Show("The right picture box can't be empty");	
-			}
-			*/
 			if (rightImage != null)
 			{
 				saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "All files (*.*)|*.*";
@@ -155,6 +125,7 @@ namespace SketchAssistant
 			{
 				MessageBox.Show("The right picture box can't be empty");	
 			}
+			
 			
 
 		}
