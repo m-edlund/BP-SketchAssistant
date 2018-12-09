@@ -37,6 +37,8 @@ namespace SketchAssistant
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.examplePictureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.canvasButton = new System.Windows.Forms.ToolStripButton();
             this.drawButton = new System.Windows.Forms.ToolStripButton();
@@ -113,7 +115,8 @@ namespace SketchAssistant
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.loadToolStripMenuItem});
+            this.loadToolStripMenuItem,
+            this.importToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -121,9 +124,24 @@ namespace SketchAssistant
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.loadToolStripMenuItem.Text = "Load...";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
+            // 
+            // importToolStripMenuItem
+            // 
+            this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.examplePictureToolStripMenuItem});
+            this.importToolStripMenuItem.Name = "importToolStripMenuItem";
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importToolStripMenuItem.Text = "Import...";
+            // 
+            // examplePictureToolStripMenuItem
+            // 
+            this.examplePictureToolStripMenuItem.Name = "examplePictureToolStripMenuItem";
+            this.examplePictureToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.examplePictureToolStripMenuItem.Text = "Example picture";
+            this.examplePictureToolStripMenuItem.Click += new System.EventHandler(this.examplePictureToolStripMenuItem_Click);
             // 
             // toolStrip1
             // 
@@ -236,6 +254,8 @@ namespace SketchAssistant
         private System.Windows.Forms.ToolStripButton canvasButton;
         private System.Windows.Forms.ToolStripButton drawButton;
         private System.Windows.Forms.ToolStripButton deleteButton;
+        private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem examplePictureToolStripMenuItem;
     }
 }
 
