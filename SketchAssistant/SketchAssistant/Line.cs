@@ -53,6 +53,11 @@ namespace SketchAssistant
             return linePoints;
         }
 
+        public int GetID()
+        {
+            return identifier;
+        }
+
         /// <summary>
         /// A function that takes a Graphics element and returns it with
         /// the line drawn on it.
