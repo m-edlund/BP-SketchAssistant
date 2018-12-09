@@ -9,8 +9,17 @@ namespace SketchAssistant
 {
     public class Line
     {
+        /// <summary>
+        /// list saving all the points of the line in the order of the path from start to end point
+        /// </summary>
         private List<Point> linePoints;
+        /// <summary>
+        /// unique identifier of this Line object
+        /// </summary>
         private int identifier;
+        /// <summary>
+        /// flag showing if this is only a temporary line
+        /// </summary>
         private bool isTemporary;
 
         /// <summary>

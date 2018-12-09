@@ -8,7 +8,11 @@ namespace SketchAssistant
 {
     class FileImporterException : Exception
     {
+        /// <summary>
+        /// the clean and formatted message to show to the user
+        /// </summary>
         String showMessage;
+
         public FileImporterException(String message, String hint, int lineNumber) : base (message)
         {
             showMessage = "Could not import file:\n\n" + message + (hint == null ? "" : "\n(Hint: " + hint + ")") + (lineNumber == -1 ? "" : "\n\n-line: " + lineNumber );

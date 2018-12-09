@@ -26,21 +26,27 @@ namespace SketchAssistant
         /**********************************/
         /*** CLASS VARIABLES START HERE ***/
         /**********************************/
-        
-        //Different Program States
+
+        /// <summary>
+        /// Different Program States
+        /// </summary>
         public enum ProgramState
         {
             Idle,
             Draw,
             Delete
         }
-        //Current Program State
+        /// <summary>
+        /// Current Program State
+        /// </summary>
         private ProgramState currentState;
         /// <summary>
         /// instance of FileImporter to handle drawing imports
         /// </summary>
         private FileImporter fileImporter;
-        //Dialog to select a file.
+        /// <summary>
+        /// Dialog to select a file.
+        /// </summary>
         OpenFileDialog openFileDialogLeft = new OpenFileDialog();
         /// <summary>
         /// Image loaded on the left
@@ -50,28 +56,50 @@ namespace SketchAssistant
         /// the graphic shown in the left window, represented as a list of polylines
         /// </summary>
         private List<Line> templatePicture;
-        //Image on the right
+        /// <summary>
+        /// Image on the right
+        /// </summary>
         Image rightImage = null;
-        //Current Line being Drawn
+        /// <summary>
+        /// Current Line being Drawn
+        /// </summary>
         List<Point> currentLine;
-        //All Lines in the current session
+        /// <summary>
+        /// All Lines in the current session
+        /// </summary>
         List<Tuple<bool,Line>> lineList = new List<Tuple<bool, Line>>();
-        //Whether the Mouse is currently pressed in the rightPictureBox
+        /// <summary>
+        /// Whether the Mouse is currently pressed in the rightPictureBox
+        /// </summary>
         bool mousePressed = false;
-        //The Position of the Cursor in the right picture box
+        /// <summary>
+        /// The Position of the Cursor in the right picture box
+        /// </summary>
         Point currentCursorPosition;
-        //The Previous Cursor Position in the right picture box
+        /// <summary>
+        /// The Previous Cursor Position in the right picture box
+        /// </summary>
         Point previousCursorPosition;
-        //Queue for the cursorPositions
+        /// <summary>
+        /// Queue for the cursorPositions
+        /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
-        //The graphic representation of the right image
+        /// <summary>
+        /// The graphic representation of the right image
+        /// </summary>
         Graphics graph = null;
-        //Deletion Matrixes for checking postions of lines in the image
+        /// <summary>
+        /// Deletion Matrixes for checking postions of lines in the image
+        /// </summary>
         bool[,] isFilledMatrix;
         HashSet<int>[,] linesMatrix;
-        //Size of deletion area
+        /// <summary>
+        /// Size of deletion area
+        /// </summary>
         uint deletionSize = 2;
-        //History of Actions
+        /// <summary>
+        /// History of Actions
+        /// </summary>
         ActionHistory historyOfActions;
 
         /******************************************/
