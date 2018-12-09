@@ -258,7 +258,7 @@ namespace SketchAssistant
         //get current Mouse positon within the right picture box
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
-            currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
+            currentCursorPosition = ConvertCoordinatesRight(new Point(e.X, e.Y));
         }
 
         //hold left mouse button to draw.
@@ -296,7 +296,7 @@ namespace SketchAssistant
                     "Attention", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
                 {
                     historyOfActions = new ActionHistory(lastActionTakenLabel);
-                    DrawEmptyCanvas();
+                    DrawEmptyCanvasRight();
                     //The following lines cannot be in DrawEmptyCanvas()
                     isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                     linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
@@ -306,7 +306,7 @@ namespace SketchAssistant
             else
             {
                 historyOfActions = new ActionHistory(lastActionTakenLabel);
-                DrawEmptyCanvas();
+                DrawEmptyCanvasRight();
                 //The following lines cannot be in DrawEmptyCanvas()
                 isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
@@ -354,7 +354,7 @@ namespace SketchAssistant
         /// <summary>
         /// Creates an empty Canvas
         /// </summary>
-        private void DrawEmptyCanvas()
+        private void DrawEmptyCanvasRight()
         {
             if (leftImage == null)
             {
@@ -401,7 +401,7 @@ namespace SketchAssistant
         /// </summary>
         private void RedrawRightImage()
         {
-            DrawEmptyCanvas();
+            DrawEmptyCanvasRight();
             foreach (Tuple<bool, Line> lineBoolTuple in lineList)
             {
                 if (lineBoolTuple.Item1)
@@ -482,7 +482,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="">The position of the mouse cursor</param>
         /// <returns>The real coordinates of the mouse cursor on the image</returns>
-        private Point ConvertCoordinates(Point cursorPosition)
+        private Point ConvertCoordinatesRight(Point cursorPosition)
         {
             Point realCoordinates = new Point(5,3);
             if(pictureBoxRight.Image == null)
