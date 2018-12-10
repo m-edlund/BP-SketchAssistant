@@ -320,18 +320,22 @@ namespace SketchAssistant
         //add a Point on every tick to the Drawpath
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
+            if(cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
+            else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
-            previousCursorPosition = cursorPositions.Dequeue();
+            //Drawing
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
+                rightGraph = Graphics.FromImage(rightImage);
                 currentLine.Add(currentCursorPosition);
                 Line drawline = new Line(currentLine);
                 drawline.DrawLine(rightGraph);
                 pictureBoxRight.Image = rightImage;
             }
+            //Deleting
             if (currentState.Equals(ProgramState.Delete) && mousePressed)
             {
-                List<Point> uncheckedPoints = Line.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
                 foreach (Point currPoint in uncheckedPoints)
                 {
                     HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
@@ -354,26 +358,32 @@ namespace SketchAssistant
         /***********************************/
 
         /// <summary>
+        /// A function that returns a white canvas for a given width and height.
+        /// </summary>
+        /// <param name="width">The width of the canvas in pixels</param>
+        /// <param name="height">The height of the canvas in pixels</param>
+        /// <returns>The new canvas</returns>
+        private Image GetEmptyCanvas(int width, int height)
+        {
+            Image image = new Bitmap(width, height);
+            Graphics graph = Graphics.FromImage(image);
+            graph.FillRectangle(Brushes.White, 0, 0, width + 10, height + 10);
+            return image;
+        }
+
+        /// <summary>
         /// Creates an empty Canvas
         /// </summary>
         private void DrawEmptyCanvasRight()
         {
             if (leftImage == null)
             {
-                rightImage = new Bitmap(pictureBoxRight.Width, pictureBoxRight.Height);
-                rightGraph = Graphics.FromImage(rightImage);
-                rightGraph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
-                pictureBoxRight.Image = rightImage;
+                SetAndRefreshRightImage(GetEmptyCanvas(pictureBoxRight.Width, pictureBoxRight.Height));
             }
             else
             {
-                rightImage = new Bitmap(leftImage.Width, leftImage.Height);
-                rightGraph = Graphics.FromImage(rightImage);
-                rightGraph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
-                pictureBoxRight.Image = rightImage;
+                SetAndRefreshRightImage(GetEmptyCanvas(leftImage.Width, leftImage.Height));
             }
-            this.Refresh();
-            pictureBoxRight.Refresh();
         }
 
         /// <summary>
@@ -385,17 +395,12 @@ namespace SketchAssistant
         {
             if (width == 0)
             {
-                leftImage = new Bitmap(pictureBoxLeft.Width, pictureBoxLeft.Height);
+                SetAndRefreshLeftImage(GetEmptyCanvas(pictureBoxLeft.Width, pictureBoxLeft.Height));
             }
             else
             {
-                leftImage = new Bitmap(width, height);
+                SetAndRefreshLeftImage(GetEmptyCanvas(width, height));
             }
-            Graphics.FromImage(leftImage).FillRectangle(Brushes.White, 0, 0, pictureBoxLeft.Width + 10, pictureBoxLeft.Height + 10);
-            pictureBoxLeft.Image = leftImage;
-            
-            this.Refresh();
-            pictureBoxLeft.Refresh();
         }
 
         /// <summary>
@@ -403,15 +408,38 @@ namespace SketchAssistant
         /// </summary>
         private void RedrawRightImage()
         {
-            DrawEmptyCanvasRight();
+            var workingCanvas = GetEmptyCanvas(rightImage.Width, rightImage.Height);
+            var workingGraph = Graphics.FromImage(workingCanvas);
             foreach (Tuple<bool, Line> lineBoolTuple in rightLineList)
             {
                 if (lineBoolTuple.Item1)
                 {
-                    lineBoolTuple.Item2.DrawLine(rightGraph);
+                    lineBoolTuple.Item2.DrawLine(workingGraph);
                 }
             }
+            SetAndRefreshRightImage(workingCanvas);
+        }
+
+        /// <summary>
+        /// A function to set rightImage and to refresh the respective PictureBox with it.
+        /// </summary>
+        /// <param name="image">The new Image</param>
+        private void SetAndRefreshRightImage(Image image)
+        {
+            rightImage = image;
+            pictureBoxRight.Image = rightImage;
             pictureBoxRight.Refresh();
+        }
+
+        /// <summary>
+        /// A function to set leftImage and to refresh the respective PictureBox with it.
+        /// </summary>
+        /// <param name="image">The new Image</param>
+        private void SetAndRefreshLeftImage(Image image)
+        {
+            leftImage = image;
+            pictureBoxLeft.Image = leftImage;
+            pictureBoxLeft.Refresh();
         }
 
         /// <summary>
@@ -596,6 +624,16 @@ namespace SketchAssistant
         {
             MessageBox.Show(message);
         }
+        
+        private void DisplayPointsInRightCanvas(Point p0, Point p1)
+        {
+
+
+        }
+
+        /********************************************/
+        /*** TESTING RELATED FUNCTIONS START HERE ***/
+        /********************************************/
 
         /// <summary>
         /// returns all instance variables in the order of their definition for testing
@@ -617,7 +655,5 @@ namespace SketchAssistant
             DrawEmptyCanvasLeft(width, height);
             BindAndDrawLeftImage(newImage);
         }
-
-
     }
 }
