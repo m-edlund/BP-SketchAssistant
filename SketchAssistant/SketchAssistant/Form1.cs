@@ -101,11 +101,23 @@ namespace SketchAssistant
         /// <summary>
         /// Size of deletion area
         /// </summary>
-        uint deletionSize = 2;
+        int deletionRadius = 2;
         /// <summary>
         /// History of Actions
         /// </summary>
         ActionHistory historyOfActions;
+        /// <summary>
+        /// A boolean value indicating whether or not the redraw mode is active.
+        /// </summary>
+        bool redrawModeActive = false;
+        /// <summary>
+        /// A tuple containing the areas around the end points of the current line in the left graphic.
+        /// </summary>
+        Tuple<HashSet<Point>, HashSet<Point>> currentLineEndings;
+        /// <summary>
+        /// Size of areas marking endpoints of lines in the redraw mode.
+        /// </summary>
+        int markerRadius = 10;
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -123,6 +135,7 @@ namespace SketchAssistant
         private void Form1_Resize(object sender, System.EventArgs e)
         {
             this.Refresh();
+            UpdateSizes();
         }
         
         //Load button, will open an OpenFileDialog
@@ -145,20 +158,33 @@ namespace SketchAssistant
         /// </summary>
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            if (CheckSavedStatus())
             {
-                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
-                try
+                openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
-                    DrawEmptyCanvasLeft(values.Item1, values.Item2);
-                    BindAndDrawLeftImage(values.Item3);
-                    this.Refresh();
-                }
-                catch(FileImporterException ex)
-                {
-                    ShowInfoMessage(ex.ToString());
+                    toolStripLoadStatus.Text = openFileDialog.SafeFileName;
+                    try
+                    {
+                        (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
+                        DrawEmptyCanvasLeft(values.Item1, values.Item2);
+                        BindAndDrawLeftImage(values.Item3);
+
+                        //Match The right canvas to the left
+                        historyOfActions = new ActionHistory(lastActionTakenLabel);
+                        DrawEmptyCanvasRight();
+                        isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
+                        linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
+                        rightLineList = new List<Tuple<bool, Line>>();
+                        //Show the start and ends of lines
+                        CalculateAndDisplayStartAndEnd(leftLineList[0], markerRadius);
+
+                        this.Refresh();
+                    }
+                    catch (FileImporterException ex)
+                    {
+                        ShowInfoMessage(ex.ToString());
+                    }
                 }
             }
         }
@@ -295,20 +321,7 @@ namespace SketchAssistant
         //If there is no image loaded the canvas will be the size of the right picture box
         private void canvasButton_Click(object sender, EventArgs e)
         {
-            if (!historyOfActions.IsEmpty())
-            {
-                if (MessageBox.Show("You have unsaved changes, creating a new canvas will discard these.", 
-                    "Attention", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
-                {
-                    historyOfActions = new ActionHistory(lastActionTakenLabel);
-                    DrawEmptyCanvasRight();
-                    //The following lines cannot be in DrawEmptyCanvas()
-                    isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
-                    linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                    rightLineList = new List<Tuple<bool, Line>>();
-                }
-            }
-            else
+            if (CheckSavedStatus())
             {
                 historyOfActions = new ActionHistory(lastActionTakenLabel);
                 DrawEmptyCanvasRight();
@@ -318,6 +331,7 @@ namespace SketchAssistant
                 rightLineList = new List<Tuple<bool, Line>>();
             }
             UpdateButtonStatus();
+            UpdateSizes();
         }
 
         //add a Point on every tick to the Drawpath
@@ -341,7 +355,7 @@ namespace SketchAssistant
                 List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
                 foreach (Point currPoint in uncheckedPoints)
                 {
-                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
+                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionRadius);
                     if (linesToDelete.Count > 0)
                     {
                         historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
@@ -578,28 +592,15 @@ namespace SketchAssistant
         /// <param name="p">The point around which to check.</param>
         /// <param name="range">The range around the point. If range is 0, only the point is checked.</param>
         /// <returns>A List of all lines.</returns>
-        private HashSet<int> CheckDeletionMatrixesAroundPoint(Point p, uint range)
+        private HashSet<int> CheckDeletionMatrixesAroundPoint(Point p, int range)
         {
             HashSet<int> returnSet = new HashSet<int>();
 
-            if (p.X >= 0 && p.Y >= 0 && p.X < rightImage.Width && p.Y < rightImage.Height)
+            foreach(Point pnt in GeometryCalculator.FilledCircleAlgorithm(p, (int)range))
             {
-                if (isFilledMatrix[p.X, p.Y])
+                if (isFilledMatrix[pnt.X, pnt.Y])
                 {
-                    returnSet.UnionWith(linesMatrix[p.X, p.Y]);
-                }
-            }
-            for (int x_mod = (int)range*(-1); x_mod < range; x_mod++)
-            {
-                for (int y_mod = (int)range * (-1); y_mod < range; y_mod++)
-                {
-                    if (p.X + x_mod >= 0 && p.Y + y_mod >= 0 && p.X + x_mod < rightImage.Width && p.Y + y_mod < rightImage.Height)
-                    {
-                        if (isFilledMatrix[p.X + x_mod, p.Y + y_mod])
-                        {
-                            returnSet.UnionWith(linesMatrix[p.X + x_mod, p.Y + y_mod]);
-                        }
-                    }
+                    returnSet.UnionWith(linesMatrix[pnt.X, pnt.Y]);
                 }
             }
             return returnSet;
@@ -617,8 +618,6 @@ namespace SketchAssistant
             {
                 l.DrawLine(Graphics.FromImage(leftImage));
             }
-            //temporary for testing.
-            //DisplayStartAndEnd(leftLineList[0], 30);
         }
 
         /// <summary>
@@ -631,20 +630,51 @@ namespace SketchAssistant
         }
         
         /// <summary>
-        /// Will display the start and endpoints of the given line on the right canvas.
+        /// Will calculate and mark the start and endpoints of the given line on the right canvas.
         /// </summary>
         /// <param name="line">The line.</param>
         /// <param name="size">The size of the circle with which the endpoints of the line are marked.</param>
-        private void DisplayStartAndEnd(Line line, int size)
+        private void CalculateAndDisplayStartAndEnd(Line line, int size)
         {
             var circle0 = GeometryCalculator.FilledCircleAlgorithm(line.GetStartPoint(), size);
-            var circle1 = GeometryCalculator.FilledCircleAlgorithm(line.GetEndPoint(), size);
+            var circle1 = GeometryCalculator.BresenhamCircleAlgorithm(line.GetEndPoint(), size);
+            currentLineEndings = new Tuple<HashSet<Point>, HashSet<Point>>(circle0, circle1);
 
             rightGraph = Graphics.FromImage(rightImage);
             foreach(Point p in circle0) { rightGraph.FillRectangle(Brushes.Red, p.X, p.Y, 1, 1); }
             foreach(Point p in circle1) { rightGraph.FillRectangle(Brushes.Blue, p.X, p.Y, 1, 1); }
 
             SetAndRefreshRightImage(rightImage);
+        }
+
+        /// <summary>
+        /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
+        /// </summary>
+        private void UpdateSizes()
+        {
+            if (rightImage != null)
+            {
+                double widthProp = pictureBoxRight.Width / rightImage.Width;
+                double heightProp = pictureBoxRight.Height / rightImage.Height;
+                double scaling = (widthProp + heightProp) / 2;
+                markerRadius = (int)(10 / scaling);
+                deletionRadius = (int)(5 / scaling);
+            }
+        }
+
+        /// <summary>
+        /// Checks if there is unsaved progess, and warns the user. Returns True if it safe to continue.
+        /// </summary>
+        /// <returns>true if there is none, or the user wishes to continue without saving.
+        /// false if there is progress, and the user doesn't wish to continue.</returns>
+        private bool CheckSavedStatus()
+        {
+            if (!historyOfActions.IsEmpty())
+            {
+                return (MessageBox.Show("You have unsaved changes, do you wish to continue?",
+                    "Attention", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
+            }
+            return true;
         }
 
         /********************************************/
@@ -654,10 +684,17 @@ namespace SketchAssistant
         /// <summary>
         /// returns all instance variables in the order of their definition for testing
         /// </summary>
-        /// <returns>all instance variables in the order of their definition</returns>
-        public Object[]/*(ProgramState, FileImporter, OpenFileDialog, Image, List<Line>, Image, List<Point>, List<Tuple<bool, Line>>, bool, Point, Point, Queue<Point>, Graphics, bool[,], HashSet<int>[,], uint, ActionHistory)*/ GetAllVariables()
+        /// <returns>A list of tuples containing names of variables and the variable themselves. 
+        /// Cast according to the Type definitions in the class variable section.</returns>
+        public List<Tuple<String, Object>>GetAllVariables()
         {
-            return new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList, rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition, cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionSize, historyOfActions };
+            var objArr = new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList, rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition, cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionRadius, historyOfActions };
+            var varArr = new List<Tuple<String, Object>>();
+            foreach(Object obj in objArr)
+            {
+                varArr.Add(new Tuple<string, object>(nameof(obj), obj));
+            }
+            return varArr;
         }
 
         /// <summary>

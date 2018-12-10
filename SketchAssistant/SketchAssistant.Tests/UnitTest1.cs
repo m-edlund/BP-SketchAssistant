@@ -367,7 +367,7 @@ namespace Tests
         private List<Line> GetLeftImage(Form1 program)
         {
             //cast is save as long as Form1#GetAllVariables() is conform to its contract
-            return (List<Line>) program.GetAllVariables()[4];
+            return (List<Line>)program.GetAllVariables().Find(x => x.Item1.Equals("leftLineList")).Item2;
         }
     }
 }
