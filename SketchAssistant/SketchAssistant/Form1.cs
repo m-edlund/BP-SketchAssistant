@@ -91,9 +91,12 @@ namespace SketchAssistant
         /// </summary>
         Graphics rightGraph = null;
         /// <summary>
-        /// Deletion Matrixes for checking postions of lines in the image
+        /// Lookup Matrix for checking postions of lines in the image
         /// </summary>
         bool[,] isFilledMatrix;
+        /// <summary>
+        /// Lookup Matrix for getting line ids at a certain postions of the image
+        /// </summary>
         HashSet<int>[,] linesMatrix;
         /// <summary>
         /// Size of deletion area
@@ -614,6 +617,8 @@ namespace SketchAssistant
             {
                 l.DrawLine(Graphics.FromImage(leftImage));
             }
+            //temporary for testing.
+            //DisplayStartAndEnd(leftLineList[0], 30);
         }
 
         /// <summary>
@@ -625,10 +630,21 @@ namespace SketchAssistant
             MessageBox.Show(message);
         }
         
-        private void DisplayPointsInRightCanvas(Point p0, Point p1)
+        /// <summary>
+        /// Will display the start and endpoints of the given line on the right canvas.
+        /// </summary>
+        /// <param name="line">The line.</param>
+        /// <param name="size">The size of the circle with which the endpoints of the line are marked.</param>
+        private void DisplayStartAndEnd(Line line, int size)
         {
+            var circle0 = GeometryCalculator.FilledCircleAlgorithm(line.GetStartPoint(), size);
+            var circle1 = GeometryCalculator.FilledCircleAlgorithm(line.GetEndPoint(), size);
 
+            rightGraph = Graphics.FromImage(rightImage);
+            foreach(Point p in circle0) { rightGraph.FillRectangle(Brushes.Red, p.X, p.Y, 1, 1); }
+            foreach(Point p in circle1) { rightGraph.FillRectangle(Brushes.Blue, p.X, p.Y, 1, 1); }
 
+            SetAndRefreshRightImage(rightImage);
         }
 
         /********************************************/

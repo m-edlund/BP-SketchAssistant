@@ -75,10 +75,9 @@ namespace SketchAssistant
         /// <returns>The given Graphics element with the additional line</returns>
         public Graphics DrawLine(Graphics canvas)
         {
-            Pen thePen = new Pen(Color.Black);
             for(int i = 0; i < linePoints.Count - 1 ; i++)
             {
-                canvas.DrawLine(thePen, linePoints[i], linePoints[i + 1]);
+                canvas.DrawLine(Pens.Black, linePoints[i], linePoints[i + 1]);
             }
             //If there is only one point
             if(linePoints.Count == 1){ canvas.FillRectangle(Brushes.Black, linePoints[0].X, linePoints[0].Y, 1, 1); }
