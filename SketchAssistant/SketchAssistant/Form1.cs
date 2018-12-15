@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
+using System.IO;
+using System.Text;
 
 
 // This is the code for your desktop app.
@@ -103,12 +106,16 @@ namespace SketchAssistant
         /// History of Actions
         /// </summary>
         ActionHistory historyOfActions;
+		/// <summary>
+		///Dialog to save a file
+		/// </summary>
+		SaveFileDialog saveFileDialogRight = new SaveFileDialog();
 
-        /******************************************/
-        /*** FORM SPECIFIC FUNCTIONS START HERE ***/
-        /******************************************/
+		/******************************************/
+		/*** FORM SPECIFIC FUNCTIONS START HERE ***/
+		/******************************************/
 
-        private void Form1_Load(object sender, EventArgs e)
+		private void Form1_Load(object sender, EventArgs e)
         {
             currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
@@ -349,14 +356,104 @@ namespace SketchAssistant
             }
         }
 
-        /***********************************/
-        /*** HELPER FUNCTIONS START HERE ***/
-        /***********************************/
 
-        /// <summary>
-        /// Creates an empty Canvas
-        /// </summary>
-        private void DrawEmptyCanvasRight()
+		//Save button, will open an SaveFileDialog
+		private void saveToolStripMenuItem_Click_1(object sender, EventArgs e)
+		{
+			if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
+			{
+				StreamWriter sw = new StreamWriter(File.OpenWrite(saveFileDialogRight.FileName));
+				sw.Write("hello");
+				sw.Close();
+			}
+			
+			//if (rightImage != null)
+			//{
+			//	saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "Vector Graphics|*.txt|" + "All files (*.*)|*.*";
+			//	ImageFormat format = ImageFormat.Jpeg;
+			//	if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
+			//	{
+
+			//		switch (saveFileDialogRight.Filter)
+			//		{
+			//			case ".txt":
+							
+
+
+
+
+
+
+
+			//			/*String newReturnString = createSvgTxt();
+			//			File.WriteAllText(saveFileDialogRight.FileName, newReturnString);
+			//			return;
+			//			*/
+
+			//			/*sw.WriteLine(String.Format("<svg viewBox = \"0 0 {0} {1}\" xmlns = \"http://www.w3.org/2000/svg\">", rightImage.Width, rightImage.Height));
+			//			foreach (Tuple<bool, Line> lineTuple in rightLineList)
+			//			{
+			//				if (lineTuple.Item1 == true)
+			//				{
+			//						sw.WriteLine("\n" + "<line x1 = \"{0}\" y1 = \"{1}\" x2 = \"{2}\" y2 = \"{3}\" stroke = \"black\">",
+			//														lineTuple.Item2.GetStartPoint().X, lineTuple.Item2.GetStartPoint().Y, lineTuple.Item2.GetEndPoint().X, lineTuple.Item2.GetEndPoint().X);
+			//					//sw.WriteLine("1");
+			//				}
+			//			}*/
+
+
+			//			/*using (FileStream fs = File.Create(saveFileDialogRight.FileName))
+			//			{
+			//				fs.Write(Encoding.UTF8.GetBytes(String.Format("<svg viewBox = \"0 0 {0} {1}\" xmlns = \"http://www.w3.org/2000/svg\">", rightImage.Width, rightImage.Height)),0,int.MaxValue);
+			//				foreach (Tuple<bool, Line> lineTuple in rightLineList)
+			//				{
+			//					if (lineTuple.Item1 == true)
+			//					{
+			//						fs.Write(Encoding.UTF8.GetBytes(String.Format("\n" + "<line x1 = \"{0}\" y1 = \"{1}\" x2 = \"{2}\" y2 = \"{3}\" stroke = \"black\">",
+			//														lineTuple.Item2.GetStartPoint().X, lineTuple.Item2.GetStartPoint().Y, lineTuple.Item2.GetEndPoint().X, lineTuple.Item2.GetEndPoint().X)),0,int.MaxValue);
+			//					}
+			//				}
+			//			}
+			//			return;
+			//			*/
+
+
+			//			case ".png":
+
+			//				format = ImageFormat.Png;
+			//				pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+			//				break;
+
+			//			case ".bmp":
+
+			//				format = ImageFormat.Bmp;
+			//				pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+			//				break;
+
+			//			default:
+			//				pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+			//				break;
+			//		}
+
+
+			//	}
+			//}
+			//else
+			//{
+			//	MessageBox.Show("The right picture box can't be empty");
+			//}
+
+
+		}
+
+		/***********************************/
+		/*** HELPER FUNCTIONS START HERE ***/
+		/***********************************/
+
+		/// <summary>
+		/// Creates an empty Canvas
+		/// </summary>
+		private void DrawEmptyCanvasRight()
         {
             if (leftImage == null)
             {
@@ -618,6 +715,20 @@ namespace SketchAssistant
             BindAndDrawLeftImage(newImage);
         }
 
+		private String createSvgTxt()
+		{
+			String newString = String.Format("<svg viewBox = \"0 0 {0} {1}\" xmlns = \"http://www.w3.org/2000/svg\">", rightImage.Width, rightImage.Height);
+			foreach (Tuple<bool, Line> lineTuple in rightLineList)
+			{
+				if (lineTuple.Item1 == true)
+				{
+					String nextLine = String.Format("\n" + "<line x1 = \"{0}\" y1 = \"{1}\" x2 = \"{2}\" y2 = \"{3}\" stroke = \"black\">",
+													lineTuple.Item2.GetStartPoint().X, lineTuple.Item2.GetStartPoint().Y, lineTuple.Item2.GetEndPoint().X, lineTuple.Item2.GetEndPoint().X);
+					newString += nextLine;
+				}
+			}
+			return newString;
+		}
 
-    }
+	}
 }
