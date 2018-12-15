@@ -360,88 +360,48 @@ namespace SketchAssistant
 		//Save button, will open an SaveFileDialog
 		private void saveToolStripMenuItem_Click_1(object sender, EventArgs e)
 		{
-			if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
+			if (rightImage != null)
 			{
-				StreamWriter sw = new StreamWriter(File.OpenWrite(saveFileDialogRight.FileName));
-				sw.Write("hello");
-				sw.Close();
+				saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "Vector Graphics|*.svg|" + "All files (*.*)|*.*";
+				ImageFormat format = ImageFormat.Jpeg;
+				if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
+				{
+
+					switch (saveFileDialogRight.Filter)
+					{
+						case ".svg":
+							String newReturnString = createSvgTxt();
+							StreamWriter sw = new StreamWriter(File.OpenWrite(saveFileDialogRight.FileName));
+							sw.Write("test");
+							sw.Close();
+							break;
+
+
+						case ".png":
+
+							format = ImageFormat.Png;
+							pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+							break;
+
+						case ".bmp":
+
+							format = ImageFormat.Bmp;
+							pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+							break;
+
+						default:
+							pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
+							break;
+					}
+
+
+				}
 			}
-			
-			//if (rightImage != null)
-			//{
-			//	saveFileDialogRight.Filter = "Image|*.jpg;*.png;*.jpeg|" + "Vector Graphics|*.txt|" + "All files (*.*)|*.*";
-			//	ImageFormat format = ImageFormat.Jpeg;
-			//	if (saveFileDialogRight.ShowDialog() == DialogResult.OK)
-			//	{
+			else
+			{
+				MessageBox.Show("The right picture box can't be empty");
+			}
 
-			//		switch (saveFileDialogRight.Filter)
-			//		{
-			//			case ".txt":
-							
-
-
-
-
-
-
-
-			//			/*String newReturnString = createSvgTxt();
-			//			File.WriteAllText(saveFileDialogRight.FileName, newReturnString);
-			//			return;
-			//			*/
-
-			//			/*sw.WriteLine(String.Format("<svg viewBox = \"0 0 {0} {1}\" xmlns = \"http://www.w3.org/2000/svg\">", rightImage.Width, rightImage.Height));
-			//			foreach (Tuple<bool, Line> lineTuple in rightLineList)
-			//			{
-			//				if (lineTuple.Item1 == true)
-			//				{
-			//						sw.WriteLine("\n" + "<line x1 = \"{0}\" y1 = \"{1}\" x2 = \"{2}\" y2 = \"{3}\" stroke = \"black\">",
-			//														lineTuple.Item2.GetStartPoint().X, lineTuple.Item2.GetStartPoint().Y, lineTuple.Item2.GetEndPoint().X, lineTuple.Item2.GetEndPoint().X);
-			//					//sw.WriteLine("1");
-			//				}
-			//			}*/
-
-
-			//			/*using (FileStream fs = File.Create(saveFileDialogRight.FileName))
-			//			{
-			//				fs.Write(Encoding.UTF8.GetBytes(String.Format("<svg viewBox = \"0 0 {0} {1}\" xmlns = \"http://www.w3.org/2000/svg\">", rightImage.Width, rightImage.Height)),0,int.MaxValue);
-			//				foreach (Tuple<bool, Line> lineTuple in rightLineList)
-			//				{
-			//					if (lineTuple.Item1 == true)
-			//					{
-			//						fs.Write(Encoding.UTF8.GetBytes(String.Format("\n" + "<line x1 = \"{0}\" y1 = \"{1}\" x2 = \"{2}\" y2 = \"{3}\" stroke = \"black\">",
-			//														lineTuple.Item2.GetStartPoint().X, lineTuple.Item2.GetStartPoint().Y, lineTuple.Item2.GetEndPoint().X, lineTuple.Item2.GetEndPoint().X)),0,int.MaxValue);
-			//					}
-			//				}
-			//			}
-			//			return;
-			//			*/
-
-
-			//			case ".png":
-
-			//				format = ImageFormat.Png;
-			//				pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
-			//				break;
-
-			//			case ".bmp":
-
-			//				format = ImageFormat.Bmp;
-			//				pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
-			//				break;
-
-			//			default:
-			//				pictureBoxRight.Image.Save(saveFileDialogRight.FileName, format);
-			//				break;
-			//		}
-
-
-			//	}
-			//}
-			//else
-			//{
-			//	MessageBox.Show("The right picture box can't be empty");
-			//}
 
 
 		}
