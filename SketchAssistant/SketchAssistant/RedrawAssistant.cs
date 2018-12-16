@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,10 @@ namespace SketchAssistant
         /// </summary>
         List<Tuple<HashSet<Point>, HashSet<Point>>> startAndEndPoints;
         /// <summary>
+        /// A Hashtable for quick lookup for a line id and its respective tuple in linesToRedraw
+        /// </summary>
+        Hashtable redrawnLineLookupTable;
+        /// <summary>
         /// The position of the line currently being redrawn in the startAndEndPoints 
         /// & linesToRedraw lists. -1 if no line is being redrawn.
         /// </summary>
@@ -27,10 +32,6 @@ namespace SketchAssistant
         /// Whether or not the user is currently redrawing a line.
         /// </summary>
         bool currentlyRedrawing;
-        /// <summary>
-        /// The id of the Line currently being redrawn
-        /// </summary>
-        int redrawingID;
         /// <summary>
         /// Whether or not the RedrawAssistant is active.
         /// </summary>
@@ -59,6 +60,7 @@ namespace SketchAssistant
             isActive = true;
             currentlyRedrawing = false;
             lineBeingRedrawn = -1;
+            redrawnLineLookupTable = new Hashtable();
             foreach (Line line in redrawItem)
             {
                 linesToRedraw.Add(new Tuple<Line, bool, int>(line, false, -1));
@@ -68,10 +70,9 @@ namespace SketchAssistant
         /// <summary>
         /// The main functionality of the RedrawAssistant, which updates the Assistant according to the inputs given.
         /// </summary>
-        /// <param name="currentPoint"></param>
-        /// <param name="rightLines"></param>
-        /// <param name="currLineID"></param>
-        /// <param name="markerRad"></param>
+        /// <param name="currentPoint">The current position of the cursor, as a point</param>
+        /// <param name="rightLines">The lines on the right canvas</param>
+        /// <param name="currLineID">The id of the currently finished line, -1 if no line was finished.</param>
         /// <returns></returns>
         public List<HashSet<Point>> Tick(Point currentPoint, List<Tuple<bool, Line>> rightLines, int currLineID)
         {
@@ -79,7 +80,7 @@ namespace SketchAssistant
             if (!isActive) { return returnList; }
             Tuple<Line, bool, int> newLineTuple = null;
             var returnAllStartPoints = true;
-
+            CheckForUndrawnLines(rightLines);
             // The current Endpoint has been intersected, and a line was finished here
             if (currentlyRedrawing && startAndEndPoints[lineBeingRedrawn].Item2.Contains(currentPoint) && currLineID != -1)
             {
@@ -124,6 +125,7 @@ namespace SketchAssistant
                         && redrawLine.GetStartPoint().Equals(newLine.GetStartPoint())
                         && redrawLine.GetEndPoint().Equals(newLine.GetEndPoint()))
                     {
+                        redrawnLineLookupTable.Add(currLineID, i);
                         linesToRedraw[i] = newLineTuple;
                     }
                 }
@@ -144,6 +146,36 @@ namespace SketchAssistant
             return returnList;
         }
 
+        /// <summary>
+        /// A helping function which checks for lines where previously redrawn, but were removed from the image again.
+        /// </summary>
+        /// <param name="rightLines">The lines in the right image.</param>
+        private void CheckForUndrawnLines(List<Tuple<bool, Line>> rightLines)
+        {
+            for (int i = 0; i < rightLines.Count; i++)
+            {
+                if (redrawnLineLookupTable.ContainsKey(rightLines[i].Item2.GetID()))
+                {
+                    if (!rightLines[i].Item1)
+                    {
+                        int listPos = (int)redrawnLineLookupTable[rightLines[i].Item2.GetID()];
+                        var oldTup = linesToRedraw[listPos];
+                        linesToRedraw[listPos] = new Tuple<Line, bool, int>(oldTup.Item1, false, -1);
+                    }
+                    else
+                    {
+                        int listPos = (int)redrawnLineLookupTable[rightLines[i].Item2.GetID()];
+                        var oldTup = linesToRedraw[listPos];
+                        linesToRedraw[listPos] = new Tuple<Line, bool, int>(oldTup.Item1, true, rightLines[i].Item2.GetID());
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// A function to set the marker radius for the markers returned by the RedrawAssistant
+        /// </summary>
+        /// <param name="markerRad">The Radius of the markers.</param>
         public void SetMarkerRadius(int markerRad)
         {
             markerRadius = markerRad;

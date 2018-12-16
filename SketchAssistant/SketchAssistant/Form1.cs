@@ -132,7 +132,9 @@ namespace SketchAssistant
             UpdateButtonStatus();
         }
 
-        //Resize Function connected to the form resize event, will refresh the form when it is resized
+        /// <summary>
+        /// Resize Function connected to the form resize event, will refresh the form when it is resized
+        /// </summary>
         private void Form1_Resize(object sender, System.EventArgs e)
         {
             this.Refresh();
@@ -193,7 +195,9 @@ namespace SketchAssistant
             UpdateButtonStatus();
         }
 
-        //Changes the state of the program to drawing
+        /// <summary>
+        /// Changes the state of the program to drawing
+        /// </summary>
         private void drawButton_Click(object sender, EventArgs e)
         {
             if(rightImage != null)
@@ -210,7 +214,9 @@ namespace SketchAssistant
             UpdateButtonStatus();
         }
 
-        //Changes the state of the program to deletion
+        /// <summary>
+        /// Changes the state of the program to deletion
+        /// </summary>
         private void deleteButton_Click(object sender, EventArgs e)
         {
             if (rightImage != null)
@@ -227,7 +233,9 @@ namespace SketchAssistant
             UpdateButtonStatus();
         }
 
-        //Undo an action
+        /// <summary>
+        /// Undo an Action.
+        /// </summary>
         private void undoButton_Click(object sender, EventArgs e)
         {
             if (historyOfActions.CanUndo())
@@ -247,12 +255,16 @@ namespace SketchAssistant
                     default:
                         break;
                 }
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                RedrawRightImage();
             }
             historyOfActions.MoveAction(true);
             UpdateButtonStatus();
         }
 
-        //Redo an action
+        /// <summary>
+        /// Redo an Action.
+        /// </summary>
         private void redoButton_Click(object sender, EventArgs e)
         {
             if (historyOfActions.CanRedo())
@@ -273,11 +285,15 @@ namespace SketchAssistant
                     default:
                         break;
                 }
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                RedrawRightImage();
             }
             UpdateButtonStatus();
         }
 
-        //Detect Keyboard Shortcuts
+        /// <summary>
+        /// Detect Keyboard Shortcuts.
+        /// </summary>
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Z)
@@ -290,13 +306,17 @@ namespace SketchAssistant
             }
         }
 
-        //get current Mouse positon within the right picture box
+        /// <summary>
+        /// Get current Mouse positon within the right picture box.
+        /// </summary>
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
             currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
         }
-
-        //hold left mouse button to draw.
+        
+        /// <summary>
+        /// Hold left mouse button to start drawing.
+        /// </summary>
         private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
         {
             mousePressed = true;
@@ -305,8 +325,10 @@ namespace SketchAssistant
                 currentLine = new List<Point>();
             }
         }
-
-        //Lift left mouse button to stop drawing and add a new Line.
+        
+        /// <summary>
+        /// Lift left mouse button to stop drawing and add a new Line.
+        /// </summary>
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
             mousePressed = false;
@@ -322,10 +344,12 @@ namespace SketchAssistant
             }
             UpdateButtonStatus();
         }
-
-        //Button to create a new Canvas. Will create an empty image 
-        //which is the size of the left image, if there is one.
-        //If there is no image loaded the canvas will be the size of the right picture box
+        
+        /// <summary>
+        /// Button to create a new Canvas. Will create an empty image 
+        /// which is the size of the left image, if there is one.
+        /// If there is no image loaded the canvas will be the size of the right picture box
+        /// </summary>
         private void canvasButton_Click(object sender, EventArgs e)
         {
             if (CheckSavedStatus())
@@ -349,7 +373,10 @@ namespace SketchAssistant
             UpdateSizes();
         }
 
-        //add a Point on every tick to the Drawpath
+        /// <summary>
+        /// Add a Point on every tick to the Drawpath.
+        /// Or detect lines for deletion on every tick
+        /// </summary>
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
             if(cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
@@ -382,6 +409,8 @@ namespace SketchAssistant
                             rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
+                        //RedrawTick
+                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
                         RedrawRightImage();
                     }
                 }
@@ -735,7 +764,10 @@ namespace SketchAssistant
         /// Cast according to the Type definitions in the class variable section.</returns>
         public List<Tuple<String, Object>>GetAllVariables()
         {
-            var objArr = new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList, rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition, cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionRadius, historyOfActions };
+            var objArr = new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList,
+                rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition,
+                cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionRadius, historyOfActions,
+                overlayItems, redrawAss, markerRadius };
             var varArr = new List<Tuple<String, Object>>();
             foreach(Object obj in objArr)
             {
