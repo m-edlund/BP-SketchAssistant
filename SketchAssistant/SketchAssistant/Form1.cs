@@ -107,13 +107,13 @@ namespace SketchAssistant
         /// </summary>
         ActionHistory historyOfActions;
         /// <summary>
-        /// A boolean value indicating whether or not the redraw mode is active.
+        /// List of items which will be overlayed over the right canvas.
         /// </summary>
-        bool redrawModeActive = false;
+        List<HashSet<Point>> overlayItems;
         /// <summary>
-        /// A tuple containing the areas around the end points of the current line in the left graphic.
+        /// The assistant responsible for the redraw mode
         /// </summary>
-        Tuple<HashSet<Point>, HashSet<Point>> currentLineEndings;
+        RedrawAssistant redrawAss;
         /// <summary>
         /// Size of areas marking endpoints of lines in the redraw mode.
         /// </summary>
@@ -128,6 +128,7 @@ namespace SketchAssistant
             currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
             historyOfActions = new ActionHistory(null);
+            redrawAss = new RedrawAssistant();
             UpdateButtonStatus();
         }
 
@@ -176,9 +177,11 @@ namespace SketchAssistant
                         isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                         linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
                         rightLineList = new List<Tuple<bool, Line>>();
-                        //Show the start and ends of lines
-                        CalculateAndDisplayStartAndEnd(leftLineList[0], markerRadius);
-
+                        //Start the redraw mode
+                        redrawAss = new RedrawAssistant(leftLineList);
+                        UpdateSizes();
+                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                        RedrawRightImage();
                         this.Refresh();
                     }
                     catch (FileImporterException ex)
@@ -187,6 +190,7 @@ namespace SketchAssistant
                     }
                 }
             }
+            UpdateButtonStatus();
         }
 
         //Changes the state of the program to drawing
@@ -312,6 +316,9 @@ namespace SketchAssistant
                 rightLineList.Add(new Tuple<bool, Line>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
+                //Execute a RedrawAssistant tick with the currently finished Line
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, newLine.GetID());
+                RedrawRightImage();
             }
             UpdateButtonStatus();
         }
@@ -329,6 +336,14 @@ namespace SketchAssistant
                 isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
                 rightLineList = new List<Tuple<bool, Line>>();
+                //Reinitialise the Redraw Assistant.
+                if(leftLineList != null)
+                {
+                    redrawAss = new RedrawAssistant(leftLineList);
+                    UpdateSizes();
+                    overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                    RedrawRightImage();
+                }
             }
             UpdateButtonStatus();
             UpdateSizes();
@@ -348,6 +363,9 @@ namespace SketchAssistant
                 Line drawline = new Line(currentLine);
                 drawline.DrawLine(rightGraph);
                 pictureBoxRight.Image = rightImage;
+                //RedrawTick
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                RedrawRightImage();
             }
             //Deleting
             if (currentState.Equals(ProgramState.Delete) && mousePressed)
@@ -427,11 +445,26 @@ namespace SketchAssistant
         {
             var workingCanvas = GetEmptyCanvas(rightImage.Width, rightImage.Height);
             var workingGraph = Graphics.FromImage(workingCanvas);
+            //Lines
             foreach (Tuple<bool, Line> lineBoolTuple in rightLineList)
             {
                 if (lineBoolTuple.Item1)
                 {
                     lineBoolTuple.Item2.DrawLine(workingGraph);
+                }
+            }
+            //The Line being currently drawn
+            if(currentLine != null && currentLine.Count > 0 && currentState.Equals(ProgramState.Draw) && mousePressed)
+            {
+                var currLine = new Line(currentLine);
+                currLine.DrawLine(workingGraph);
+            }
+            //Overlay Items
+            foreach (HashSet<Point> item in overlayItems)
+            {
+                foreach(Point p in item)
+                {
+                    workingGraph.FillRectangle(Brushes.Green, p.X, p.Y, 1, 1);
                 }
             }
             SetAndRefreshRightImage(workingCanvas);
@@ -598,9 +631,12 @@ namespace SketchAssistant
 
             foreach(Point pnt in GeometryCalculator.FilledCircleAlgorithm(p, (int)range))
             {
-                if (isFilledMatrix[pnt.X, pnt.Y])
+                if(pnt.X >= 0 && pnt.Y >= 0 && pnt.X < rightImage.Width && pnt.Y < rightImage.Height)
                 {
-                    returnSet.UnionWith(linesMatrix[pnt.X, pnt.Y]);
+                    if (isFilledMatrix[pnt.X, pnt.Y])
+                    {
+                        returnSet.UnionWith(linesMatrix[pnt.X, pnt.Y]);
+                    }
                 }
             }
             return returnSet;
@@ -630,21 +666,16 @@ namespace SketchAssistant
         }
         
         /// <summary>
-        /// Will calculate and mark the start and endpoints of the given line on the right canvas.
+        /// Will calculate the start and endpoints of the given line on the right canvas.
         /// </summary>
         /// <param name="line">The line.</param>
         /// <param name="size">The size of the circle with which the endpoints of the line are marked.</param>
-        private void CalculateAndDisplayStartAndEnd(Line line, int size)
+        private Tuple<HashSet<Point>, HashSet<Point>> CalculateStartAndEnd(Line line, int size)
         {
             var circle0 = GeometryCalculator.FilledCircleAlgorithm(line.GetStartPoint(), size);
-            var circle1 = GeometryCalculator.BresenhamCircleAlgorithm(line.GetEndPoint(), size);
-            currentLineEndings = new Tuple<HashSet<Point>, HashSet<Point>>(circle0, circle1);
-
-            rightGraph = Graphics.FromImage(rightImage);
-            foreach(Point p in circle0) { rightGraph.FillRectangle(Brushes.Red, p.X, p.Y, 1, 1); }
-            foreach(Point p in circle1) { rightGraph.FillRectangle(Brushes.Blue, p.X, p.Y, 1, 1); }
-
-            SetAndRefreshRightImage(rightImage);
+            var circle1 = GeometryCalculator.FilledCircleAlgorithm(line.GetEndPoint(), size);
+            var currentLineEndings = new Tuple<HashSet<Point>, HashSet<Point>>(circle0, circle1);
+            return currentLineEndings;
         }
 
         /// <summary>
@@ -654,11 +685,27 @@ namespace SketchAssistant
         {
             if (rightImage != null)
             {
-                double widthProp = pictureBoxRight.Width / rightImage.Width;
-                double heightProp = pictureBoxRight.Height / rightImage.Height;
-                double scaling = (widthProp + heightProp) / 2;
-                markerRadius = (int)(10 / scaling);
-                deletionRadius = (int)(5 / scaling);
+                int widthImage = pictureBoxRight.Image.Width;
+                int heightImage = pictureBoxRight.Image.Height;
+                int widthBox = pictureBoxRight.Width;
+                int heightBox = pictureBoxRight.Height;
+                
+                float imageRatio = (float)widthImage / (float)heightImage;
+                float containerRatio = (float)widthBox / (float)heightBox;
+                float zoomFactor = 0;
+                if (imageRatio >= containerRatio)
+                {
+                    //Image is wider than it is high
+                    zoomFactor = (float)widthImage / (float)widthBox;
+                }
+                else
+                {
+                    //Image is higher than it is wide
+                    zoomFactor = (float)heightImage / (float)heightBox;
+                }
+                markerRadius = (int)(10 * zoomFactor);
+                redrawAss.SetMarkerRadius(markerRadius);
+                deletionRadius = (int)(5 * zoomFactor);
             }
         }
 
