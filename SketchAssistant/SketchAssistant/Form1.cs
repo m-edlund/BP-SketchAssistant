@@ -99,6 +99,7 @@ namespace SketchAssistant
         /// Size of deletion area
         /// </summary>
         uint deletionSize = 2;
+
         /// <summary>
         /// History of Actions
         /// </summary>
@@ -138,7 +139,7 @@ namespace SketchAssistant
         }
 
         /// <summary>
-        /// Import button, will open an OpenFileDialog
+        /// Import example picture button, will open an OpenFileDialog
         /// </summary>
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -156,6 +157,33 @@ namespace SketchAssistant
                 catch(FileImporterException ex)
                 {
                     ShowInfoMessage(ex.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Import svg drawing button, will open an OpenFileDialog
+        /// </summary>
+        private void SVGDrawingToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            openFileDialog.Filter = "Scalable Vector Graphics|*.svg";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
+                try
+                {
+                    (int, int, List<Line>) drawing = fileImporter.ParseSVGInputFile(openFileDialog.FileName, pictureBoxLeft.Width, pictureBoxLeft.Height);
+                    DrawEmptyCanvasLeft(drawing.Item1, drawing.Item2);
+                    BindAndDrawLeftImage(drawing.Item3);
+                    this.Refresh();
+                }
+                catch (FileImporterException ex)
+                {
+                    ShowInfoMessage(ex.ToString());
+                }
+                catch (Exception ex)
+                {
+                    ShowInfoMessage("exception occured while trying to parse svg file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace);
                 }
             }
         }
