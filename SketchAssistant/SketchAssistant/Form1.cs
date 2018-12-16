@@ -371,9 +371,10 @@ namespace SketchAssistant
 					{
 						case ".svg":
 							String newReturnString = createSvgTxt();
-							StreamWriter sw = new StreamWriter(File.OpenWrite(saveFileDialogRight.FileName));
-							sw.Write("test");
-							sw.Close();
+							using (StreamWriter sw = new StreamWriter(File.Create(saveFileDialogRight.FileName)))
+							{
+								sw.Write("test");
+							}
 							break;
 
 
@@ -401,8 +402,6 @@ namespace SketchAssistant
 			{
 				MessageBox.Show("The right picture box can't be empty");
 			}
-
-
 
 		}
 
