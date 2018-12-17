@@ -764,14 +764,16 @@ namespace SketchAssistant
         /// Cast according to the Type definitions in the class variable section.</returns>
         public List<Tuple<String, Object>>GetAllVariables()
         {
-            var objArr = new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList,
-                rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition,
-                cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionRadius, historyOfActions,
-                overlayItems, redrawAss, markerRadius };
+            var objArr = new (String, object)[] { ("currentState", currentState), ("fileImporter", fileImporter), ("openFileDialog", openFileDialog),
+                ("leftImage", leftImage), ("leftLineList", leftLineList), ("rightImage", rightImage), ("currentLine", currentLine),
+                ("rightLineList", rightLineList), ("mousePressed", mousePressed), ("currentCursorPosition", currentCursorPosition),
+                ("previousCursorPosition", previousCursorPosition), ("cursorPositions", cursorPositions), ("rightGraph", rightGraph),
+                ("isFilledMatrix", isFilledMatrix), ("linesMatrix", linesMatrix), ("deletionRadius", deletionRadius),
+                ("historyOfActions", historyOfActions), ("overlayItems", overlayItems), ("redrawAss", redrawAss), ("markerRadius", markerRadius) };
             var varArr = new List<Tuple<String, Object>>();
-            foreach(Object obj in objArr)
+            foreach((String, object) obj in objArr)
             {
-                varArr.Add(new Tuple<string, object>(nameof(obj), obj));
+                varArr.Add(new Tuple<string, object>(obj.Item1, obj.Item2));
             }
             return varArr;
         }

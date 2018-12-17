@@ -8,7 +8,7 @@ using System.Drawing;
 
 namespace SketchAssistant
 {
-    class RedrawAssistant
+    public class RedrawAssistant
     {
         /// <summary>
         /// The lines of the left image, with a boolean indicating if they have been redrawn
@@ -67,13 +67,14 @@ namespace SketchAssistant
             }
             SetMarkerRadius(5);
         }
+
         /// <summary>
         /// The main functionality of the RedrawAssistant, which updates the Assistant according to the inputs given.
         /// </summary>
         /// <param name="currentPoint">The current position of the cursor, as a point</param>
         /// <param name="rightLines">The lines on the right canvas</param>
         /// <param name="currLineID">The id of the currently finished line, -1 if no line was finished.</param>
-        /// <returns></returns>
+        /// <returns>A List of HashSets of Points, which are markers for the user to redraw lines.</returns>
         public List<HashSet<Point>> Tick(Point currentPoint, List<Tuple<bool, Line>> rightLines, int currLineID)
         {
             List<HashSet<Point>> returnList = new List<HashSet<Point>>();
@@ -192,7 +193,7 @@ namespace SketchAssistant
         /// <summary>
         /// Will calculate the start and endpoints of the given line.
         /// </summary>
-        /// <param name="line">The line.</param>
+        /// <param name="line">The given line.</param>
         private Tuple<HashSet<Point>, HashSet<Point>> CalculateStartAndEnd(Line line)
         {
             var circle0 = GeometryCalculator.FilledCircleAlgorithm(line.GetStartPoint(), markerRadius);

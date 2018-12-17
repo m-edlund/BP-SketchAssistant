@@ -370,4 +370,226 @@ namespace Tests
             return (List<Line>)program.GetAllVariables().Find(x => x.Item1.Equals("leftLineList")).Item2;
         }
     }
+
+    [TestClass]
+    public class RedrawAssistantTests
+    {
+        private RedrawAssistant GetAssistant(List<Line> input)
+        {
+            if(input.Count == 0)
+            {
+                return new RedrawAssistant();
+            }
+            else
+            {
+                return new RedrawAssistant(input);
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(17, 20, new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, true)]
+        [DataRow(-50, 30, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, false)]
+        [DataRow(-70, -20, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 }, true)]
+        public void InactiveRedrawAssistantTest(int x, int y, int[] xCoords, int[] yCoords, bool lineActive)
+        {
+            RedrawAssistant testAssistant = GetAssistant(new List<Line>());
+            List<Point> testPoints = new List<Point>();
+            for (int i = 0; i < xCoords.Length; i++)
+            {
+                testPoints.Add(new Point(xCoords[i], yCoords[i]));
+            }
+            List<Tuple<bool, Line>> testLines = new List<Tuple<bool, Line>> { new Tuple<bool, Line>(lineActive, new Line(testPoints, 0)) };
+            List<HashSet<Point>> result = testAssistant.Tick(new Point(1, 1), testLines, -1 );
+            Assert.AreEqual(0, result.Count);
+        }
+
+        [DataTestMethod]
+        [DataRow(17, 20, new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, 1)]
+        [DataRow(-50, 30, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, 1)]
+        [DataRow(33, 54, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 }, 2)]
+        public void ActiveRedrawAssistantTestStartedDrawing(int x, int y, int[] xCoords, int[] yCoords, int resultingCount)
+        {
+            List<Point> testPoints = new List<Point>();
+            for (int i = 0; i < xCoords.Length; i++)
+            {
+                testPoints.Add(new Point(xCoords[i], yCoords[i]));
+            }
+            List<Tuple<bool, Line>> testInputLines = new List<Tuple<bool, Line>>();
+            List<Line> testRedrawLines = new List<Line> { new Line(testPoints, 0) };
+            RedrawAssistant testAssistant = GetAssistant(testRedrawLines);
+            //Setting Marker Radius to 1 so that only the functionality of the RedrawAssistant is checked 
+            //and not the functionality of the Circle algorithm.
+            testAssistant.SetMarkerRadius(1);
+            List<HashSet<Point>> tickResult = testAssistant.Tick(new Point(x, y), testInputLines, -1);
+
+
+            Assert.AreEqual(resultingCount, tickResult.Count);
+            if(resultingCount == 1)
+            {
+                foreach(Point p in tickResult[0])
+                {
+                    Assert.AreEqual(testPoints[0], p);
+                }
+            }
+            if(resultingCount == 2)
+            {
+                foreach (Point p in tickResult[0])
+                {
+                    Assert.AreEqual(testPoints[0], p);
+                }
+                foreach (Point p in tickResult[1])
+                {
+                    Assert.AreEqual(testPoints[testPoints.Count-1], p);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(17, 20, new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
+             new int[] { 77, 20, 3, 74, 28 }, new int[] { 40, 50, 20, 77, 28}, 2, false)]
+        [DataRow(33, 33, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
+             new int[] { 42, 140, 30, 30, 30 }, new int[] { 11, 145, 34, 113, 28 }, 2, true)]
+        [DataRow(33, 54, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 },
+             new int[] { 43, 57, 11, 145 }, new int[] { 33, 42, 140, 30 }, 2, true)]
+        public void ActiveRedrawAssistantTestMultipleLinesRedrawn(
+            int x, int y, int[] xCoords_one, int[] yCoords_one, int[] xCoords_two, int[] yCoords_two, int resultingCount, bool showingStartAndEnd)
+        {
+            List<Point> testPoints1 = new List<Point>();
+            for (int i = 0; i < xCoords_one.Length; i++)
+            {
+                testPoints1.Add(new Point(xCoords_one[i], yCoords_one[i]));
+            }
+            List<Point> testPoints2 = new List<Point>();
+            for (int i = 0; i < xCoords_two.Length; i++)
+            {
+                testPoints2.Add(new Point(xCoords_two[i], yCoords_two[i]));
+            }
+            List<Tuple<bool, Line>> testInputLines = new List<Tuple<bool, Line>>();
+
+            List<Line> testRedrawLines = new List<Line> { new Line(testPoints1, 0) , new Line(testPoints2, 1) };
+            RedrawAssistant testAssistant = GetAssistant(testRedrawLines);
+            //Setting Marker Radius to 1 so that only the functionality of the RedrawAssistant is checked 
+            //and not the functionality of the Circle algorithm.
+            testAssistant.SetMarkerRadius(1);
+
+            List<HashSet<Point>> tickResult = testAssistant.Tick(new Point(x, y), testInputLines, -1);
+
+            Assert.AreEqual(resultingCount, tickResult.Count);
+            if (showingStartAndEnd)
+            {
+                foreach (Point p in tickResult[0])
+                {
+                    Assert.AreEqual(testPoints1[0], p);
+                }
+                foreach (Point p in tickResult[1])
+                {
+                    Assert.AreEqual(testPoints1[testPoints1.Count - 1], p);
+                }
+            }
+            else
+            {
+                foreach (Point p in tickResult[0])
+                {
+                    Assert.AreEqual(testPoints1[0], p);
+                }
+                foreach (Point p in tickResult[1])
+                {
+                    Assert.AreEqual(testPoints2[0], p);
+                }
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(17, 20, 17, 20, new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
+     new int[] { 77, 20, 3, 74, 28 }, new int[] { 40, 50, 20, 77, 28 }, 2, 2, false, false)]
+
+        [DataRow(33, 33, 2, 2, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
+     new int[] { 42, 140, 30, 30, 30 }, new int[] { 11, 145, 34, 113, 28 }, 2, 1, true, false)]
+
+        [DataRow(33, 54, 17, 0, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 },
+     new int[] { 43, 57, 11, 145 }, new int[] { 33, 42, 140, 30 }, 2, 2, true, true)]
+        public void ActiveRedrawAssistantTestLineFinished(
+            int x_one, int y_one, int x_two, int y_two, int[] xCoords_one, int[] yCoords_one, int[] xCoords_two, int[] yCoords_two, 
+            int count_one, int count_two, bool showingSE_one, bool showingSE_two)
+        {
+            List<Point> testPoints1 = new List<Point>();
+            for (int i = 0; i < xCoords_one.Length; i++)
+            {
+                testPoints1.Add(new Point(xCoords_one[i], yCoords_one[i]));
+            }
+            List<Point> testPoints2 = new List<Point>();
+            for (int i = 0; i < xCoords_two.Length; i++)
+            {
+                testPoints2.Add(new Point(xCoords_two[i], yCoords_two[i]));
+            }
+            List<Tuple<bool, Line>> testInputLines = new List<Tuple<bool, Line>>();
+
+            List<Line> testRedrawLines = new List<Line> { new Line(testPoints1, 0), new Line(testPoints2, 1) };
+            RedrawAssistant testAssistant = GetAssistant(testRedrawLines);
+            //Setting Marker Radius to 1 so that only the functionality of the RedrawAssistant is checked 
+            //and not the functionality of the Circle algorithm.
+            testAssistant.SetMarkerRadius(1);
+
+            List<HashSet<Point>> tickResult1 = testAssistant.Tick(new Point(x_one, y_one), testInputLines, -1);
+            List<HashSet<Point>> tickResult2 = testAssistant.Tick(new Point(x_two, y_two), testInputLines, 0);
+
+            Assert.AreEqual(count_one, tickResult1.Count);
+            if (showingSE_one)
+            {
+                foreach(Point p in tickResult1[0])
+                {
+                    Assert.AreEqual(testPoints1[0], p);
+                }
+                foreach (Point p in tickResult1[1])
+                {
+                    Assert.AreEqual(testPoints1[testPoints1.Count - 1], p);
+                }
+            }
+            else
+            {
+                foreach (Point p in tickResult1[0])
+                {
+                    Assert.AreEqual(testPoints1[0], p);
+                }
+                foreach (Point p in tickResult1[1])
+                {
+                    Assert.AreEqual(testPoints2[0], p);
+                }
+            }
+
+            Assert.AreEqual(count_two, tickResult2.Count);
+            if(count_two == 2)
+            {
+                if (showingSE_two)
+                {
+                    foreach (Point p in tickResult2[0])
+                    {
+                        Assert.AreEqual(testPoints1[0], p);
+                    }
+                    foreach (Point p in tickResult2[1])
+                    {
+                        Assert.AreEqual(testPoints1[testPoints1.Count - 1], p);
+                    }
+                }
+                else
+                {
+                    foreach (Point p in tickResult2[0])
+                    {
+                        Assert.AreEqual(testPoints1[0], p);
+                    }
+                    foreach (Point p in tickResult2[1])
+                    {
+                        Assert.AreEqual(testPoints2[0], p);
+                    }
+                }
+            }
+            if(count_two == 1)
+            {
+                foreach (Point p in tickResult2[0])
+                {
+                    Assert.AreEqual(testPoints2[0], p);
+                }
+            }
+        }
+    }
 }
