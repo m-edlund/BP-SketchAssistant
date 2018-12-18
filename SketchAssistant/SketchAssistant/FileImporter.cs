@@ -32,6 +32,11 @@ namespace SketchAssistant
         /// </summary>
         readonly char[] whitespaces = new char[] { ' ' , ',' };
 
+        /// <summary>
+        /// number of points to create along the outline of an ellipse, divisible by 4
+        /// </summary>
+        readonly int samplingRateEllipse = 24;
+
         public FileImporter(Form1 newProgram)
         {
             program = newProgram;
@@ -559,6 +564,7 @@ namespace SketchAssistant
         private List<Line> parsePath(string[] currentElement)
         {
             List<String> pathElements = new List<string>();
+            /*
             for (int j = 0; j < currentElement.Length; j++)
             {
                 if (currentElement[j].StartsWith("d="))
@@ -591,6 +597,8 @@ namespace SketchAssistant
                 }
             }
             return element;
+            */
+            return null;
         }
 
         /// <summary>
@@ -651,7 +659,48 @@ namespace SketchAssistant
         /// <returns>the parsed element as a List of Points</returns>
         private List<Point> SampleEllipse(double x, double y, double rx, double ry)
         {
-            throw new NotImplementedException();
+            List<Point> ellipse = new List<Point>();
+            double angle = ((double)2 * Math.PI) / (double)samplingRateEllipse;
+            double yScale = ry / rx;
+            Console.WriteLine("parsing ellipse: " + x + ";" + y + "(" + rx + "x" + ry + ")" + " " + yScale + ":" + angle);
+            double[] xValues = new double[samplingRateEllipse / 4];
+            double[] yValues = new double[samplingRateEllipse / 4];
+            for (int j = 0; j < samplingRateEllipse / 4; j++) //compute offset values of points for one quadrant
+            {
+                xValues[j] = Math.Sin((double)j * angle) * rx;
+                yValues[j] = Math.Cos((double)j * angle) * rx;
+                Console.WriteLine("parsed ellipse value: " + xValues[j] + ";" + yValues[j]);
+            }
+            for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for first quadrant
+            {
+                int xCoord = Convert.ToInt32(Math.Round(x + xValues[j]));
+                int yCoord = Convert.ToInt32(Math.Round(y - yValues[j] * yScale));
+                ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
+                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+            }
+            for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for second quadrant
+            {
+                int xCoord = Convert.ToInt32(Math.Round(x + yValues[j]));
+                int yCoord = Convert.ToInt32(Math.Round(y + xValues[j] * yScale));
+                ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
+                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+            }
+            for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for third quadrant
+            {
+                int xCoord = Convert.ToInt32(Math.Round(x - xValues[j]));
+                int yCoord = Convert.ToInt32(Math.Round(y + yValues[j] * yScale));
+                ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
+                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+            }
+            for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for fourth quadrant
+            {
+                int xCoord = Convert.ToInt32(Math.Round(x - yValues[j]));
+                int yCoord = Convert.ToInt32(Math.Round(y - xValues[j] * yScale));
+                ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
+                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+            }
+            ellipse.Add(ScaleAndCreatePoint(Convert.ToInt32(Math.Round(x + 0)), Convert.ToInt32(Math.Round(y - rx * yScale)))); //close ellipse
+            return ellipse;
         }
     }
 }
