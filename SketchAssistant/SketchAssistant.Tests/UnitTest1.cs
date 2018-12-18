@@ -399,7 +399,7 @@ namespace Tests
                 testPoints.Add(new Point(xCoords[i], yCoords[i]));
             }
             List<Tuple<bool, Line>> testLines = new List<Tuple<bool, Line>> { new Tuple<bool, Line>(lineActive, new Line(testPoints, 0)) };
-            List<HashSet<Point>> result = testAssistant.Tick(new Point(1, 1), testLines, -1 );
+            List<HashSet<Point>> result = testAssistant.Tick(new Point(1, 1), testLines, -1, false);
             Assert.AreEqual(0, result.Count);
         }
 
@@ -420,7 +420,7 @@ namespace Tests
             //Setting Marker Radius to 1 so that only the functionality of the RedrawAssistant is checked 
             //and not the functionality of the Circle algorithm.
             testAssistant.SetMarkerRadius(1);
-            List<HashSet<Point>> tickResult = testAssistant.Tick(new Point(x, y), testInputLines, -1);
+            List<HashSet<Point>> tickResult = testAssistant.Tick(new Point(x, y), testInputLines, -1, false);
 
 
             Assert.AreEqual(resultingCount, tickResult.Count);
@@ -472,7 +472,7 @@ namespace Tests
             //and not the functionality of the Circle algorithm.
             testAssistant.SetMarkerRadius(1);
 
-            List<HashSet<Point>> tickResult = testAssistant.Tick(new Point(x, y), testInputLines, -1);
+            List<HashSet<Point>> tickResult = testAssistant.Tick(new Point(x, y), testInputLines, -1, false);
 
             Assert.AreEqual(resultingCount, tickResult.Count);
             if (showingStartAndEnd)
@@ -500,16 +500,16 @@ namespace Tests
         }
 
         [DataTestMethod]
-        [DataRow(17, 20, 17, 20, new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
+        [DataRow(17, 20, 17, 20, -1 ,false, new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
      new int[] { 77, 20, 3, 74, 28 }, new int[] { 40, 50, 20, 77, 28 }, 2, 2, false, false)]
 
-        [DataRow(33, 33, 2, 2, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
+        [DataRow(33, 33, 2, 2, 0, true, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 },
      new int[] { 42, 140, 30, 30, 30 }, new int[] { 11, 145, 34, 113, 28 }, 2, 1, true, false)]
 
-        [DataRow(33, 54, 17, 0, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 },
-     new int[] { 43, 57, 11, 145 }, new int[] { 33, 42, 140, 30 }, 2, 2, true, true)]
+        [DataRow(33, 54, 17, 0, 0, true, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 },
+     new int[] { 43, 57, 11, 145 }, new int[] { 33, 42, 140, 30 }, 2, 2, true, false)]
         public void ActiveRedrawAssistantTestLineFinished(
-            int x_one, int y_one, int x_two, int y_two, int[] xCoords_one, int[] yCoords_one, int[] xCoords_two, int[] yCoords_two, 
+            int x_one, int y_one, int x_two, int y_two, int lineID, bool finishedDrawing, int[] xCoords_one, int[] yCoords_one, int[] xCoords_two, int[] yCoords_two, 
             int count_one, int count_two, bool showingSE_one, bool showingSE_two)
         {
             List<Point> testPoints1 = new List<Point>();
@@ -530,8 +530,8 @@ namespace Tests
             //and not the functionality of the Circle algorithm.
             testAssistant.SetMarkerRadius(1);
 
-            List<HashSet<Point>> tickResult1 = testAssistant.Tick(new Point(x_one, y_one), testInputLines, -1);
-            List<HashSet<Point>> tickResult2 = testAssistant.Tick(new Point(x_two, y_two), testInputLines, 0);
+            List<HashSet<Point>> tickResult1 = testAssistant.Tick(new Point(x_one, y_one), testInputLines, lineID, false);
+            List<HashSet<Point>> tickResult2 = testAssistant.Tick(new Point(x_two, y_two), testInputLines, lineID, finishedDrawing);
 
             Assert.AreEqual(count_one, tickResult1.Count);
             if (showingSE_one)
