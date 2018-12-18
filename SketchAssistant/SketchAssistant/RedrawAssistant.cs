@@ -29,6 +29,10 @@ namespace SketchAssistant
         /// </summary>
         int lineBeingRedrawn;
         /// <summary>
+        /// The id of the line being drawn on the right side. -1 if no line is being drawn.
+        /// </summary>
+        int currentLineID;
+        /// <summary>
         /// Whether or not the user is currently redrawing a line.
         /// </summary>
         bool currentlyRedrawing;
@@ -73,46 +77,58 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="currentPoint">The current position of the cursor, as a point</param>
         /// <param name="rightLines">The lines on the right canvas</param>
-        /// <param name="currLineID">The id of the currently finished line, -1 if no line was finished.</param>
+        /// <param name="currLineID">The id of the line currently being drawn.</param>
+        /// <param name="lineFinished">A boolean to indicate that the line is finished</param>
         /// <returns>A List of HashSets of Points, which are markers for the user to redraw lines.</returns>
-        public List<HashSet<Point>> Tick(Point currentPoint, List<Tuple<bool, Line>> rightLines, int currLineID)
+        public List<HashSet<Point>> Tick(Point currentPoint, List<Tuple<bool, Line>> rightLines, int currLineID, bool lineFinished)
         {
             List<HashSet<Point>> returnList = new List<HashSet<Point>>();
             if (!isActive) { return returnList; }
             Tuple<Line, bool, int> newLineTuple = null;
             var returnAllStartPoints = true;
             CheckForUndrawnLines(rightLines);
-            // The current Endpoint has been intersected, and a line was finished here
-            if (currentlyRedrawing && startAndEndPoints[lineBeingRedrawn].Item2.Contains(currentPoint) && currLineID != -1)
-            {
-                newLineTuple = new Tuple<Line, bool, int>(linesToRedraw[lineBeingRedrawn].Item1, true, currLineID);
-                currentlyRedrawing = false;
-                lineBeingRedrawn = -1;
-            }
-            else if (currentlyRedrawing)
-            {
-                returnList.Add(startAndEndPoints[lineBeingRedrawn].Item1);
-                returnList.Add(startAndEndPoints[lineBeingRedrawn].Item2);
-                returnAllStartPoints = false;
-            }
-            else if (!currentlyRedrawing)
+
+            // Checking if a startpoint is intersected
+            if (!currentlyRedrawing)
             {
                 for (int i = 0; i < linesToRedraw.Count; i++)
                 {
                     Tuple<Line, bool, int> tup = linesToRedraw[i];
                     if (!tup.Item2)
                     {
-                        // A Starpoint has been intersected
-                        if (!currentlyRedrawing && startAndEndPoints[i].Item1.Contains(currentPoint))
+                        if (startAndEndPoints[i].Item1.Contains(currentPoint))
                         {
                             currentlyRedrawing = true;
                             lineBeingRedrawn = i;
+                            currentLineID = currLineID;
                             returnList.Add(startAndEndPoints[i].Item1);
                             returnList.Add(startAndEndPoints[i].Item2);
                             returnAllStartPoints = false;
                         }
                     }
                 }
+            }
+            //Currently redrawing a line, but a line hasn't been finished drawing.
+            else if (!lineFinished)
+            {
+                returnList.Add(startAndEndPoints[lineBeingRedrawn].Item1);
+                returnList.Add(startAndEndPoints[lineBeingRedrawn].Item2);
+                returnAllStartPoints = false;
+            }
+            //Line is finished, check if it is in the correct endpoint
+            else if (currLineID == currentLineID && startAndEndPoints[lineBeingRedrawn].Item2.Contains(currentPoint))
+            {
+                newLineTuple = new Tuple<Line, bool, int>(linesToRedraw[lineBeingRedrawn].Item1, true, currLineID);
+                currentlyRedrawing = false;
+                lineBeingRedrawn = -1;
+                currentLineID = -1;
+            }
+            //Line is finished, but not in the correct endpoint
+            else
+            {
+                currentlyRedrawing = false;
+                lineBeingRedrawn = -1;
+                currentLineID = -1;
             }
 
             //Replace the changed line tuple in linesToRedraw

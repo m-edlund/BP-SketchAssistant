@@ -182,7 +182,7 @@ namespace SketchAssistant
                         //Start the redraw mode
                         redrawAss = new RedrawAssistant(leftLineList);
                         UpdateSizes();
-                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
                         RedrawRightImage();
                         this.Refresh();
                     }
@@ -255,7 +255,7 @@ namespace SketchAssistant
                     default:
                         break;
                 }
-                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
                 RedrawRightImage();
             }
             historyOfActions.MoveAction(true);
@@ -285,7 +285,7 @@ namespace SketchAssistant
                     default:
                         break;
                 }
-                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
                 RedrawRightImage();
             }
             UpdateButtonStatus();
@@ -339,7 +339,7 @@ namespace SketchAssistant
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
                 //Execute a RedrawAssistant tick with the currently finished Line
-                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, newLine.GetID());
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, newLine.GetID(), true);
                 RedrawRightImage();
             }
             UpdateButtonStatus();
@@ -365,7 +365,7 @@ namespace SketchAssistant
                 {
                     redrawAss = new RedrawAssistant(leftLineList);
                     UpdateSizes();
-                    overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                    overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
                     RedrawRightImage();
                 }
             }
@@ -390,8 +390,8 @@ namespace SketchAssistant
                 Line drawline = new Line(currentLine);
                 drawline.DrawLine(rightGraph);
                 pictureBoxRight.Image = rightImage;
-                //RedrawTick
-                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                //Redraw overlay gets ticked
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, rightLineList.Count, false);
                 RedrawRightImage();
             }
             //Deleting
@@ -409,8 +409,8 @@ namespace SketchAssistant
                             rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
-                        //RedrawTick
-                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1);
+                        //Redraw overlay gets ticked
+                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
                         RedrawRightImage();
                     }
                 }
@@ -429,7 +429,16 @@ namespace SketchAssistant
         /// <returns>The new canvas</returns>
         private Image GetEmptyCanvas(int width, int height)
         {
-            Image image = new Bitmap(width, height);
+            Image image;
+            try
+            {
+                image = new Bitmap(width, height);
+            }
+            catch(ArgumentException e)
+            {
+                ShowInfoMessage("The requested canvas size caused an error: \n" + e.ToString() + "\n The Canvas will be set to match your window.");
+                image = new Bitmap(pictureBoxLeft.Width, pictureBoxLeft.Height);
+            }
             Graphics graph = Graphics.FromImage(image);
             graph.FillRectangle(Brushes.White, 0, 0, width + 10, height + 10);
             return image;
