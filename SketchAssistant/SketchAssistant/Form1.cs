@@ -91,18 +91,33 @@ namespace SketchAssistant
         /// </summary>
         Graphics rightGraph = null;
         /// <summary>
-        /// Deletion Matrixes for checking postions of lines in the image
+        /// Lookup Matrix for checking postions of lines in the image
         /// </summary>
         bool[,] isFilledMatrix;
+        /// <summary>
+        /// Lookup Matrix for getting line ids at a certain postions of the image
+        /// </summary>
         HashSet<int>[,] linesMatrix;
         /// <summary>
         /// Size of deletion area
         /// </summary>
-        uint deletionSize = 2;
+        int deletionRadius = 2;
         /// <summary>
         /// History of Actions
         /// </summary>
         ActionHistory historyOfActions;
+        /// <summary>
+        /// List of items which will be overlayed over the right canvas.
+        /// </summary>
+        List<HashSet<Point>> overlayItems;
+        /// <summary>
+        /// The assistant responsible for the redraw mode
+        /// </summary>
+        RedrawAssistant redrawAss;
+        /// <summary>
+        /// Size of areas marking endpoints of lines in the redraw mode.
+        /// </summary>
+        int markerRadius = 10;
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -113,13 +128,17 @@ namespace SketchAssistant
             currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
             historyOfActions = new ActionHistory(null);
+            redrawAss = new RedrawAssistant();
             UpdateButtonStatus();
         }
 
-        //Resize Function connected to the form resize event, will refresh the form when it is resized
+        /// <summary>
+        /// Resize Function connected to the form resize event, will refresh the form when it is resized
+        /// </summary>
         private void Form1_Resize(object sender, System.EventArgs e)
         {
             this.Refresh();
+            UpdateSizes();
         }
         
         //Load button, will open an OpenFileDialog
@@ -142,25 +161,43 @@ namespace SketchAssistant
         /// </summary>
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            if (CheckSavedStatus())
             {
-                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
-                try
+                openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
-                    DrawEmptyCanvasLeft(values.Item1, values.Item2);
-                    BindAndDrawLeftImage(values.Item3);
-                    this.Refresh();
-                }
-                catch(FileImporterException ex)
-                {
-                    ShowInfoMessage(ex.ToString());
+                    toolStripLoadStatus.Text = openFileDialog.SafeFileName;
+                    try
+                    {
+                        (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
+                        DrawEmptyCanvasLeft(values.Item1, values.Item2);
+                        BindAndDrawLeftImage(values.Item3);
+
+                        //Match The right canvas to the left
+                        historyOfActions = new ActionHistory(lastActionTakenLabel);
+                        DrawEmptyCanvasRight();
+                        isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
+                        linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
+                        rightLineList = new List<Tuple<bool, Line>>();
+                        //Start the redraw mode
+                        redrawAss = new RedrawAssistant(leftLineList);
+                        UpdateSizes();
+                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
+                        RedrawRightImage();
+                        this.Refresh();
+                    }
+                    catch (FileImporterException ex)
+                    {
+                        ShowInfoMessage(ex.ToString());
+                    }
                 }
             }
+            UpdateButtonStatus();
         }
 
-        //Changes the state of the program to drawing
+        /// <summary>
+        /// Changes the state of the program to drawing
+        /// </summary>
         private void drawButton_Click(object sender, EventArgs e)
         {
             if(rightImage != null)
@@ -177,7 +214,9 @@ namespace SketchAssistant
             UpdateButtonStatus();
         }
 
-        //Changes the state of the program to deletion
+        /// <summary>
+        /// Changes the state of the program to deletion
+        /// </summary>
         private void deleteButton_Click(object sender, EventArgs e)
         {
             if (rightImage != null)
@@ -194,7 +233,9 @@ namespace SketchAssistant
             UpdateButtonStatus();
         }
 
-        //Undo an action
+        /// <summary>
+        /// Undo an Action.
+        /// </summary>
         private void undoButton_Click(object sender, EventArgs e)
         {
             if (historyOfActions.CanUndo())
@@ -214,12 +255,16 @@ namespace SketchAssistant
                     default:
                         break;
                 }
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
+                RedrawRightImage();
             }
             historyOfActions.MoveAction(true);
             UpdateButtonStatus();
         }
 
-        //Redo an action
+        /// <summary>
+        /// Redo an Action.
+        /// </summary>
         private void redoButton_Click(object sender, EventArgs e)
         {
             if (historyOfActions.CanRedo())
@@ -240,11 +285,15 @@ namespace SketchAssistant
                     default:
                         break;
                 }
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
+                RedrawRightImage();
             }
             UpdateButtonStatus();
         }
 
-        //Detect Keyboard Shortcuts
+        /// <summary>
+        /// Detect Keyboard Shortcuts.
+        /// </summary>
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Z)
@@ -257,13 +306,17 @@ namespace SketchAssistant
             }
         }
 
-        //get current Mouse positon within the right picture box
+        /// <summary>
+        /// Get current Mouse positon within the right picture box.
+        /// </summary>
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
             currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
         }
-
-        //hold left mouse button to draw.
+        
+        /// <summary>
+        /// Hold left mouse button to start drawing.
+        /// </summary>
         private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
         {
             mousePressed = true;
@@ -272,8 +325,10 @@ namespace SketchAssistant
                 currentLine = new List<Point>();
             }
         }
-
-        //Lift left mouse button to stop drawing and add a new Line.
+        
+        /// <summary>
+        /// Lift left mouse button to stop drawing and add a new Line.
+        /// </summary>
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
             mousePressed = false;
@@ -283,29 +338,21 @@ namespace SketchAssistant
                 rightLineList.Add(new Tuple<bool, Line>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
+                //Execute a RedrawAssistant tick with the currently finished Line
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, newLine.GetID(), true);
+                RedrawRightImage();
             }
             UpdateButtonStatus();
         }
-
-        //Button to create a new Canvas. Will create an empty image 
-        //which is the size of the left image, if there is one.
-        //If there is no image loaded the canvas will be the size of the right picture box
+        
+        /// <summary>
+        /// Button to create a new Canvas. Will create an empty image 
+        /// which is the size of the left image, if there is one.
+        /// If there is no image loaded the canvas will be the size of the right picture box
+        /// </summary>
         private void canvasButton_Click(object sender, EventArgs e)
         {
-            if (!historyOfActions.IsEmpty())
-            {
-                if (MessageBox.Show("You have unsaved changes, creating a new canvas will discard these.", 
-                    "Attention", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
-                {
-                    historyOfActions = new ActionHistory(lastActionTakenLabel);
-                    DrawEmptyCanvasRight();
-                    //The following lines cannot be in DrawEmptyCanvas()
-                    isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
-                    linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                    rightLineList = new List<Tuple<bool, Line>>();
-                }
-            }
-            else
+            if (CheckSavedStatus())
             {
                 historyOfActions = new ActionHistory(lastActionTakenLabel);
                 DrawEmptyCanvasRight();
@@ -313,28 +360,47 @@ namespace SketchAssistant
                 isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
                 linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
                 rightLineList = new List<Tuple<bool, Line>>();
+                //Reinitialise the Redraw Assistant.
+                if(leftLineList != null)
+                {
+                    redrawAss = new RedrawAssistant(leftLineList);
+                    UpdateSizes();
+                    overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
+                    RedrawRightImage();
+                }
             }
             UpdateButtonStatus();
+            UpdateSizes();
         }
 
-        //add a Point on every tick to the Drawpath
+        /// <summary>
+        /// Add a Point on every tick to the Drawpath.
+        /// Or detect lines for deletion on every tick
+        /// </summary>
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
+            if(cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
+            else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
-            previousCursorPosition = cursorPositions.Dequeue();
+            //Drawing
             if (currentState.Equals(ProgramState.Draw) && mousePressed)
             {
+                rightGraph = Graphics.FromImage(rightImage);
                 currentLine.Add(currentCursorPosition);
                 Line drawline = new Line(currentLine);
                 drawline.DrawLine(rightGraph);
                 pictureBoxRight.Image = rightImage;
+                //Redraw overlay gets ticked
+                overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, rightLineList.Count, false);
+                RedrawRightImage();
             }
+            //Deleting
             if (currentState.Equals(ProgramState.Delete) && mousePressed)
             {
-                List<Point> uncheckedPoints = Line.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
                 foreach (Point currPoint in uncheckedPoints)
                 {
-                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
+                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionRadius);
                     if (linesToDelete.Count > 0)
                     {
                         historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
@@ -343,6 +409,8 @@ namespace SketchAssistant
                             rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
+                        //Redraw overlay gets ticked
+                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
                         RedrawRightImage();
                     }
                 }
@@ -354,26 +422,41 @@ namespace SketchAssistant
         /***********************************/
 
         /// <summary>
+        /// A function that returns a white canvas for a given width and height.
+        /// </summary>
+        /// <param name="width">The width of the canvas in pixels</param>
+        /// <param name="height">The height of the canvas in pixels</param>
+        /// <returns>The new canvas</returns>
+        private Image GetEmptyCanvas(int width, int height)
+        {
+            Image image;
+            try
+            {
+                image = new Bitmap(width, height);
+            }
+            catch(ArgumentException e)
+            {
+                ShowInfoMessage("The requested canvas size caused an error: \n" + e.ToString() + "\n The Canvas will be set to match your window.");
+                image = new Bitmap(pictureBoxLeft.Width, pictureBoxLeft.Height);
+            }
+            Graphics graph = Graphics.FromImage(image);
+            graph.FillRectangle(Brushes.White, 0, 0, width + 10, height + 10);
+            return image;
+        }
+
+        /// <summary>
         /// Creates an empty Canvas
         /// </summary>
         private void DrawEmptyCanvasRight()
         {
             if (leftImage == null)
             {
-                rightImage = new Bitmap(pictureBoxRight.Width, pictureBoxRight.Height);
-                rightGraph = Graphics.FromImage(rightImage);
-                rightGraph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
-                pictureBoxRight.Image = rightImage;
+                SetAndRefreshRightImage(GetEmptyCanvas(pictureBoxRight.Width, pictureBoxRight.Height));
             }
             else
             {
-                rightImage = new Bitmap(leftImage.Width, leftImage.Height);
-                rightGraph = Graphics.FromImage(rightImage);
-                rightGraph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
-                pictureBoxRight.Image = rightImage;
+                SetAndRefreshRightImage(GetEmptyCanvas(leftImage.Width, leftImage.Height));
             }
-            this.Refresh();
-            pictureBoxRight.Refresh();
         }
 
         /// <summary>
@@ -385,17 +468,12 @@ namespace SketchAssistant
         {
             if (width == 0)
             {
-                leftImage = new Bitmap(pictureBoxLeft.Width, pictureBoxLeft.Height);
+                SetAndRefreshLeftImage(GetEmptyCanvas(pictureBoxLeft.Width, pictureBoxLeft.Height));
             }
             else
             {
-                leftImage = new Bitmap(width, height);
+                SetAndRefreshLeftImage(GetEmptyCanvas(width, height));
             }
-            Graphics.FromImage(leftImage).FillRectangle(Brushes.White, 0, 0, pictureBoxLeft.Width + 10, pictureBoxLeft.Height + 10);
-            pictureBoxLeft.Image = leftImage;
-            
-            this.Refresh();
-            pictureBoxLeft.Refresh();
         }
 
         /// <summary>
@@ -403,15 +481,53 @@ namespace SketchAssistant
         /// </summary>
         private void RedrawRightImage()
         {
-            DrawEmptyCanvasRight();
+            var workingCanvas = GetEmptyCanvas(rightImage.Width, rightImage.Height);
+            var workingGraph = Graphics.FromImage(workingCanvas);
+            //Lines
             foreach (Tuple<bool, Line> lineBoolTuple in rightLineList)
             {
                 if (lineBoolTuple.Item1)
                 {
-                    lineBoolTuple.Item2.DrawLine(rightGraph);
+                    lineBoolTuple.Item2.DrawLine(workingGraph);
                 }
             }
+            //The Line being currently drawn
+            if(currentLine != null && currentLine.Count > 0 && currentState.Equals(ProgramState.Draw) && mousePressed)
+            {
+                var currLine = new Line(currentLine);
+                currLine.DrawLine(workingGraph);
+            }
+            //Overlay Items
+            foreach (HashSet<Point> item in overlayItems)
+            {
+                foreach(Point p in item)
+                {
+                    workingGraph.FillRectangle(Brushes.Green, p.X, p.Y, 1, 1);
+                }
+            }
+            SetAndRefreshRightImage(workingCanvas);
+        }
+
+        /// <summary>
+        /// A function to set rightImage and to refresh the respective PictureBox with it.
+        /// </summary>
+        /// <param name="image">The new Image</param>
+        private void SetAndRefreshRightImage(Image image)
+        {
+            rightImage = image;
+            pictureBoxRight.Image = rightImage;
             pictureBoxRight.Refresh();
+        }
+
+        /// <summary>
+        /// A function to set leftImage and to refresh the respective PictureBox with it.
+        /// </summary>
+        /// <param name="image">The new Image</param>
+        private void SetAndRefreshLeftImage(Image image)
+        {
+            leftImage = image;
+            pictureBoxLeft.Image = leftImage;
+            pictureBoxLeft.Refresh();
         }
 
         /// <summary>
@@ -547,27 +663,17 @@ namespace SketchAssistant
         /// <param name="p">The point around which to check.</param>
         /// <param name="range">The range around the point. If range is 0, only the point is checked.</param>
         /// <returns>A List of all lines.</returns>
-        private HashSet<int> CheckDeletionMatrixesAroundPoint(Point p, uint range)
+        private HashSet<int> CheckDeletionMatrixesAroundPoint(Point p, int range)
         {
             HashSet<int> returnSet = new HashSet<int>();
 
-            if (p.X >= 0 && p.Y >= 0 && p.X < rightImage.Width && p.Y < rightImage.Height)
+            foreach(Point pnt in GeometryCalculator.FilledCircleAlgorithm(p, (int)range))
             {
-                if (isFilledMatrix[p.X, p.Y])
+                if(pnt.X >= 0 && pnt.Y >= 0 && pnt.X < rightImage.Width && pnt.Y < rightImage.Height)
                 {
-                    returnSet.UnionWith(linesMatrix[p.X, p.Y]);
-                }
-            }
-            for (int x_mod = (int)range*(-1); x_mod < range; x_mod++)
-            {
-                for (int y_mod = (int)range * (-1); y_mod < range; y_mod++)
-                {
-                    if (p.X + x_mod >= 0 && p.Y + y_mod >= 0 && p.X + x_mod < rightImage.Width && p.Y + y_mod < rightImage.Height)
+                    if (isFilledMatrix[pnt.X, pnt.Y])
                     {
-                        if (isFilledMatrix[p.X + x_mod, p.Y + y_mod])
-                        {
-                            returnSet.UnionWith(linesMatrix[p.X + x_mod, p.Y + y_mod]);
-                        }
+                        returnSet.UnionWith(linesMatrix[pnt.X, pnt.Y]);
                     }
                 }
             }
@@ -596,14 +702,89 @@ namespace SketchAssistant
         {
             MessageBox.Show(message);
         }
+        
+        /// <summary>
+        /// Will calculate the start and endpoints of the given line on the right canvas.
+        /// </summary>
+        /// <param name="line">The line.</param>
+        /// <param name="size">The size of the circle with which the endpoints of the line are marked.</param>
+        private Tuple<HashSet<Point>, HashSet<Point>> CalculateStartAndEnd(Line line, int size)
+        {
+            var circle0 = GeometryCalculator.FilledCircleAlgorithm(line.GetStartPoint(), size);
+            var circle1 = GeometryCalculator.FilledCircleAlgorithm(line.GetEndPoint(), size);
+            var currentLineEndings = new Tuple<HashSet<Point>, HashSet<Point>>(circle0, circle1);
+            return currentLineEndings;
+        }
+
+        /// <summary>
+        /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
+        /// </summary>
+        private void UpdateSizes()
+        {
+            if (rightImage != null)
+            {
+                int widthImage = pictureBoxRight.Image.Width;
+                int heightImage = pictureBoxRight.Image.Height;
+                int widthBox = pictureBoxRight.Width;
+                int heightBox = pictureBoxRight.Height;
+                
+                float imageRatio = (float)widthImage / (float)heightImage;
+                float containerRatio = (float)widthBox / (float)heightBox;
+                float zoomFactor = 0;
+                if (imageRatio >= containerRatio)
+                {
+                    //Image is wider than it is high
+                    zoomFactor = (float)widthImage / (float)widthBox;
+                }
+                else
+                {
+                    //Image is higher than it is wide
+                    zoomFactor = (float)heightImage / (float)heightBox;
+                }
+                markerRadius = (int)(10 * zoomFactor);
+                redrawAss.SetMarkerRadius(markerRadius);
+                deletionRadius = (int)(5 * zoomFactor);
+            }
+        }
+
+        /// <summary>
+        /// Checks if there is unsaved progess, and warns the user. Returns True if it safe to continue.
+        /// </summary>
+        /// <returns>true if there is none, or the user wishes to continue without saving.
+        /// false if there is progress, and the user doesn't wish to continue.</returns>
+        private bool CheckSavedStatus()
+        {
+            if (!historyOfActions.IsEmpty())
+            {
+                return (MessageBox.Show("You have unsaved changes, do you wish to continue?",
+                    "Attention", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
+            }
+            return true;
+        }
+
+        /********************************************/
+        /*** TESTING RELATED FUNCTIONS START HERE ***/
+        /********************************************/
 
         /// <summary>
         /// returns all instance variables in the order of their definition for testing
         /// </summary>
-        /// <returns>all instance variables in the order of their definition</returns>
-        public Object[]/*(ProgramState, FileImporter, OpenFileDialog, Image, List<Line>, Image, List<Point>, List<Tuple<bool, Line>>, bool, Point, Point, Queue<Point>, Graphics, bool[,], HashSet<int>[,], uint, ActionHistory)*/ GetAllVariables()
+        /// <returns>A list of tuples containing names of variables and the variable themselves. 
+        /// Cast according to the Type definitions in the class variable section.</returns>
+        public List<Tuple<String, Object>>GetAllVariables()
         {
-            return new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList, rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition, cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionSize, historyOfActions };
+            var objArr = new (String, object)[] { ("currentState", currentState), ("fileImporter", fileImporter), ("openFileDialog", openFileDialog),
+                ("leftImage", leftImage), ("leftLineList", leftLineList), ("rightImage", rightImage), ("currentLine", currentLine),
+                ("rightLineList", rightLineList), ("mousePressed", mousePressed), ("currentCursorPosition", currentCursorPosition),
+                ("previousCursorPosition", previousCursorPosition), ("cursorPositions", cursorPositions), ("rightGraph", rightGraph),
+                ("isFilledMatrix", isFilledMatrix), ("linesMatrix", linesMatrix), ("deletionRadius", deletionRadius),
+                ("historyOfActions", historyOfActions), ("overlayItems", overlayItems), ("redrawAss", redrawAss), ("markerRadius", markerRadius) };
+            var varArr = new List<Tuple<String, Object>>();
+            foreach((String, object) obj in objArr)
+            {
+                varArr.Add(new Tuple<string, object>(obj.Item1, obj.Item2));
+            }
+            return varArr;
         }
 
         /// <summary>
@@ -617,7 +798,5 @@ namespace SketchAssistant
             DrawEmptyCanvasLeft(width, height);
             BindAndDrawLeftImage(newImage);
         }
-
-
     }
 }
