@@ -20,7 +20,7 @@ namespace SketchAssistant
         public Form1()
         {
             InitializeComponent();
-            fileImporter = new FileImporter(this);
+            fileImporter = new FileImporter();
         }
 
         /**********************************/

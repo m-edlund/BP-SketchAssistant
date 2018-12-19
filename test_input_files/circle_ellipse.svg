@@ -5,10 +5,10 @@ FSFewFAHBfAg
 <DSFVSF>
 <GSG FS02MAFfm="Fmseikf" />
 source: https://www.w3schools.com/
-<svg height="500" width="500">
-  <ellipse cx="250" cy="250" rx="100" ry="50"
+<svg height="5000" width="5000">
+  <ellipse cx="2500" cy="2500" rx="1000" ry="500"
   style="fill:yellow;stroke:purple;stroke-width:2" />
-  <ellipse cx="240" cy="100" rx="220" ry="30" style="fill:purple" />
-  <ellipse cx="220" cy="70" rx="190" ry="20" style="fill:lime" />
-  <ellipse cx="210" cy="45" rx="170" ry="15" style="fill:yellow" />
+  <ellipse cx="2400" cy="1000" rx="2200" ry="300" style="fill:purple" />
+  <ellipse cx="2200" cy="700" rx="1900" ry="200" style="fill:lime" />
+  <ellipse cx="2100" cy="450" rx="1700" ry="150" style="fill:yellow" />
 </svg>

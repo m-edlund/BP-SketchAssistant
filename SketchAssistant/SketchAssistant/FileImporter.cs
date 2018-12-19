@@ -13,11 +13,6 @@ namespace SketchAssistant
     {
 
         /// <summary>
-        /// pointer to the running instance of main program
-        /// </summary>
-        Form1 program;
-
-        /// <summary>
         /// scale factor for coordinates of svg file
         /// </summary>
         double scale;
@@ -35,11 +30,15 @@ namespace SketchAssistant
         /// <summary>
         /// number of points to create along the outline of an ellipse, divisible by 4
         /// </summary>
-        readonly int samplingRateEllipse = 24;
+        readonly int samplingRateEllipse = 12;
 
-        public FileImporter(Form1 newProgram)
+        /// <summary>
+        /// number of points to create on a bezier curve, including start and end point (even numbr will result in "flat" bezier curves, uneven number in "pointed" ones
+        /// </summary>
+        readonly int samplingRateBezier = 101;
+
+        public FileImporter()
         {
-            program = newProgram;
         }
 
         /// <summary>
@@ -564,7 +563,6 @@ namespace SketchAssistant
         private List<Line> parsePath(string[] currentElement)
         {
             List<String> pathElements = new List<string>();
-            /*
             for (int j = 0; j < currentElement.Length; j++)
             {
                 if (currentElement[j].StartsWith("d="))
@@ -581,24 +579,613 @@ namespace SketchAssistant
             }
             List<Line> element = new List<Line>();
             List<Point> currentLine = new List<Point>();
-            Point mirroredBezierPoint;
-            pathElements = PreparePathElements(pathElements); //split pathElement list objects until every object is atomar (single character or single number (coordinate))
-            //int k = 0; //index of active element in pathElements is always 0
-            currentLine = parse_M(pathElements);
-            while(!(pathElements.Count == 0){
-                if (pathElements.First().Equals("M"))
+            double lastBezierControlPointX= 0;
+            double lastBezierControlPointY= 0;
+            double lastPositionX;
+            double lastPositionY;
+            //assume that svg is well formatted with spaces between each token, no emitted characters and only "[char] (appropriateNumber*[coordinate])" segments
+            //pathElements = PreparePathElements(pathElements); //split pathElement list objects until every object is atomar (single character or single number (coordinate))
+            //int k = 0; //index of active element in pathElements is always 0 
+            (List<Point>, double, double) valuesArc; //list of points, new values for: lastPositionX, lastPositionY
+            (List<Point>, double, double, double, double) valuesBezierCurve; //list of points, new values for: lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY
+            (Point, double, double) valuesSinglePoint = parse_M_Z_L(pathElements); //new point, new values for: lastPositionX, lastPositionY
+            currentLine = new List<Point>();
+            currentLine.Add(valuesSinglePoint.Item1);
+            lastPositionX = valuesSinglePoint.Item2;
+            lastPositionY = valuesSinglePoint.Item3;
+            String currentToken;
+            while (!(pathElements.Count == 0)){
+                currentToken = pathElements.First();
+                if (currentToken.Equals("M"))
                 {
-                    element.Add(new Line(currentLine));
-                    currentLine = parse_M(pathElements);
+                    element.Add(new Line(currentLine)); //save current line
+                    valuesSinglePoint = parse_M_Z_L(pathElements);
+                    currentLine = new List<Point>(); //create new empty line
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
                 }
-                else if (pathElements.First().Equals(""))
+                else if (currentToken.Equals("m"))
                 {
-
+                    element.Add(new Line(currentLine)); //save current line
+                    valuesSinglePoint = parse_m_z_l(pathElements, lastPositionX, lastPositionY);
+                    currentLine = new List<Point>(); //create new empty line
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("Z"))
+                {
+                    valuesSinglePoint = parse_M_Z_L(pathElements);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to old line
+                    element.Add(new Line(currentLine)); //save current line
+                    currentLine = new List<Point>(); //create new empty line
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("z"))
+                {
+                    valuesSinglePoint = parse_m_z_l(pathElements, lastPositionX, lastPositionY);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to old line
+                    element.Add(new Line(currentLine)); //save current line
+                    currentLine = new List<Point>(); //create new empty line
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("L"))
+                {
+                    valuesSinglePoint = parse_M_Z_L(pathElements);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("l"))
+                {
+                    valuesSinglePoint = parse_m_z_l(pathElements, lastPositionX, lastPositionY);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("H"))
+                {
+                    valuesSinglePoint = parse_H(pathElements, lastPositionY);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("h"))
+                {
+                    valuesSinglePoint = parse_h(pathElements, lastPositionX, lastPositionY);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("V"))
+                {
+                    valuesSinglePoint = parse_V(pathElements, lastPositionX);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("v"))
+                {
+                    valuesSinglePoint = parse_v(pathElements, lastPositionX, lastPositionY);
+                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
+                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
+                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("C"))
+                {
+                    valuesBezierCurve = parse_C(pathElements, lastPositionX, lastPositionY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("c"))
+                {
+                    valuesBezierCurve = parse_C(pathElements, lastPositionX, lastPositionY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("S"))
+                {
+                    valuesBezierCurve = parse_S(pathElements, lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("s"))
+                {
+                    valuesBezierCurve = parse_s(pathElements, lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("Q"))
+                {
+                    valuesBezierCurve = parse_Q(pathElements, lastPositionX, lastPositionY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("q"))
+                {
+                    valuesBezierCurve = parse_q(pathElements, lastPositionX, lastPositionY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("T"))
+                {
+                    valuesBezierCurve = parse_T(pathElements, lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("t"))
+                {
+                    valuesBezierCurve = parse_t(pathElements, lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY);
+                    currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
+                    lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
+                    lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
+                    lastBezierControlPointX = valuesBezierCurve.Item4; //save last bezier control point coordinates
+                    lastBezierControlPointY = valuesBezierCurve.Item5; //save last bezier control point coordinates
+                }
+                else if (currentToken.Equals("A"))
+                {
+                    valuesArc = parse_A(pathElements);
+                    currentLine.AddRange(valuesArc.Item1); //add points to new line
+                    lastPositionX = valuesArc.Item2; //save last point coordinates
+                    lastPositionY = valuesArc.Item3; //save last point coordinates
+                }
+                else if (currentToken.Equals("a"))
+                {
+                    valuesArc = parse_a(pathElements, lastPositionX, lastPositionY);
+                    currentLine.AddRange(valuesArc.Item1); //add points to new line
+                    lastPositionX = valuesArc.Item2; //save last point coordinates
+                    lastPositionY = valuesArc.Item3; //save last point coordinates
+                }
+                else
+                {
+                    throw new FileImporterException("invalid path argument or path data formatting: read argument " + pathElements.First(), "valid path arguments are: {M,Z,L,H,V,C,S,Q,T,A} in upper and lower case", i + 1);
                 }
             }
+            if (currentLine.Count > 1)
+            {
+                element.Add(new Line(currentLine)); //save current line
+            }
             return element;
-            */
-            return null;
+        }
+
+        /// <summary>
+        /// parses a "moveto", "close loop" or "lineto" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <returns>the point at the end of the move, close loop or line action and its exact, unscaled coordinates</returns>
+        private (Point, double, double) parse_M_Z_L(List<string> pathElements)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            return (ScaleAndCreatePoint(x, y), x, y);
+        }
+
+        /// <summary>
+        /// parses a "moveto", "close loop" or "lineto" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>the point at the end of the move, close loop or line action and its exact, unscaled coordinates</returns>
+        private (Point, double, double) parse_m_z_l(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            x = lastPositionX + x; //compute absolute x coordinate
+            y = lastPositionY + y; //compute absolute y coordinate
+            return (ScaleAndCreatePoint(x, y), x, y);
+        }
+
+        /// <summary>
+        /// parses a "horizontal lineto" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>the point at the end of the horizontal line action and its exact, unscaled coordinates</returns>
+        private (Point, double, double) parse_H(List<string> pathElements, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            return (ScaleAndCreatePoint(x, lastPositionY), x, lastPositionY);
+        }
+
+        /// <summary>
+        /// parses a "horizontal lineto" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>the point at the end of the horizontal line action and its exact, unscaled coordinates</returns>
+        private (Point, double, double) parse_h(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            x = lastPositionX + x; //compute absolute x coordinate
+            return (ScaleAndCreatePoint(x, lastPositionY), x, lastPositionY);
+        }
+
+        /// <summary>
+        /// parses a "vertical lineto" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <returns>the point at the end of the vertical line action and its exact, unscaled coordinates</returns>
+        private (Point, double, double) parse_V(List<string> pathElements, double lastPositionX)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            return (ScaleAndCreatePoint(lastPositionX, y), lastPositionX, y);
+        }
+
+        /// <summary>
+        /// parses a "vertical lineto" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>the point at the end of the vertical line action and its exact, unscaled coordinates</returns>
+        private (Point, double, double) parse_v(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            y = lastPositionY + y; //compute absolute y coordinate
+            return (ScaleAndCreatePoint(lastPositionX, y), lastPositionX, y);
+        }
+
+        /// <summary>
+        /// parses a "cubic bezier curve" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_C(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+        }
+
+        /// <summary>
+        /// parses a "cubic bezier curve" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_c(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            x1 = lastPositionX + x1; //compute absolute x coordinate
+            y1 = lastPositionY + y1; //compute absolute y coordinate
+            x2 = lastPositionX + x2; //compute absolute x coordinate
+            y2 = lastPositionY + y2; //compute absolute y coordinate
+            x = lastPositionX + x; //compute absolute x coordinate
+            y = lastPositionY + y; //compute absolute y coordinate
+            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+        }
+
+        /// <summary>
+        /// parses a "cubic bezier curve shorthand" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_S(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x1 = lastPositionX + (lastPositionX - lastBezierControlPointX); //mirror last bezier control point at bezier start point to get first new bezier control point
+            double y1 = lastPositionY + (lastPositionY - lastBezierControlPointY); //mirror last bezier control point at bezier start point to get first new bezier control point
+            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+        }
+
+        /// <summary>
+        /// parses a "cubic bezier curve shorthand" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_s(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x1 = lastPositionX + (lastPositionX - lastBezierControlPointX); //mirror last bezier control point at bezier start point to get first new bezier control point
+            double y1 = lastPositionY + (lastPositionY - lastBezierControlPointY); //mirror last bezier control point at bezier start point to get first new bezier control point
+            x2 = lastPositionX + x2; //compute absolute x coordinate
+            y2 = lastPositionY + y2; //compute absolute y coordinate
+            x = lastPositionX + x; //compute absolute x coordinate
+            y = lastPositionY + y; //compute absolute y coordinate
+            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+        }
+
+        /// <summary>
+        /// parses a "quadratic bezier curve" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_Q(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+        }
+
+        /// <summary>
+        /// parses a "quadratic bezier curve" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_q(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse control point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse control point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            x1 = lastPositionX + x1; //compute absolute x coordinate
+            y1 = lastPositionY + y1; //compute absolute y coordinate
+            x = lastPositionX + x; //compute absolute x coordinate
+            y = lastPositionY + y; //compute absolute y coordinate
+            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+        }
+
+        /// <summary>
+        /// parses a "quadratic bezier curve shorthand" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_T(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            double x1 = lastPositionX + (lastPositionX - lastBezierControlPointX); //mirror last bezier control point at bezier start point to get first new bezier control point
+            double y1 = lastPositionY + (lastPositionY - lastBezierControlPointY); //mirror last bezier control point at bezier start point to get first new bezier control point
+            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+        }
+
+        /// <summary>
+        /// parses a "quadratic bezier curve shorthand" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
+        /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
+        private (List<Point>, double, double, double, double) parse_t(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            x = lastPositionX + x; //compute absolute x coordinate
+            y = lastPositionY + y; //compute absolute y coordinate
+            double x1 = lastPositionX + (lastPositionX - lastBezierControlPointX); //mirror last bezier control point at bezier start point to get first new bezier control point
+            double y1 = lastPositionY + (lastPositionY - lastBezierControlPointY); //mirror last bezier control point at bezier start point to get first new bezier control point
+            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+        }
+
+        private (List<Point>, double, double) parse_A(List<string> pathElements)
+        {
+            throw new NotImplementedException();
+        }
+
+        private (List<Point>, double, double) parse_a(List<string> pathElements, double lastPositionX, double lastPositionY)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// samples a cubic bezier curve with a static number of steps (samplingRateBezier)
+        /// </summary>
+        /// <param name="lastPositionX">x coordinate of last point</param>
+        /// <param name="lastPositionY">y coordinate of last point</param>
+        /// <param name="controlPoint1X">x coordinate of control point 1</param>
+        /// <param name="controlPoint1Y">y coordinate of control point 1</param>
+        /// <param name="controlPoint2X">x coordinate of control point 2</param>
+        /// <param name="controlPoint2Y">y coordinate of control point 2</param>
+        /// <param name="nextPositionX">x coordinate of next point</param>
+        /// <param name="nextPositionY">y coordinate of next point</param>
+        /// <returns>a List of Points containing all sampled points</returns>
+        private List<Point> SampleCubicBezier(double lastPositionX, double lastPositionY, double controlPoint1X, double controlPoint1Y, double controlPoint2X, double controlPoint2Y, double nextPositionX, double nextPositionY)
+        {
+            (double[], double[]) line1 = CreateDiscreteLine(lastPositionX, lastPositionY, controlPoint1X, controlPoint1Y);
+            (double[], double[]) line2 = CreateDiscreteLine(controlPoint1X, controlPoint1Y, controlPoint2X, controlPoint2Y);
+            (double[], double[]) line3 = CreateDiscreteLine(controlPoint2X, controlPoint2Y, nextPositionX, nextPositionY);
+            (double[], double[]) quadraticBezier1 = computeBezierStep(line1.Item1, line1.Item2, line2.Item1, line2.Item2);
+            (double[], double[]) quadraticBezier2 = computeBezierStep(line2.Item1, line2.Item2, line3.Item1, line3.Item2);
+            (double[], double[]) values = computeBezierStep(quadraticBezier1.Item1, quadraticBezier1.Item2, quadraticBezier2.Item1, quadraticBezier2.Item2);
+            List<Point> result = new List<Point>();
+            for (int j = 0; j < samplingRateBezier; j++)
+            {
+                result.Add(ScaleAndCreatePoint(values.Item1[j], values.Item2[j]));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// samples a quadratic bezier curve with a static number of steps (samplingRateBezier)
+        /// </summary>
+        /// <param name="lastPositionX">x coordinate of last point</param>
+        /// <param name="lastPositionY">y coordinate of last point</param>
+        /// <param name="controlPointX">x coordinate of control point</param>
+        /// <param name="controlPointY">y coordinate of control point</param>
+        /// <param name="nextPositionX">x coordinate of next point</param>
+        /// <param name="nextPositionY">y coordinate of next point</param>
+        /// <returns>a List of Points containing all sampled points</returns>
+        private List<Point> SampleQuadraticBezier(double lastPositionX, double lastPositionY, double controlPointX, double controlPointY, double nextPositionX, double nextPositionY)
+        {
+            (double[], double[]) line1 = CreateDiscreteLine(lastPositionX, lastPositionY, controlPointX, controlPointY);
+            (double[], double[]) line2 = CreateDiscreteLine(controlPointX, controlPointY, nextPositionX, nextPositionY);
+            (double[], double[]) values = computeBezierStep(line1.Item1, line1.Item2, line2.Item1, line2.Item2);
+            List<Point> result = new List<Point>();
+            for (int j = 0; j < samplingRateBezier; j++)
+            {
+                result.Add(ScaleAndCreatePoint(values.Item1[j], values.Item2[j]));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// create a discrete line with [samplingRateBezier] points (including start and end point) between two points
+        /// </summary>
+        /// <param name="point1X">coordinate of point 1</param>
+        /// <param name="point1Y">y coordinate of point 1</param>
+        /// <param name="point2X">x coordinate of point 2</param>
+        /// <param name="point2Y">y coordinate of point 2</param>
+        /// <returns>the discrete line as arrays of x and y coordinates</returns>
+        private (double[], double[]) CreateDiscreteLine(double point1X, double point1Y, double point2X, double point2Y)
+        {
+            double[] resultX = new double[samplingRateBezier];
+            double[] resultY = new double[samplingRateBezier];
+            for (int j = 0; j < samplingRateBezier; j++)
+            {
+                (double, double) pointResult = LinearInterpolationForBezier(point1X, point1Y, point2X, point2Y, j);
+                resultX[j] = pointResult.Item1;
+                resultY[j] = pointResult.Item2;
+            }
+            return (resultX, resultY);
+        }
+
+        /// <summary>
+        /// computes the discrete bezier curve between two given dicrete lines/curves
+        /// </summary>
+        /// <param name="line1X">x coordinates of all points in line 1</param>
+        /// <param name="line1Y">y coordinates of all points in line 1</param>
+        /// <param name="line2X">x coordinates of all points in line 2</param>
+        /// <param name="line2Y">y coordinates of all points in line 2</param>
+        /// <returns>the discrete bezier curve</returns>
+        private (double[], double[]) computeBezierStep(double[] line1X, double[] line1Y, double[] line2X, double[] line2Y)
+        {
+            double[] resultX = new double[samplingRateBezier];
+            double[] resultY = new double[samplingRateBezier];
+            for (int j = 0; j < samplingRateBezier; j++)
+            {
+                (double, double) pointResult = LinearInterpolationForBezier(line1X[j], line1Y[j], line2X[j], line2Y[j], j);
+                resultX[j] = pointResult.Item1;
+                resultY[j] = pointResult.Item2;
+            }
+            return (resultX, resultY);
+        }
+
+        /// <summary>
+        /// creates the linearly interpolated point at j/(samplingRateBezier - 1) between point 1 and point 2
+        /// </summary>
+        /// <param name="point1X">x coordinate of point 1</param>
+        /// <param name="point1Y">y coordinate of point 1</param>
+        /// <param name="point2X">x coordinate of point 2</param>
+        /// <param name="point2Y">y coordinate of point 2</param>
+        /// <param name="j">number of point to be interpolated, at a total number of [samplingRateBezier] points</param>
+        /// <returns>the linearly interpolated point</returns>
+        private (double, double) LinearInterpolationForBezier(double point1X, double point1Y, double point2X, double point2Y, int j)
+        {
+            double factor = ((double)1 / (double)(samplingRateBezier - 1)) * (double)j; //factor for linear interpolation
+            double x = point1X + ((point2X - point1X) * factor);
+            double y = point1Y + ((point2Y - point1Y) * factor);
+            return (x, y);
         }
 
         /// <summary>

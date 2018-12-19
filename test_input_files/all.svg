@@ -19,4 +19,12 @@ source: https://www.w3schools.com/
   <ellipse cx="240" cy="100" rx="220" ry="30" style="fill:purple" />
   <ellipse cx="220" cy="70" rx="190" ry="20" style="fill:lime" />
   <ellipse cx="210" cy="45" rx="170" ry="15" style="fill:yellow" />
+  <path id="lineAB" d="M 100 350 l 150 -300" stroke="red"
+  stroke-width="3" fill="none" />
+  <path id="lineBC" d="M 250 50 l 150 300" stroke="red"
+  stroke-width="3" fill="none" />
+  <path d="M 175 200 l 150 0" stroke="green" stroke-width="3"
+  fill="none" />
+  <path d="M 100 350 q 150 -300 300 0" stroke="blue"
+  stroke-width="5" fill="none" />
 </svg>
