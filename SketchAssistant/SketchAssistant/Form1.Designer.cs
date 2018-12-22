@@ -43,13 +43,13 @@ namespace SketchAssistant
             this.canvasButton = new System.Windows.Forms.ToolStripButton();
             this.drawButton = new System.Windows.Forms.ToolStripButton();
             this.deleteButton = new System.Windows.Forms.ToolStripButton();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripLoadStatus = new System.Windows.Forms.ToolStripStatusLabel();
-            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
-            this.mouseTimer = new System.Windows.Forms.Timer(this.components);
-            this.lastActionTakenLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.undoButton = new System.Windows.Forms.ToolStripButton();
             this.redoButton = new System.Windows.Forms.ToolStripButton();
+            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.toolStripLoadStatus = new System.Windows.Forms.ToolStripStatusLabel();
+            this.lastActionTakenLabel = new System.Windows.Forms.ToolStripStatusLabel();
+            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
+            this.mouseTimer = new System.Windows.Forms.Timer(this.components);
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRight)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxLeft)).BeginInit();
@@ -126,7 +126,7 @@ namespace SketchAssistant
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.loadToolStripMenuItem.Text = "Load...";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
@@ -135,13 +135,13 @@ namespace SketchAssistant
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.examplePictureToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.importToolStripMenuItem.Text = "Import...";
             // 
             // examplePictureToolStripMenuItem
             // 
             this.examplePictureToolStripMenuItem.Name = "examplePictureToolStripMenuItem";
-            this.examplePictureToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.examplePictureToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.examplePictureToolStripMenuItem.Text = "Example picture";
             this.examplePictureToolStripMenuItem.Click += new System.EventHandler(this.examplePictureToolStripMenuItem_Click);
             // 
@@ -189,36 +189,6 @@ namespace SketchAssistant
             this.deleteButton.Text = "Delete";
             this.deleteButton.Click += new System.EventHandler(this.deleteButton_Click);
             // 
-            // statusStrip1
-            // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripLoadStatus,
-            this.lastActionTakenLabel});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 491);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(696, 24);
-            this.statusStrip1.TabIndex = 4;
-            this.statusStrip1.Text = "statusStrip1";
-            // 
-            // toolStripLoadStatus
-            // 
-            this.toolStripLoadStatus.Name = "toolStripLoadStatus";
-            this.toolStripLoadStatus.Size = new System.Drawing.Size(40, 19);
-            this.toolStripLoadStatus.Text = "no file";
-            // 
-            // mouseTimer
-            // 
-            this.mouseTimer.Interval = 1;
-            this.mouseTimer.Tick += new System.EventHandler(this.mouseTimer_Tick);
-            // 
-            // lastActionTakenLabel
-            // 
-            this.lastActionTakenLabel.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
-            this.lastActionTakenLabel.Name = "lastActionTakenLabel";
-            this.lastActionTakenLabel.Size = new System.Drawing.Size(38, 19);
-            this.lastActionTakenLabel.Text = "none";
-            this.lastActionTakenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
             // undoButton
             // 
             this.undoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -238,6 +208,36 @@ namespace SketchAssistant
             this.redoButton.Size = new System.Drawing.Size(38, 22);
             this.redoButton.Text = "Redo";
             this.redoButton.Click += new System.EventHandler(this.redoButton_Click);
+            // 
+            // statusStrip1
+            // 
+            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripLoadStatus,
+            this.lastActionTakenLabel});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 491);
+            this.statusStrip1.Name = "statusStrip1";
+            this.statusStrip1.Size = new System.Drawing.Size(696, 24);
+            this.statusStrip1.TabIndex = 4;
+            this.statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStripLoadStatus
+            // 
+            this.toolStripLoadStatus.Name = "toolStripLoadStatus";
+            this.toolStripLoadStatus.Size = new System.Drawing.Size(40, 19);
+            this.toolStripLoadStatus.Text = "no file";
+            // 
+            // lastActionTakenLabel
+            // 
+            this.lastActionTakenLabel.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
+            this.lastActionTakenLabel.Name = "lastActionTakenLabel";
+            this.lastActionTakenLabel.Size = new System.Drawing.Size(38, 19);
+            this.lastActionTakenLabel.Text = "none";
+            this.lastActionTakenLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // mouseTimer
+            // 
+            this.mouseTimer.Interval = 1;
+            this.mouseTimer.Tick += new System.EventHandler(this.mouseTimer_Tick);
             // 
             // Form1
             // 

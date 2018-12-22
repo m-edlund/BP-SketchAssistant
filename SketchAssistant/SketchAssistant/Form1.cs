@@ -20,6 +20,7 @@ namespace SketchAssistant
         public Form1()
         {
             InitializeComponent();
+            ProgramPresenter = new MVP_Presenter(this);
             fileImporter = new FileImporter(this);
         }
 
@@ -28,6 +29,13 @@ namespace SketchAssistant
         /**********************************/
 
         //important: add new variables only at the end of the list to keep the order of definition consistent with the order in which they are returned by GetAllVariables()
+
+        public enum ButtonState
+        {
+            Enabled,
+            Disabled,
+            Active
+        }
 
         /// <summary>
         /// Different Program States
@@ -118,6 +126,10 @@ namespace SketchAssistant
         /// Size of areas marking endpoints of lines in the redraw mode.
         /// </summary>
         int markerRadius = 10;
+        /// <summary>
+        /// The Presenter Component of the MVP-Model
+        /// </summary>
+        MVP_Presenter ProgramPresenter;
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -137,6 +149,9 @@ namespace SketchAssistant
         /// </summary>
         private void Form1_Resize(object sender, System.EventArgs e)
         {
+            ProgramPresenter.Resize(new Tuple<int, int>(pictureBoxLeft.Width, pictureBoxLeft.Height), 
+                new Tuple<int, int>(pictureBoxRight.Width, pictureBoxRight.Height));
+            ///
             this.Refresh();
             UpdateSizes();
         }
@@ -144,6 +159,8 @@ namespace SketchAssistant
         //Load button, will open an OpenFileDialog
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ProgramPresenter.LoadToolStripMenuItemClick();
+            ///
             openFileDialog.Filter = "Image|*.jpg;*.png;*.jpeg";
             if(openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -161,6 +178,8 @@ namespace SketchAssistant
         /// </summary>
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ProgramPresenter.ExamplePictureToolStripMenuItemClick();
+            ///
             if (CheckSavedStatus())
             {
                 openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
@@ -200,6 +219,8 @@ namespace SketchAssistant
         /// </summary>
         private void drawButton_Click(object sender, EventArgs e)
         {
+            ProgramPresenter.ChangeState(true);
+            ///
             if(rightImage != null)
             {
                 if (currentState.Equals(ProgramState.Draw))
@@ -219,6 +240,8 @@ namespace SketchAssistant
         /// </summary>
         private void deleteButton_Click(object sender, EventArgs e)
         {
+            ProgramPresenter.ChangeState(false);
+            ///
             if (rightImage != null)
             {
                 if (currentState.Equals(ProgramState.Delete))
@@ -238,6 +261,8 @@ namespace SketchAssistant
         /// </summary>
         private void undoButton_Click(object sender, EventArgs e)
         {
+            ProgramPresenter.Undo();
+            ///
             if (historyOfActions.CanUndo())
             {
                 HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
@@ -267,6 +292,8 @@ namespace SketchAssistant
         /// </summary>
         private void redoButton_Click(object sender, EventArgs e)
         {
+            ProgramPresenter.Redo();
+            ///
             if (historyOfActions.CanRedo())
             {
                 historyOfActions.MoveAction(false);
@@ -298,11 +325,11 @@ namespace SketchAssistant
         {
             if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Z)
             {
-                undoButton_Click(sender, e);
+                ProgramPresenter.Undo();
             }
             if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Y)
             {
-                redoButton_Click(sender, e);
+                ProgramPresenter.Redo();
             }
         }
 
@@ -311,6 +338,8 @@ namespace SketchAssistant
         /// </summary>
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e);
+            ///
             currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
         }
         
@@ -319,6 +348,8 @@ namespace SketchAssistant
         /// </summary>
         private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
         {
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, e);
+            ///
             mousePressed = true;
             if (currentState.Equals(ProgramState.Draw))
             {
@@ -331,6 +362,8 @@ namespace SketchAssistant
         /// </summary>
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, e);
+            ///
             mousePressed = false;
             if (currentState.Equals(ProgramState.Draw) && currentLine.Count > 0)
             {
@@ -352,6 +385,8 @@ namespace SketchAssistant
         /// </summary>
         private void canvasButton_Click(object sender, EventArgs e)
         {
+            ProgramPresenter.NewCanvas();
+            ///
             if (CheckSavedStatus())
             {
                 historyOfActions = new ActionHistory(lastActionTakenLabel);
@@ -379,6 +414,8 @@ namespace SketchAssistant
         /// </summary>
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
+            ProgramPresenter.Tick();
+            ///
             if(cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
@@ -693,15 +730,6 @@ namespace SketchAssistant
                 l.DrawLine(Graphics.FromImage(leftImage));
             }
         }
-
-        /// <summary>
-        /// shows the given info message in a popup and asks the user to aknowledge it
-        /// </summary>
-        /// <param name="message">the message to show</param>
-        private void ShowInfoMessage(String message)
-        {
-            MessageBox.Show(message);
-        }
         
         /// <summary>
         /// Will calculate the start and endpoints of the given line on the right canvas.
@@ -760,6 +788,76 @@ namespace SketchAssistant
                     "Attention", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
             }
             return true;
+        }
+
+        /************************************************/
+        /*** FUNCTIONS FOR MANIPULATING THE FORM HERE ***/
+        /************************************************/
+
+        public void SetToolStripLoadStatus(String message)
+        {
+            toolStripLoadStatus.Text = message;
+        }
+
+        public void SetToolStripButtonStatus(String buttonName, ButtonState state)
+        {
+            ToolStripButton buttonToChange;
+            switch (buttonName)
+            {
+                case "canvasButton":
+                    buttonToChange = canvasButton;
+                    break;
+                case "drawButton":
+                    buttonToChange = drawButton;
+                    break;
+                case "deleteButton":
+                    buttonToChange = deleteButton;
+                    break;
+                case "undoButton":
+                    buttonToChange = undoButton;
+                    break;
+                case "redoButton":
+                    buttonToChange = redoButton;
+                    break;
+                default:
+                    Console.WriteLine("Invalid Button was given to SetToolStripButton. \nMaybe you forgot to add a case?");
+                    return;
+            }
+            switch (state)
+            {
+                case ButtonState.Active:
+                    buttonToChange.Checked = true;
+                    break;
+                case ButtonState.Disabled:
+                    buttonToChange.Checked = false;
+                    buttonToChange.Enabled = false;
+                    break;
+                case ButtonState.Enabled:
+                    buttonToChange.Checked = false;
+                    buttonToChange.Enabled = true;
+                    break;
+            }
+        }
+
+        public void DisplayInLeftPictureBox(Image img)
+        {
+            pictureBoxLeft.Image = img;
+            this.Refresh();
+        }
+
+        public void DisplayInRightPictureBox(Image img)
+        {
+            pictureBoxRight.Image = img;
+            this.Refresh();
+        }
+
+        /// <summary>
+        /// shows the given info message in a popup and asks the user to aknowledge it
+        /// </summary>
+        /// <param name="message">the message to show</param>
+        public void ShowInfoMessage(String message)
+        {
+            MessageBox.Show(message);
         }
 
         /********************************************/

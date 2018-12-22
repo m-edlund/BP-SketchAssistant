@@ -10,17 +10,6 @@ namespace SketchAssistant
 {
     public class FileImporter
     {
-
-        /// <summary>
-        /// pointer to the running instance of main program
-        /// </summary>
-        Form1 program;
-
-        public FileImporter(Form1 newProgram)
-        {
-            program = newProgram;
-        }
-
         /// <summary>
         /// parses a drawing consisting of line objects, given as a file in the application specific .isad format
         /// </summary>
