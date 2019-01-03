@@ -30,8 +30,13 @@ namespace SketchAssistant
         /*** CLASS VARIABLES ***/
         /***********************/
 
+        /// <summary>
+        /// If the program is in drawing mode.
+        /// </summary>
         bool inDrawingMode;
-
+        /// <summary>
+        /// If the mouse is currently pressed or not.
+        /// </summary>
         bool mousePressed;
         /// <summary>
         /// Size of deletion area
@@ -100,14 +105,15 @@ namespace SketchAssistant
         public MVP_Model(MVP_Presenter presenter)
         {
             programPresenter = presenter;
-            historyOfActions = new ActionHistory(null);
+            historyOfActions = new ActionHistory();
             redrawAss = new RedrawAssistant();
+            rightLineList = new List<Tuple<bool, Line>>();
+            overlayItems = new List<Tuple<bool, HashSet<Point>>>();
         }
-        
-        public void Undo()
-        {
 
-        }
+        /**************************/
+        /*** INTERNAL FUNCTIONS ***/
+        /**************************/
 
         /// <summary>
         /// A function that returns a white canvas for a given width and height.
@@ -133,21 +139,6 @@ namespace SketchAssistant
             return image;
         }
         
-        /// <summary>
-        /// Creates an empty Canvas
-        /// </summary>
-        private void DrawEmptyCanvasRight()
-        {
-            if (leftImage == null)
-            {
-                rightImageWithoutOverlay = GetEmptyCanvas(leftImageBoxWidth, leftImageBoxHeight);
-            }
-            else
-            {
-                rightImageWithoutOverlay = GetEmptyCanvas(leftImage.Width, leftImage.Height);
-            }
-            RefreshRightImage();
-        }
 
         /// <summary>
         /// Creates an empty Canvas on the left
@@ -164,29 +155,11 @@ namespace SketchAssistant
             {
                 leftImage = GetEmptyCanvas(width, height);
             }
-            RefreshLeftImage();
-        }
-
-        /// <summary>
-        /// A function to refresh the image being displayed in the right picture box, with the current rightImageWithOverlay.
-        /// </summary>
-        /// <param name="image">The new Image</param>
-        private void RefreshRightImage()
-        {
-            programPresenter.UpdateRightImage(rightImageWithOverlay);
-        }
-
-        /// <summary>
-        /// A function to refresh the image being displayed in the left picture box, with the current leftImage.
-        /// </summary>
-        /// <param name="image">The new Image</param>
-        private void RefreshLeftImage()
-        {
             programPresenter.UpdateLeftImage(leftImage);
         }
 
         /// <summary>
-        /// Redraws all lines in lineList, for which their associated boolean value equals true and calls RedrawRightOverlay.
+        /// Redraws all lines in rightLineList, for which their associated boolean value equals true and calls RedrawRightOverlay.
         /// </summary>
         private void RedrawRightImage()
         {
@@ -207,9 +180,15 @@ namespace SketchAssistant
                 currLine.DrawLine(workingGraph);
             }
             rightImageWithoutOverlay = workingCanvas;
-            //Redraw the Overlay
-            RedrawRightOverlay();
-            RefreshRightImage();
+            //Redraw the Overlay if needed
+            if (leftImage != null)
+            {
+                RedrawRightOverlay();
+            }
+            else
+            {
+                programPresenter.UpdateRightImage(rightImageWithoutOverlay);
+            }
         }
 
         /// <summary>
@@ -230,17 +209,7 @@ namespace SketchAssistant
                 }
             }
             rightImageWithOverlay = workingCanvas;
-            RefreshRightImage();
-        }
-        
-        /// <summary>
-        /// The function called by the Presenter to change the drawing state of the program.
-        /// </summary>
-        /// <param name="nowDrawing">The new drawingstate of the program</param>
-        public void ChangeState(bool nowDrawing)
-        {
-            inDrawingMode = nowDrawing;
-            UpdateUI();
+            programPresenter.UpdateRightImage(rightImageWithOverlay);
         }
         
         /// <summary>
@@ -280,7 +249,7 @@ namespace SketchAssistant
                 }
             }
         }
-        /*
+
         /// <summary>
         /// A function that checks the deletion matrixes at a certain point 
         /// and returns all Line ids at that point and in a square around it in a certain range.
@@ -294,7 +263,7 @@ namespace SketchAssistant
 
             foreach (Point pnt in GeometryCalculator.FilledCircleAlgorithm(p, (int)range))
             {
-                if (pnt.X >= 0 && pnt.Y >= 0 && pnt.X < rightImage.Width && pnt.Y < rightImage.Height)
+                if (pnt.X >= 0 && pnt.Y >= 0 && pnt.X < rightImageWithoutOverlay.Width && pnt.Y < rightImageWithoutOverlay.Height)
                 {
                     if (isFilledMatrix[pnt.X, pnt.Y])
                     {
@@ -305,6 +274,7 @@ namespace SketchAssistant
             return returnSet;
         }
 
+        /*
         /// <summary>
         /// binds the given picture to templatePicture and draws it
         /// </summary>
@@ -332,6 +302,239 @@ namespace SketchAssistant
             return currentLineEndings;
         }
         */
+
+
+
+        /// <summary>
+        /// Tells the Presenter to Update the UI
+        /// </summary>
+        private void UpdateUI()
+        {
+            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), (rightImageWithoutOverlay != null));
+        }
+
+
+        /*
+        /// <summary>
+        /// Checks if there is unsaved progess, and warns the user. Returns True if it safe to continue.
+        /// </summary>
+        /// <returns>true if there is none, or the user wishes to continue without saving.
+        /// false if there is progress, and the user doesn't wish to continue.</returns>
+        private bool CheckSavedStatus()
+        {
+            if (!historyOfActions.IsEmpty())
+            {
+                return (MessageBox.Show("You have unsaved changes, do you wish to continue?",
+                    "Attention", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
+            }
+            return true;
+        }
+        */
+
+        /********************************************/
+        /*** FUNCTIONS TO INTERACT WITH PRESENTER ***/
+        /********************************************/
+
+        /// <summary>
+        /// Creates an empty Canvas
+        /// </summary>
+        public void DrawEmptyCanvasRight()
+        {
+            if (leftImage == null)
+            {
+                rightImageWithoutOverlay = GetEmptyCanvas(leftImageBoxWidth, leftImageBoxHeight);
+            }
+            else
+            {
+                rightImageWithoutOverlay = GetEmptyCanvas(leftImage.Width, leftImage.Height);
+            }
+            RepopulateDeletionMatrixes();
+            rightImageWithOverlay = rightImageWithoutOverlay;
+            programPresenter.UpdateRightImage(rightImageWithOverlay);
+        }
+
+        /// <summary>
+        /// The function to set the left image.
+        /// </summary>
+        /// <param name="width">The width of the left image.</param>
+        /// <param name="height">The height of the left image.</param>
+        /// <param name="listOfLines">The List of Lines to be displayed in the left image.</param>
+        public void SetLeftLineList(int width, int height, List<Line> listOfLines)
+        {
+            var workingCanvas = GetEmptyCanvas(width,height);
+            var workingGraph = Graphics.FromImage(workingCanvas);
+            leftLineList = listOfLines;
+            //Lines
+            foreach (Line line in leftLineList)
+            {
+                line.DrawLine(workingGraph);
+            }
+            leftImage = workingCanvas;
+            programPresenter.UpdateLeftImage(leftImage);
+            //Set right image to same size as left image and delete linelist
+            DrawEmptyCanvasRight();
+            rightLineList = new List<Tuple<bool, Line>>();
+        }
+
+        public void Undo()
+        {
+            if (historyOfActions.CanUndo())
+            {
+                HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
+                SketchAction.ActionType undoAction = historyOfActions.GetCurrentAction().GetActionType();
+                switch (undoAction)
+                {
+                    case SketchAction.ActionType.Delete:
+                        //Deleted Lines need to be shown
+                        ChangeLines(affectedLines, true);
+                        break;
+                    case SketchAction.ActionType.Draw:
+                        //Drawn lines need to be hidden
+                        ChangeLines(affectedLines, false);
+                        break;
+                    default:
+                        break;
+                }
+                if(leftImage != null)
+                {
+                    //overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
+                }
+                RedrawRightImage();
+            }
+            RepopulateDeletionMatrixes();
+            programPresenter.PassLastActionTaken(historyOfActions.MoveAction(true));
+            UpdateUI();
+        }
+
+        public void Redo()
+        {
+            if (historyOfActions.CanRedo())
+            {
+                programPresenter.PassLastActionTaken(historyOfActions.MoveAction(false));
+                HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
+                SketchAction.ActionType redoAction = historyOfActions.GetCurrentAction().GetActionType();
+                switch (redoAction)
+                {
+                    case SketchAction.ActionType.Delete:
+                        //Deleted Lines need to be redeleted
+                        ChangeLines(affectedLines, false);
+                        break;
+                    case SketchAction.ActionType.Draw:
+                        //Drawn lines need to be redrawn
+                        ChangeLines(affectedLines, true);
+                        break;
+                    default:
+                        break;
+                }
+                if (leftImage != null)
+                {
+                    //overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
+                }
+                RedrawRightImage();
+                RepopulateDeletionMatrixes();
+            }
+            UpdateUI();
+        }
+
+        /// <summary>
+        /// The function called by the Presenter to change the drawing state of the program.
+        /// </summary>
+        /// <param name="nowDrawing">The new drawingstate of the program</param>
+        public void ChangeState(bool nowDrawing)
+        {
+            inDrawingMode = nowDrawing;
+            UpdateUI();
+        }
+
+        /// <summary>
+        /// A method to get the dimensions of the right image.
+        /// </summary>
+        /// <returns>A tuple containing the width and height of the right image.</returns>
+        public Tuple<int, int> GetRightImageDimensions()
+        {
+            if (rightImageWithoutOverlay != null)
+            {
+                return new Tuple<int, int>(rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height);
+            }
+            else
+            {
+                return new Tuple<int, int>(0, 0);
+            }
+        }
+
+        public void SetCurrentCursorPosition(Point p)
+        {
+            currentCursorPosition = p;
+        }
+
+        public void MouseDown()
+        {
+            mousePressed = true;
+            if (inDrawingMode)
+            {
+                currentLine = new List<Point>();
+            }
+        }
+
+        public void MouseUp()
+        {
+            mousePressed = false;
+            if (inDrawingMode && currentLine.Count > 0)
+            {
+                Line newLine = new Line(currentLine, rightLineList.Count);
+                rightLineList.Add(new Tuple<bool, Line>(true, newLine));
+                newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
+                if(leftImage != null)
+                {
+                    //Execute a RedrawAssistant tick with the currently finished Line
+                    //overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, newLine.GetID(), true);
+                }
+                RedrawRightImage();
+            }
+            UpdateUI();
+        }
+
+        public void Tick()
+        {
+            if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
+            else { previousCursorPosition = currentCursorPosition; }
+            cursorPositions.Enqueue(currentCursorPosition);
+            //Drawing
+            if (inDrawingMode && mousePressed)
+            {
+                var rightGraph = Graphics.FromImage(rightImageWithoutOverlay);
+                currentLine.Add(currentCursorPosition);
+                Line drawline = new Line(currentLine);
+                drawline.DrawLine(rightGraph);
+                RedrawRightOverlay();
+            }
+            //Deleting
+            if (!inDrawingMode && mousePressed)
+            {
+                List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                foreach (Point currPoint in uncheckedPoints)
+                {
+                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionRadius);
+                    if (linesToDelete.Count > 0)
+                    {
+                        programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete)));
+                        foreach (int lineID in linesToDelete)
+                        {
+                            rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
+                        }
+                        RepopulateDeletionMatrixes();
+                        if(leftImage != null)
+                        {
+                            //Redraw overlay gets ticked
+                            //overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
+                        }
+                        RedrawRightImage();
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
         /// </summary>
@@ -363,50 +566,13 @@ namespace SketchAssistant
             }
         }
 
-
         /// <summary>
-        /// Tells the Presenter to Update the UI
+        /// If there is unsaved progress.
         /// </summary>
-        private void UpdateUI()
+        /// <returns>True if there is progress that has not been saved.</returns>
+        public bool HasUnsavedProgress()
         {
-            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), (rightImageWithoutOverlay != null));
+            return !historyOfActions.IsEmpty();
         }
-
-        /// <summary>
-        /// A method to get the dimensions of the right image.
-        /// </summary>
-        /// <returns>A tuple containing the width and height of the right image.</returns>
-        public Tuple<int, int> GetRightImageDimensions()
-        {
-            if(rightImageWithoutOverlay != null)
-            {
-                return new Tuple<int, int>(rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height);
-            }
-            else
-            {
-                return new Tuple<int, int>(0, 0);
-            }
-        }
-
-        public void SetCurrentCursorPosition(Point p)
-        {
-
-        }
-        /*
-        /// <summary>
-        /// Checks if there is unsaved progess, and warns the user. Returns True if it safe to continue.
-        /// </summary>
-        /// <returns>true if there is none, or the user wishes to continue without saving.
-        /// false if there is progress, and the user doesn't wish to continue.</returns>
-        private bool CheckSavedStatus()
-        {
-            if (!historyOfActions.IsEmpty())
-            {
-                return (MessageBox.Show("You have unsaved changes, do you wish to continue?",
-                    "Attention", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
-            }
-            return true;
-        }
-        */
     }
 }

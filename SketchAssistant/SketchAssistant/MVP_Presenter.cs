@@ -36,10 +36,6 @@ namespace SketchAssistant
         /***********************/
 
         /// <summary>
-        /// A dialog responsible for opening files.
-        /// </summary>
-        OpenFileDialog openFileDialog;
-        /// <summary>
         /// Instance of FileImporter to handle drawing imports.
         /// </summary>
         private FileImporter fileImporter;
@@ -50,7 +46,6 @@ namespace SketchAssistant
             programView = form;
             programModel = new MVP_Model(this);
             //Initialize Class Variables
-            openFileDialog = new OpenFileDialog();
             fileImporter = new FileImporter();
         }
 
@@ -69,21 +64,15 @@ namespace SketchAssistant
         }
 
         /// <summary>
-        /// Display a new FileDialog to load an image.
+        /// Display a new FileDialog to load an image of type jpg or png.
         /// </summary>
         public void LoadToolStripMenuItemClick()
         {
-            openFileDialog.Filter = "Image|*.jpg;*.png;*.jpeg";
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            var fileNameTup = programView.openNewDialog("Image|*.jpg;*.png;*.jpeg");
+            if(!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
             {
-                ProgramView.SetToolStripLoadStatus(openFileDialog.SafeFileName);
-                ProgramModel
-                leftImage = Image.FromFile(openFileDialog.FileName);
-                pictureBoxLeft.Image = leftImage;
-                //Refresh the left image box when the content is changed
-                this.Refresh();
+
             }
-            UpdateButtonStatus();
         }
 
         /// <summary>
@@ -91,38 +80,23 @@ namespace SketchAssistant
         /// </summary>
         public void ExamplePictureToolStripMenuItemClick()
         {
-            if (ProgramModel.CheckSavedStatus())
+            var okToContinue = true;
+            if (programModel.HasUnsavedProgress())
             {
-                openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
+            }
+            if (okToContinue)
+            {
+                var fileNameTup = programView.openNewDialog("Interactive Sketch-Assistant Drawing|*.isad");
+                if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
                 {
-                    ProgramView.SetToolStripLoadStatus(openFileDialog.SafeFileName);
-                    try
-                    {
-                        (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
-                        DrawEmptyCanvasLeft(values.Item1, values.Item2);
-                        BindAndDrawLeftImage(values.Item3);
-
-                        //Match The right canvas to the left
-                        historyOfActions = new ActionHistory(lastActionTakenLabel);
-                        DrawEmptyCanvasRight();
-                        isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
-                        linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                        rightLineList = new List<Tuple<bool, Line>>();
-                        //Start the redraw mode
-                        redrawAss = new RedrawAssistant(leftLineList);
-                        UpdateSizes();
-                        overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
-                        RedrawRightImage();
-                        this.Refresh();
-                    }
-                    catch (FileImporterException ex)
-                    {
-                        ShowInfoMessage(ex.ToString());
-                    }
+                    programView.SetToolStripLoadStatus(fileNameTup.Item2);
+                    (int, int, List<Line>) values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                    programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                    programModel.ChangeState(true);
+                    programView.EnableTimer();
                 }
             }
-            UpdateButtonStatus();
         }
 
         public void ChangeState(bool NowDrawing)
@@ -132,22 +106,32 @@ namespace SketchAssistant
 
         public void Undo()
         {
-
+            programModel.Undo();
         }
 
         public void Redo()
         {
-
+            programModel.Redo();
         }
 
         public void NewCanvas()
         {
-
+            var okToContinue = true;
+            if (programModel.HasUnsavedProgress())
+            {
+                okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
+            }
+            if (okToContinue)
+            {
+                programModel.DrawEmptyCanvasRight();
+                programModel.ChangeState(true);
+                programView.EnableTimer();
+            }
         }
 
         public void Tick()
         {
-
+            programModel.Tick();
         }
 
         public void MouseEvent(MouseAction mouseAction, MouseEventArgs e)
@@ -157,8 +141,10 @@ namespace SketchAssistant
                 case MouseAction.Click:
                     break;
                 case MouseAction.Down:
+                    programModel.MouseDown();
                     break;
                 case MouseAction.Up:
+                    programModel.MouseUp();
                     break;
                 case MouseAction.Move:
                     programModel.SetCurrentCursorPosition(ConvertCoordinates(new Point(e.X, e.Y)));
@@ -181,7 +167,7 @@ namespace SketchAssistant
         public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool imageLoaded)
         {
             Dictionary<String, Form1.ButtonState> dict = new Dictionary<String, Form1.ButtonState> {
-                {"canvasButton", Form1.ButtonState.Disabled }, {"drawButton", Form1.ButtonState.Disabled}, {"deleteButton",Form1.ButtonState.Disabled }
+                {"canvasButton", Form1.ButtonState.Enabled }, {"drawButton", Form1.ButtonState.Disabled}, {"deleteButton",Form1.ButtonState.Disabled },
                 {"undoButton", Form1.ButtonState.Disabled },{"redoButton",  Form1.ButtonState.Disabled}};
 
             if (imageLoaded)
@@ -226,6 +212,11 @@ namespace SketchAssistant
         public void PassMessageToView(String msg)
         {
             programView.ShowInfoMessage(msg);
+        }
+
+        public void PassLastActionTaken(String msg)
+        {
+            programView.SetLastActionTakenText(msg);
         }
 
         /*************************/

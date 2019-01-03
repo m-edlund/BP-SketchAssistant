@@ -21,7 +21,7 @@ namespace SketchAssistant
         {
             InitializeComponent();
             ProgramPresenter = new MVP_Presenter(this);
-            fileImporter = new FileImporter(this);
+            fileImporter = new FileImporter();
         }
 
         /**********************************/
@@ -137,11 +137,12 @@ namespace SketchAssistant
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
+            /*
+            currentState = ProgramState.Idle;
             historyOfActions = new ActionHistory(null);
             redrawAss = new RedrawAssistant();
-            UpdateButtonStatus();
+            UpdateButtonStatus();*/
         }
 
         /// <summary>
@@ -151,16 +152,16 @@ namespace SketchAssistant
         {
             ProgramPresenter.Resize(new Tuple<int, int>(pictureBoxLeft.Width, pictureBoxLeft.Height), 
                 new Tuple<int, int>(pictureBoxRight.Width, pictureBoxRight.Height));
-            ///
+            /*
             this.Refresh();
-            UpdateSizes();
+            UpdateSizes();*/
         }
         
         //Load button, will open an OpenFileDialog
         private void loadToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ProgramPresenter.LoadToolStripMenuItemClick();
-            ///
+            /*
             openFileDialog.Filter = "Image|*.jpg;*.png;*.jpeg";
             if(openFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -171,6 +172,7 @@ namespace SketchAssistant
                 this.Refresh();
             }
             UpdateButtonStatus();
+            */
         }
 
         /// <summary>
@@ -179,7 +181,7 @@ namespace SketchAssistant
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ProgramPresenter.ExamplePictureToolStripMenuItemClick();
-            ///
+            /*
             if (CheckSavedStatus())
             {
                 openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
@@ -212,6 +214,7 @@ namespace SketchAssistant
                 }
             }
             UpdateButtonStatus();
+            */
         }
 
         /// <summary>
@@ -220,7 +223,7 @@ namespace SketchAssistant
         private void drawButton_Click(object sender, EventArgs e)
         {
             ProgramPresenter.ChangeState(true);
-            ///
+            /*
             if(rightImage != null)
             {
                 if (currentState.Equals(ProgramState.Draw))
@@ -232,7 +235,7 @@ namespace SketchAssistant
                     ChangeState(ProgramState.Draw);
                 }
             }
-            UpdateButtonStatus();
+            UpdateButtonStatus();*/
         }
 
         /// <summary>
@@ -241,7 +244,7 @@ namespace SketchAssistant
         private void deleteButton_Click(object sender, EventArgs e)
         {
             ProgramPresenter.ChangeState(false);
-            ///
+            /*
             if (rightImage != null)
             {
                 if (currentState.Equals(ProgramState.Delete))
@@ -253,7 +256,7 @@ namespace SketchAssistant
                     ChangeState(ProgramState.Delete);
                 }
             }
-            UpdateButtonStatus();
+            UpdateButtonStatus();*/
         }
 
         /// <summary>
@@ -262,7 +265,7 @@ namespace SketchAssistant
         private void undoButton_Click(object sender, EventArgs e)
         {
             ProgramPresenter.Undo();
-            ///
+            /*
             if (historyOfActions.CanUndo())
             {
                 HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
@@ -284,7 +287,7 @@ namespace SketchAssistant
                 RedrawRightImage();
             }
             historyOfActions.MoveAction(true);
-            UpdateButtonStatus();
+            UpdateButtonStatus();*/
         }
 
         /// <summary>
@@ -293,7 +296,7 @@ namespace SketchAssistant
         private void redoButton_Click(object sender, EventArgs e)
         {
             ProgramPresenter.Redo();
-            ///
+            /*
             if (historyOfActions.CanRedo())
             {
                 historyOfActions.MoveAction(false);
@@ -315,7 +318,7 @@ namespace SketchAssistant
                 overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
                 RedrawRightImage();
             }
-            UpdateButtonStatus();
+            UpdateButtonStatus();*/
         }
 
         /// <summary>
@@ -339,8 +342,8 @@ namespace SketchAssistant
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e);
-            ///
-            currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
+            
+            //currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
         }
         
         /// <summary>
@@ -349,12 +352,12 @@ namespace SketchAssistant
         private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, e);
-            ///
+            /*
             mousePressed = true;
             if (currentState.Equals(ProgramState.Draw))
             {
                 currentLine = new List<Point>();
-            }
+            }*/
         }
         
         /// <summary>
@@ -363,7 +366,7 @@ namespace SketchAssistant
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, e);
-            ///
+            /*
             mousePressed = false;
             if (currentState.Equals(ProgramState.Draw) && currentLine.Count > 0)
             {
@@ -375,7 +378,7 @@ namespace SketchAssistant
                 overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, newLine.GetID(), true);
                 RedrawRightImage();
             }
-            UpdateButtonStatus();
+            UpdateButtonStatus();*/
         }
         
         /// <summary>
@@ -386,7 +389,7 @@ namespace SketchAssistant
         private void canvasButton_Click(object sender, EventArgs e)
         {
             ProgramPresenter.NewCanvas();
-            ///
+            /*
             if (CheckSavedStatus())
             {
                 historyOfActions = new ActionHistory(lastActionTakenLabel);
@@ -405,7 +408,7 @@ namespace SketchAssistant
                 }
             }
             UpdateButtonStatus();
-            UpdateSizes();
+            UpdateSizes();*/
         }
 
         /// <summary>
@@ -415,7 +418,7 @@ namespace SketchAssistant
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
             ProgramPresenter.Tick();
-            ///
+            /*
             if(cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
@@ -451,7 +454,111 @@ namespace SketchAssistant
                         RedrawRightImage();
                     }
                 }
+            }*/
+        }
+
+        /*************************/
+        /*** PRESENTER -> VIEW ***/
+        /*************************/
+
+        public void EnableTimer()
+        {
+            mouseTimer.Enabled = true;
+        }
+
+        /// <summary>
+        /// A function that opens a file dialog and returns the filename.
+        /// </summary>
+        /// <param name="Filter">The filter that should be applied to the new Dialog.</param>
+        /// <returns>Returns the FileName and the SafeFileName if the user correctly selects a file, 
+        /// else returns a tuple with empty strigns</returns>
+        public Tuple<String, String> openNewDialog(String Filter)
+        {
+            openFileDialog.Filter = Filter;
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                return new Tuple<string, string>(openFileDialog.FileName, openFileDialog.SafeFileName);
             }
+            else
+            {
+                return new Tuple<string, string>("", "");
+            }
+        }
+
+        public void SetToolStripLoadStatus(String message)
+        {
+            toolStripLoadStatus.Text = message;
+        }
+
+        public void SetLastActionTakenText(String message)
+        {
+            lastActionTakenLabel.Text = message;
+        }
+
+        public void SetToolStripButtonStatus(String buttonName, ButtonState state)
+        {
+            ToolStripButton buttonToChange;
+            switch (buttonName)
+            {
+                case "canvasButton":
+                    buttonToChange = canvasButton;
+                    break;
+                case "drawButton":
+                    buttonToChange = drawButton;
+                    break;
+                case "deleteButton":
+                    buttonToChange = deleteButton;
+                    break;
+                case "undoButton":
+                    buttonToChange = undoButton;
+                    break;
+                case "redoButton":
+                    buttonToChange = redoButton;
+                    break;
+                default:
+                    Console.WriteLine("Invalid Button was given to SetToolStripButton. \nMaybe you forgot to add a case?");
+                    return;
+            }
+            switch (state)
+            {
+                case ButtonState.Active:
+                    buttonToChange.Checked = true;
+                    break;
+                case ButtonState.Disabled:
+                    buttonToChange.Checked = false;
+                    buttonToChange.Enabled = false;
+                    break;
+                case ButtonState.Enabled:
+                    buttonToChange.Checked = false;
+                    buttonToChange.Enabled = true;
+                    break;
+            }
+        }
+
+        public void DisplayInLeftPictureBox(Image img)
+        {
+            pictureBoxLeft.Image = img;
+            pictureBoxLeft.Refresh();
+        }
+
+        public void DisplayInRightPictureBox(Image img)
+        {
+            pictureBoxRight.Image = img;
+            pictureBoxRight.Refresh();
+        }
+
+        /// <summary>
+        /// shows the given info message in a popup and asks the user to aknowledge it
+        /// </summary>
+        /// <param name="message">the message to show</param>
+        public void ShowInfoMessage(String message)
+        {
+            MessageBox.Show(message);
+        }
+
+        public bool ShowWarning(String message)
+        {
+            return (MessageBox.Show(message, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
         }
 
         /***********************************/
@@ -788,76 +895,6 @@ namespace SketchAssistant
                     "Attention", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
             }
             return true;
-        }
-
-        /************************************************/
-        /*** FUNCTIONS FOR MANIPULATING THE FORM HERE ***/
-        /************************************************/
-
-        public void SetToolStripLoadStatus(String message)
-        {
-            toolStripLoadStatus.Text = message;
-        }
-
-        public void SetToolStripButtonStatus(String buttonName, ButtonState state)
-        {
-            ToolStripButton buttonToChange;
-            switch (buttonName)
-            {
-                case "canvasButton":
-                    buttonToChange = canvasButton;
-                    break;
-                case "drawButton":
-                    buttonToChange = drawButton;
-                    break;
-                case "deleteButton":
-                    buttonToChange = deleteButton;
-                    break;
-                case "undoButton":
-                    buttonToChange = undoButton;
-                    break;
-                case "redoButton":
-                    buttonToChange = redoButton;
-                    break;
-                default:
-                    Console.WriteLine("Invalid Button was given to SetToolStripButton. \nMaybe you forgot to add a case?");
-                    return;
-            }
-            switch (state)
-            {
-                case ButtonState.Active:
-                    buttonToChange.Checked = true;
-                    break;
-                case ButtonState.Disabled:
-                    buttonToChange.Checked = false;
-                    buttonToChange.Enabled = false;
-                    break;
-                case ButtonState.Enabled:
-                    buttonToChange.Checked = false;
-                    buttonToChange.Enabled = true;
-                    break;
-            }
-        }
-
-        public void DisplayInLeftPictureBox(Image img)
-        {
-            pictureBoxLeft.Image = img;
-            this.Refresh();
-        }
-
-        public void DisplayInRightPictureBox(Image img)
-        {
-            pictureBoxRight.Image = img;
-            this.Refresh();
-        }
-
-        /// <summary>
-        /// shows the given info message in a popup and asks the user to aknowledge it
-        /// </summary>
-        /// <param name="message">the message to show</param>
-        public void ShowInfoMessage(String message)
-        {
-            MessageBox.Show(message);
         }
 
         /********************************************/

@@ -126,7 +126,7 @@ namespace SketchAssistant
             // loadToolStripMenuItem
             // 
             this.loadToolStripMenuItem.Name = "loadToolStripMenuItem";
-            this.loadToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.loadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.loadToolStripMenuItem.Text = "Load...";
             this.loadToolStripMenuItem.Click += new System.EventHandler(this.loadToolStripMenuItem_Click);
             // 
@@ -135,13 +135,13 @@ namespace SketchAssistant
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.examplePictureToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.importToolStripMenuItem.Text = "Import...";
             // 
             // examplePictureToolStripMenuItem
             // 
             this.examplePictureToolStripMenuItem.Name = "examplePictureToolStripMenuItem";
-            this.examplePictureToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
+            this.examplePictureToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.examplePictureToolStripMenuItem.Text = "Example picture";
             this.examplePictureToolStripMenuItem.Click += new System.EventHandler(this.examplePictureToolStripMenuItem_Click);
             // 
@@ -172,6 +172,7 @@ namespace SketchAssistant
             // drawButton
             // 
             this.drawButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.drawButton.Enabled = false;
             this.drawButton.Image = ((System.Drawing.Image)(resources.GetObject("drawButton.Image")));
             this.drawButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.drawButton.Name = "drawButton";
@@ -182,6 +183,7 @@ namespace SketchAssistant
             // deleteButton
             // 
             this.deleteButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.deleteButton.Enabled = false;
             this.deleteButton.Image = ((System.Drawing.Image)(resources.GetObject("deleteButton.Image")));
             this.deleteButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.deleteButton.Name = "deleteButton";
@@ -192,6 +194,7 @@ namespace SketchAssistant
             // undoButton
             // 
             this.undoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.undoButton.Enabled = false;
             this.undoButton.Image = ((System.Drawing.Image)(resources.GetObject("undoButton.Image")));
             this.undoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.undoButton.Name = "undoButton";
@@ -202,6 +205,7 @@ namespace SketchAssistant
             // redoButton
             // 
             this.redoButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.redoButton.Enabled = false;
             this.redoButton.Image = ((System.Drawing.Image)(resources.GetObject("redoButton.Image")));
             this.redoButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.redoButton.Name = "redoButton";

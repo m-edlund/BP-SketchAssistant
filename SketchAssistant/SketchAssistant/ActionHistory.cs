@@ -13,12 +13,9 @@ namespace SketchAssistant
         List<SketchAction> actionHistory;
         //The current position in the actionHistory
         Tuple<int, SketchAction> currentAction;
-        //The label in which the current action is displayed
-        ToolStripStatusLabel displayLabel;
 
-        public ActionHistory(ToolStripStatusLabel displayPosition)
+        public ActionHistory()
         {
-            displayLabel = displayPosition;
             actionHistory = new List<SketchAction>();
             currentAction = new Tuple<int, SketchAction>(-1, null);
             AddNewAction(new SketchAction(SketchAction.ActionType.Start, -1));
@@ -28,7 +25,8 @@ namespace SketchAssistant
         /// Adds a new action to the action history.
         /// </summary>
         /// <param name="newAction">The newly added action.</param>
-        public void AddNewAction(SketchAction newAction)
+        /// <returns>The message to be displayed</returns>
+        public String AddNewAction(SketchAction newAction)
         {
             //The current Action is before the last action taken, delete everything after the current action.
             if (currentAction.Item1 < actionHistory.Count - 1)
@@ -37,14 +35,15 @@ namespace SketchAssistant
             }
             actionHistory.Add(newAction);
             currentAction = new Tuple<int, SketchAction>(actionHistory.Count - 1, newAction);
-            UpdateStatusLabel();
+            return UpdateStatusLabel();
         }
 
         /// <summary>
         /// Changes the currentAction.
         /// </summary>
         /// <param name="moveBack">If True, moves the current action back one slot, if False, moves it forward.</param>
-        public void MoveAction(bool moveBack)
+        /// <returns>The message to be displayed</returns>
+        public String MoveAction(bool moveBack)
         {
             if(moveBack && CanUndo())
             {
@@ -54,7 +53,7 @@ namespace SketchAssistant
             {
                 currentAction = new Tuple<int, SketchAction>(currentAction.Item1 + 1, actionHistory[currentAction.Item1 + 1]);
             }
-            UpdateStatusLabel();
+            return UpdateStatusLabel();
         }
 
         /// <summary>
@@ -99,12 +98,10 @@ namespace SketchAssistant
         /// <summary>
         /// Updates the status label if there is one given.
         /// </summary>
-        private void UpdateStatusLabel()
+        /// <returns>The message to be displayed</returns>
+        private String UpdateStatusLabel()
         {
-            if (displayLabel != null)
-            {
-                displayLabel.Text = "Last Action: " + currentAction.Item2.GetActionInformation();
-            }
+            return "Last Action: " + currentAction.Item2.GetActionInformation();
         }
     }
 }
