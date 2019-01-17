@@ -55,24 +55,11 @@ namespace SketchAssistant
 
         public void Resize(Tuple<int, int> leftPBS,Tuple<int, int> rightPBS)
         {
-            programView.Refresh();
             programModel.leftImageBoxWidth = leftPBS.Item1;
             programModel.leftImageBoxHeight = leftPBS.Item2;
             programModel.rightImageBoxWidth = rightPBS.Item1;
             programModel.rightImageBoxHeight = rightPBS.Item2;
             programModel.UpdateSizes();
-        }
-
-        /// <summary>
-        /// Display a new FileDialog to load an image of type jpg or png.
-        /// </summary>
-        public void LoadToolStripMenuItemClick()
-        {
-            var fileNameTup = programView.openNewDialog("Image|*.jpg;*.png;*.jpeg");
-            if(!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
-            {
-
-            }
         }
 
         /// <summary>

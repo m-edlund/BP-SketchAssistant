@@ -20,7 +20,6 @@ namespace SketchAssistant
         {
             InitializeComponent();
             ProgramPresenter = new MVP_Presenter(this);
-            fileImporter = new FileImporter();
         }
 
         /**********************************/
@@ -46,85 +45,17 @@ namespace SketchAssistant
             Delete
         }
         /// <summary>
-        /// Current Program State
-        /// </summary>
-        private ProgramState currentState;
-        /// <summary>
-        /// instance of FileImporter to handle drawing imports
-        /// </summary>
-        private FileImporter fileImporter;
-        /// <summary>
         /// Dialog to select a file.
         /// </summary>
         OpenFileDialog openFileDialog = new OpenFileDialog();
-        /// <summary>
-        /// Image loaded on the left
-        /// </summary>
-        private Image leftImage = null;
-        /// <summary>
-        /// the graphic shown in the left window, represented as a list of polylines
-        /// </summary>
-        private List<Line> leftLineList;
-        /// <summary>
-        /// Image on the right
-        /// </summary>
-        Image rightImage = null;
-        /// <summary>
-        /// Current Line being Drawn
-        /// </summary>
-        List<Point> currentLine;
         /// <summary>
         /// All Lines in the current session
         /// </summary>
         List<Tuple<bool,Line>> rightLineList = new List<Tuple<bool, Line>>();
         /// <summary>
-        /// Whether the Mouse is currently pressed in the rightPictureBox
-        /// </summary>
-        bool mousePressed = false;
-        /// <summary>
-        /// The Position of the Cursor in the right picture box
-        /// </summary>
-        Point currentCursorPosition;
-        /// <summary>
-        /// The Previous Cursor Position in the right picture box
-        /// </summary>
-        Point previousCursorPosition;
-        /// <summary>
         /// Queue for the cursorPositions
         /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
-        /// <summary>
-        /// The graphic representation of the right image
-        /// </summary>
-        Graphics rightGraph = null;
-        /// <summary>
-        /// Lookup Matrix for checking postions of lines in the image
-        /// </summary>
-        bool[,] isFilledMatrix;
-        /// <summary>
-        /// Lookup Matrix for getting line ids at a certain postions of the image
-        /// </summary>
-        HashSet<int>[,] linesMatrix;
-        /// <summary>
-        /// Size of deletion area
-        /// </summary>
-        int deletionRadius = 2;
-        /// <summary>
-        /// History of Actions
-        /// </summary>
-        ActionHistory historyOfActions;
-        /// <summary>
-        /// List of items which will be overlayed over the right canvas.
-        /// </summary>
-        List<HashSet<Point>> overlayItems;
-        /// <summary>
-        /// The assistant responsible for the redraw mode
-        /// </summary>
-        RedrawAssistant redrawAss;
-        /// <summary>
-        /// Size of areas marking endpoints of lines in the redraw mode.
-        /// </summary>
-        int markerRadius = 10;
         /// <summary>
         /// The Presenter Component of the MVP-Model
         /// </summary>
@@ -146,12 +77,7 @@ namespace SketchAssistant
         {
             ProgramPresenter.Resize(new Tuple<int, int>(pictureBoxLeft.Width, pictureBoxLeft.Height), 
                 new Tuple<int, int>(pictureBoxRight.Width, pictureBoxRight.Height));
-        }
-        
-        //Load button, will open an OpenFileDialog
-        private void loadToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ProgramPresenter.LoadToolStripMenuItemClick();
+            this.Refresh();
         }
 
         /// <summary>
@@ -389,6 +315,8 @@ namespace SketchAssistant
         /*** TESTING RELATED FUNCTIONS START HERE ***/
         /********************************************/
 
+        /*
+
         /// <summary>
         /// returns all instance variables in the order of their definition for testing
         /// </summary>
@@ -409,7 +337,7 @@ namespace SketchAssistant
             }
             return varArr;
         }
-        /*
+
         /// <summary>
         /// public method wrapper for testing purposes, invoking DrawEmptyCanvas(...) and BindAndDrawLeftImage(...)
         /// </summary>
