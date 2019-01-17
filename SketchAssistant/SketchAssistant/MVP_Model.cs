@@ -364,6 +364,8 @@ namespace SketchAssistant
             var workingCanvas = GetEmptyCanvas(width,height);
             var workingGraph = Graphics.FromImage(workingCanvas);
             leftLineList = listOfLines;
+            redrawAss = new RedrawAssistant(leftLineList);
+            overlayItems = redrawAss.Initialize(markerRadius);
             //Lines
             foreach (Line line in leftLineList)
             {

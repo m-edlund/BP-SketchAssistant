@@ -13,7 +13,7 @@ namespace SketchAssistant
         /// <summary>
         /// The View of the MVP-Model, in this case Form1.
         /// </summary>
-        Form1 programView;
+        MVP_View programView;
         /// <summary>
         /// The Model of the MVP-Model.
         /// </summary>
@@ -41,7 +41,7 @@ namespace SketchAssistant
         private FileImporter fileImporter;
 
 
-        public MVP_Presenter(Form1 form)
+        public MVP_Presenter(MVP_View form)
         {
             programView = form;
             programModel = new MVP_Model(this);
