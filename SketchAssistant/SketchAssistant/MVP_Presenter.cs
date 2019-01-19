@@ -53,6 +53,11 @@ namespace SketchAssistant
         /*** FUNCTIONS VIEW -> PRESENTER ***/
         /***********************************/
 
+        /// <summary>
+        /// Pass-trough function to update the appropriate information of the model, when the window is resized.
+        /// </summary>
+        /// <param name="leftPBS">The new size of the left picture box.</param>
+        /// <param name="rightPBS">The new size of the left picture box.</param>
         public void Resize(Tuple<int, int> leftPBS,Tuple<int, int> rightPBS)
         {
             programModel.leftImageBoxWidth = leftPBS.Item1;
@@ -86,21 +91,34 @@ namespace SketchAssistant
             }
         }
 
+        /// <summary>
+        /// Pass-trough function to change the drawing state of the model.
+        /// </summary>
+        /// <param name="NowDrawing">Indicates if the program is in drawing (true) or deletion (false) mode.</param>
         public void ChangeState(bool NowDrawing)
         {
             programModel.ChangeState(NowDrawing);
         }
 
+        /// <summary>
+        /// Pass-trough function to undo an action.
+        /// </summary>
         public void Undo()
         {
             programModel.Undo();
         }
 
+        /// <summary>
+        /// Pass-trough function to redo an action.
+        /// </summary>
         public void Redo()
         {
             programModel.Redo();
         }
 
+        /// <summary>
+        /// Checks if there is unsaved progress, and promts the model to generate a new canvas if not.
+        /// </summary>
         public void NewCanvas()
         {
             var okToContinue = true;
@@ -116,11 +134,19 @@ namespace SketchAssistant
             }
         }
 
+        /// <summary>
+        /// Pass-trough function for ticking the model.
+        /// </summary>
         public void Tick()
         {
             programModel.Tick();
         }
 
+        /// <summary>
+        /// Pass-trough function that calls the correct Mouse event of the model.
+        /// </summary>
+        /// <param name="mouseAction">The action which is sent by the View.</param>
+        /// <param name="e">The Mouse event arguments.</param>
         public void MouseEvent(MouseAction mouseAction, MouseEventArgs e)
         {
             switch (mouseAction)
@@ -196,11 +222,19 @@ namespace SketchAssistant
             programView.DisplayInRightPictureBox(img);
         }
 
+        /// <summary>
+        /// Pass-trough function to display an info message in the view.
+        /// </summary>
+        /// <param name="msg">The message.</param>
         public void PassMessageToView(String msg)
         {
             programView.ShowInfoMessage(msg);
         }
 
+        /// <summary>
+        /// Pass-trough function to update the display of the last action taken.
+        /// </summary>
+        /// <param name="msg">The new last action taken.</param>
         public void PassLastActionTaken(String msg)
         {
             programView.SetLastActionTakenText(msg);

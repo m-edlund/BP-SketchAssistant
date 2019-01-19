@@ -276,20 +276,6 @@ namespace SketchAssistant
 
         /*
         /// <summary>
-        /// binds the given picture to templatePicture and draws it
-        /// </summary>
-        /// <param name="newTemplatePicture"> the new template picture, represented as a list of polylines </param>
-        /// <returns></returns>
-        private void BindAndDrawLeftImage(List<Line> newTemplatePicture)
-        {
-            leftLineList = newTemplatePicture;
-            foreach (Line l in leftLineList)
-            {
-                l.DrawLine(Graphics.FromImage(leftImage));
-            }
-        }
-        
-        /// <summary>
         /// Will calculate the start and endpoints of the given line on the right canvas.
         /// </summary>
         /// <param name="line">The line.</param>
@@ -313,23 +299,6 @@ namespace SketchAssistant
             programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), (rightImageWithoutOverlay != null));
         }
 
-
-        /*
-        /// <summary>
-        /// Checks if there is unsaved progess, and warns the user. Returns True if it safe to continue.
-        /// </summary>
-        /// <returns>true if there is none, or the user wishes to continue without saving.
-        /// false if there is progress, and the user doesn't wish to continue.</returns>
-        private bool CheckSavedStatus()
-        {
-            if (!historyOfActions.IsEmpty())
-            {
-                return (MessageBox.Show("You have unsaved changes, do you wish to continue?",
-                    "Attention", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
-            }
-            return true;
-        }
-        */
 
         /********************************************/
         /*** FUNCTIONS TO INTERACT WITH PRESENTER ***/
@@ -378,6 +347,9 @@ namespace SketchAssistant
             rightLineList = new List<Tuple<bool, Line>>();
         }
 
+        /// <summary>
+        /// Will undo the last action taken, if the action history allows it.
+        /// </summary>
         public void Undo()
         {
             if (historyOfActions.CanUndo())
@@ -408,6 +380,9 @@ namespace SketchAssistant
             UpdateUI();
         }
 
+        /// <summary>
+        /// Will redo the last action undone, if the action history allows it.
+        /// </summary>
         public void Redo()
         {
             if (historyOfActions.CanRedo())
@@ -464,11 +439,18 @@ namespace SketchAssistant
             }
         }
 
+        /// <summary>
+        /// Updates the current cursor position of the model.
+        /// </summary>
+        /// <param name="p">The new cursor position</param>
         public void SetCurrentCursorPosition(Point p)
         {
             currentCursorPosition = p;
         }
 
+        /// <summary>
+        /// Start a new Line, when the Mouse is pressed down.
+        /// </summary>
         public void MouseDown()
         {
             mousePressed = true;
@@ -478,6 +460,9 @@ namespace SketchAssistant
             }
         }
 
+        /// <summary>
+        /// Finish the current Line, when the pressed Mouse is released.
+        /// </summary>
         public void MouseUp()
         {
             mousePressed = false;
@@ -497,6 +482,9 @@ namespace SketchAssistant
             UpdateUI();
         }
 
+        /// <summary>
+        /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
+        /// </summary>
         public void Tick()
         {
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
