@@ -577,29 +577,39 @@ namespace SketchAssistant
                     pathElements.Add(currentElement[j].Trim('"')); //parse last path element by removing '"'
                 }
             }
+            normalizePathDeclaration(pathElements); //expand path data to always explicitly have the command descriptor in front of the appropriate number of arguments and to seperate command descriptors, coordinates and other tokens always into seperate list elements (equivalent to seperation with spaces in the input file, but svg allows also for comma as a seperator, and for omitting seperators where possible without losing information (refer to svg grammer) to reduce file size
             List<Line> element = new List<Line>();
             List<Point> currentLine = new List<Point>();
             double lastBezierControlPointX= 0;
             double lastBezierControlPointY= 0;
             double lastPositionX;
             double lastPositionY;
+            double initialPositionX= -1;
+            double initialPositionY= -1;
+            bool newSubpath = true;
             //assume that svg is well formatted with spaces between each token, no emitted characters and only "[char] (appropriateNumber*[coordinate])" segments
             //pathElements = PreparePathElements(pathElements); //split pathElement list objects until every object is atomar (single character or single number (coordinate))
             //int k = 0; //index of active element in pathElements is always 0 
             (List<Point>, double, double) valuesArc; //list of points, new values for: lastPositionX, lastPositionY
             (List<Point>, double, double, double, double) valuesBezierCurve; //list of points, new values for: lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY
-            (Point, double, double) valuesSinglePoint = parse_M_Z_L(pathElements); //new point, new values for: lastPositionX, lastPositionY
+            (Point, double, double) valuesSinglePoint = parse_M_L(pathElements); //new point, new values for: lastPositionX, lastPositionY
             currentLine = new List<Point>();
             currentLine.Add(valuesSinglePoint.Item1);
             lastPositionX = valuesSinglePoint.Item2;
             lastPositionY = valuesSinglePoint.Item3;
             String currentToken;
             while (!(pathElements.Count == 0)){
+                if (newSubpath)
+                {
+                    initialPositionX = lastPositionX; //update buffers for coordinates of first point of active subpath
+                    initialPositionY = lastPositionY;
+                    newSubpath = false;
+                }
                 currentToken = pathElements.First();
                 if (currentToken.Equals("M"))
                 {
                     element.Add(new Line(currentLine)); //save current line
-                    valuesSinglePoint = parse_M_Z_L(pathElements);
+                    valuesSinglePoint = parse_M_L(pathElements);
                     currentLine = new List<Point>(); //create new empty line
                     currentLine.Add(valuesSinglePoint.Item1); //add point to new line
                     lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
@@ -608,25 +618,16 @@ namespace SketchAssistant
                 else if (currentToken.Equals("m"))
                 {
                     element.Add(new Line(currentLine)); //save current line
-                    valuesSinglePoint = parse_m_z_l(pathElements, lastPositionX, lastPositionY);
+                    valuesSinglePoint = parse_m_l(pathElements, lastPositionX, lastPositionY);
                     currentLine = new List<Point>(); //create new empty line
                     currentLine.Add(valuesSinglePoint.Item1); //add point to new line
                     lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
                     lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
                 }
-                else if (currentToken.Equals("Z"))
+                else if (currentToken.Equals("Z") || currentToken.Equals("z"))
                 {
-                    valuesSinglePoint = parse_M_Z_L(pathElements);
-                    currentLine.Add(valuesSinglePoint.Item1); //add point to old line
-                    element.Add(new Line(currentLine)); //save current line
-                    currentLine = new List<Point>(); //create new empty line
-                    currentLine.Add(valuesSinglePoint.Item1); //add point to new line
-                    lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
-                    lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
-                }
-                else if (currentToken.Equals("z"))
-                {
-                    valuesSinglePoint = parse_m_z_l(pathElements, lastPositionX, lastPositionY);
+                    valuesSinglePoint = parse_Z(pathElements, initialPositionX, initialPositionY); //method call only used for uniform program structure... only real effect of method is to consume one token
+                    newSubpath = true;
                     currentLine.Add(valuesSinglePoint.Item1); //add point to old line
                     element.Add(new Line(currentLine)); //save current line
                     currentLine = new List<Point>(); //create new empty line
@@ -636,14 +637,14 @@ namespace SketchAssistant
                 }
                 else if (currentToken.Equals("L"))
                 {
-                    valuesSinglePoint = parse_M_Z_L(pathElements);
+                    valuesSinglePoint = parse_M_L(pathElements);
                     currentLine.Add(valuesSinglePoint.Item1); //add point to new line
                     lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
                     lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
                 }
                 else if (currentToken.Equals("l"))
                 {
-                    valuesSinglePoint = parse_m_z_l(pathElements, lastPositionX, lastPositionY);
+                    valuesSinglePoint = parse_m_l(pathElements, lastPositionX, lastPositionY);
                     currentLine.Add(valuesSinglePoint.Item1); //add point to new line
                     lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
                     lastPositionY = valuesSinglePoint.Item3; //save last point coordinates
@@ -750,7 +751,7 @@ namespace SketchAssistant
                 }
                 else if (currentToken.Equals("A"))
                 {
-                    valuesArc = parse_A(pathElements);
+                    valuesArc = parse_A(pathElements, lastPositionX, lastPositionY);
                     currentLine.AddRange(valuesArc.Item1); //add points to new line
                     lastPositionX = valuesArc.Item2; //save last point coordinates
                     lastPositionY = valuesArc.Item3; //save last point coordinates
@@ -774,12 +775,146 @@ namespace SketchAssistant
             return element;
         }
 
+        private void normalizePathDeclaration(List<string> pathElements)
+        {
+            Char lastCommand = 'M';
+            int argumentCounter = 0;
+            for( int j= 0; j < pathElements.Count; j++)
+            {
+                String currentElement = pathElements.ElementAt(j);
+                if (currentElement.Length != 1)
+                {
+                    if ((currentElement.First() >= 'A' && currentElement.First() <= 'Z') || (currentElement.First() >= 'a' && currentElement.First() <= 'z')) //seperate a single command descriptor / letter
+                    {
+                        pathElements.RemoveAt(j);
+                        pathElements.Insert(j, currentElement.First() + ""); //insert letter as seperate element
+                        pathElements.Insert(j + 1, currentElement.Substring(1)); //insert rest of String at next position so it will be processed again
+                        lastCommand = currentElement.First();
+                        argumentCounter = 0;
+                    }
+                    else if ((currentElement.First() >= '0' && currentElement.First() <= '9') || currentElement.First() == '-' || currentElement.First() == '+') //seperate a single coordinate / number
+                    {
+                        bool decimalPointEncountered = false; //reuse the decimalPointEncountered flag for control flow first...
+                        switch (lastCommand){ //ceck for reaching of next command with omitted command descriptor
+                            case 'M':
+                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                break;
+                            case 'm':
+                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                break;
+                            case 'L':
+                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                break;
+                            case 'l':
+                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                break;
+                            case 'V':
+                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                break;
+                            case 'v':
+                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                break;
+                            case 'H':
+                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                break;
+                            case 'h':
+                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                break;
+                            case 'C':
+                                if (argumentCounter >= 6) decimalPointEncountered = true;
+                                break;
+                            case 'c':
+                                if (argumentCounter >= 6) decimalPointEncountered = true;
+                                break;
+                            case 'S':
+                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                break;
+                            case 's':
+                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                break;
+                            case 'Q':
+                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                break;
+                            case 'q':
+                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                break;
+                            case 'T':
+                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                break;
+                            case 't':
+                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                break;
+                            case 'A':
+                                if (argumentCounter >= 7) decimalPointEncountered = true;
+                                break;
+                            case 'a':
+                                if (argumentCounter >= 7) decimalPointEncountered = true;
+                                break;
+                        }
+                        if (decimalPointEncountered)
+                        {
+                            pathElements.Insert(j, lastCommand + ""); //repeat command descriptor
+                            j++; //skip command descriptor (was put into active position in the list
+                            argumentCounter = 0; //reset argument counter
+                        }
+                        decimalPointEncountered = false;
+                        for (int k = 1; k < currentElement.Length; k++)
+                        {
+                            if (!decimalPointEncountered && currentElement.ElementAt(k) == '.') //allow up to one decimal point in numbers
+                            {
+                                decimalPointEncountered = true;
+                            }
+                            else if (!((currentElement.ElementAt(k) >= '0' && currentElement.ElementAt(k) <= '9')))
+                            {
+                                pathElements.RemoveAt(j);
+                                pathElements.Insert(j, currentElement.Substring(0, k - 1)); //insert number as seperate element
+                                pathElements.Insert(j + 1, currentElement.Substring(k)); //insert rest of String at next position so it will be processed again
+                                break;
+                            }
+                        }
+                        argumentCounter++; 
+                    }
+                    else //parse non-space seperators and skip other unsupported characters (the only other valid ones per svg standard would be weird tokens looking like format descriptors (e.g. '#xC'), these are unsopported and will likely cause an error or other inconsitencies during parsing)
+                    {
+                        for (int k = 1; k < currentElement.Length; k++)
+                        {
+                            if (((currentElement.ElementAt(k) >= '0' && currentElement.ElementAt(k) <= '9')) || currentElement.ElementAt(k) == '-' || currentElement.ElementAt(k) == '+' || (currentElement.ElementAt(k) >= 'A' && currentElement.ElementAt(k) <= 'Z') || (currentElement.ElementAt(k) >= 'a' && currentElement.ElementAt(k) <= 'z'))
+                            {
+                                pathElements.RemoveAt(j);
+                                pathElements.Insert(j + 1, currentElement.Substring(k)); //insert rest of String at next position so it will be processed again
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if ((currentElement.First() >= 'A' && currentElement.First() <= 'Z') || (currentElement.First() >= 'a' && currentElement.First() <= 'z')) //update lastCommand buffer when reading single letter
+                    {
+                        lastCommand = currentElement.First();
+                        argumentCounter = 0;
+                    }
+                    else if(!((currentElement.First() >= '0' && currentElement.First() <= '9') || currentElement.First() == '-' || currentElement.First() == '+')) //not a number
+                    {
+                        pathElements.RemoveAt(j); //remove element
+                        j--; //decrement index pointer so next element will not be skipped (indices of all folowing elements just decreased by 1)
+                    }
+                }
+            }
+        }
+
+        private (Point, double, double) parse_Z(List<string> pathElements, double initialPositionX, double initialPositionY)
+        {
+            pathElements.RemoveAt(0); //remove element descriptor token
+            return (ScaleAndCreatePoint(initialPositionX, initialPositionY), initialPositionX, initialPositionY);
+        }
+
         /// <summary>
         /// parses a "moveto", "close loop" or "lineto" path element with absolute coordinates
         /// </summary>
         /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
         /// <returns>the point at the end of the move, close loop or line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) parse_M_Z_L(List<string> pathElements)
+        private (Point, double, double) parse_M_L(List<string> pathElements)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x coordinate
@@ -796,7 +931,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>the point at the end of the move, close loop or line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) parse_m_z_l(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private (Point, double, double) parse_m_l(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative x coordinate
@@ -1068,14 +1203,217 @@ namespace SketchAssistant
             return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
         }
 
-        private (List<Point>, double, double) parse_A(List<string> pathElements)
+        /// <summary>
+        /// parses a "elliptical arc" path element with absolute coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>a List of Points containing all sampled points on the elliptic arc, aswell as the unscaled x and y coordinates of the last point of the arc<returns>
+        private (List<Point>, double, double) parse_A(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
-            throw new NotImplementedException();
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double rx = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x radius
+            pathElements.RemoveAt(0); //remove x radius token
+            double ry = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse y radius
+            pathElements.RemoveAt(0); //remove y radius token
+            double thetha = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse rotation
+            pathElements.RemoveAt(0); //remove rotation token
+            bool largeArcFlag = Convert.ToInt16(pathElements.First()) == 1 ? true : false; //parse large arc flag
+            pathElements.RemoveAt(0); //remove large arc flag token
+            bool sweepFlag = Convert.ToInt16(pathElements.First()) == 1 ? true : false; //parse sweep flag
+            pathElements.RemoveAt(0); //remove sweep flag token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            x = x - lastPositionX; //compute relative x coordinate
+            y = y - lastPositionY; //compute relative y coordinate
+            return (sampleArc(lastPositionX, lastPositionY, rx, ry, x, y, thetha, largeArcFlag, sweepFlag), x, y);
         }
 
+        /// <summary>
+        /// parses a "elliptical arc" path element with relative coordinates
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
+        /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
+        /// <returns>a List of Points containing all sampled points on the elliptic arc, aswell as the unscaled x and y coordinates of the last point of the arc</returns>
         private (List<Point>, double, double) parse_a(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
-            throw new NotImplementedException();
+            pathElements.RemoveAt(0); //remove element descriptor token
+            double rx = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x radius
+            pathElements.RemoveAt(0); //remove x radius token
+            double ry = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse y radius
+            pathElements.RemoveAt(0); //remove y radius token
+            double thetha = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse rotation
+            pathElements.RemoveAt(0); //remove rotation token
+            bool largeArcFlag = Convert.ToInt16(pathElements.First()) == 1 ? true : false; //parse large arc flag
+            pathElements.RemoveAt(0); //remove large arc flag token
+            bool sweepFlag = Convert.ToInt16(pathElements.First()) == 1 ? true : false; //parse sweep flag
+            pathElements.RemoveAt(0); //remove sweep flag token
+            double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
+            pathElements.RemoveAt(0); //remove x coordinate token
+            double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
+            pathElements.RemoveAt(0); //remove y coordinate token
+            return (sampleArc(lastPositionX, lastPositionY, rx, ry, x, y, thetha, largeArcFlag, sweepFlag), x, y);
+        }
+
+        /// <summary>
+        /// samles an arc of an ellipse into a list of points
+        /// </summary>
+        /// <param name="lastPositionX">x coordinate of last point</param>
+        /// <param name="lastPositionY">y coordinate of last point</param>
+        /// <param name="rx">x radius of the ellipse</param>
+        /// <param name="ry">y radius of the ellipse</param>
+        /// <param name="nextPositionXRelative">x coordinate of next point</param>
+        /// <param name="nextPositionYRelative">y coordinate of next point</param>
+        /// <param name="thetha">rotation of the ellipse around the x axis</param>
+        /// <param name="largeArcFlag">flag determining if the large or the small arc is to be drawn</param>
+        /// <param name="sweepFlag">flag determining in which direction the arc is to be drawn (false = ccw, true = cw)</param>
+        /// <returns></returns>
+        private List<Point> sampleArc(double lastPositionX, double lastPositionY, double rx, double ry, double nextPositionXRelative, double nextPositionYRelative, double thetha, bool largeArcFlag, bool sweepFlag)
+        {
+            double cos = Math.Cos(thetha / 180 * Math.PI);
+            double sin = Math.Sin(thetha / 180 * Math.PI);
+            double targetXTransformed = cos * nextPositionXRelative - sin * nextPositionYRelative; //rotate target point counterclockwise around the start point by [thetha] degrees, thereby practically rotating an intermediate coordinate system, which has its origin in the start point, clockwise by the same amount
+            double targetYTransformed = sin * nextPositionXRelative + cos * nextPositionYRelative;
+            (double[], double[]) values = sampleEllipticArcBiasedNoRotation(rx, ry, nextPositionXRelative, nextPositionYRelative, largeArcFlag, sweepFlag);
+            List<Point> result = new List<Point>();
+            for (int j = 0; j < values.Item1.Length; j++)
+            {
+                double xCoordinateRelative = cos * values.Item1[j] + sin * values.Item2[j]; //rotate backwards so intermediate coordinate system and "real" coordinate system have the same rotation again
+                double yCoordinateRelative = cos * values.Item2[j] - sin * values.Item1[j];
+                double xCoordinateAbsolute = lastPositionX + xCoordinateRelative; //translate relative to absolute coordinates (intermediate coordinate system is now again aligned with the "real" one (the virtual pane on which all vectorgraphic elements are placed) (note that this "real" coordinate system is still not the same as the one actually representing pixels for drawing, as it still has to be scaled appropriately (done inside the ScaleAndCreatePoint method)))
+                double yCoordinateAbsolute = lastPositionY + yCoordinateRelative;
+                result.Add(ScaleAndCreatePoint(xCoordinateAbsolute, yCoordinateAbsolute));
+            }
+            result.Add(ScaleAndCreatePoint(lastPositionX + nextPositionXRelative, lastPositionY + nextPositionYRelative)); //add end point
+            return result;
+        }
+
+        /// <summary>
+        /// samples an elliptical arc with given radii through coordinate origin and endpoint with specified properties
+        /// </summary>
+        /// <param name="rx">x radius</param>
+        /// <param name="ry">y radius</param>
+        /// <param name="nextPositionXRelative">x coordinate of next point</param>
+        /// <param name="nextPositionYRelative">y coordinate of next point</param>
+        /// <param name="largeArcFlag">flag determining if the large or the small arc is to be drawn</param>
+        /// <param name="sweepFlag">flag determining in which direction the arc is to be drawn (false = ccw, true = cw)</param>
+        /// <returns></returns>
+        private (double[], double[]) sampleEllipticArcBiasedNoRotation(double rx, double ry, double nextPositionXRelative, double nextPositionYRelative, bool largeArcFlag, bool sweepFlag)
+        {
+            double xStretchFactor = rx / ry; //get rx to ry ratio
+            (double[], double[]) values = sampleCircleArcBiasedNoRotation(ry, nextPositionXRelative, nextPositionYRelative, largeArcFlag, sweepFlag); //get a circular arc with radius ry
+            for (int j = 0; j < values.Item1.Length; j++)
+            {
+                values.Item1[j] = values.Item1[j] * xStretchFactor; //correct x coordinates to get an elliptical arc from a circular one
+            }
+            return values;
+        }
+
+        /// <summary>
+        /// samples a circular arc with given radius through coordinate origin and endpoint with specified properties
+        /// </summary>
+        /// <param name="r">radius</param>
+        /// <param name="nextPositionXRelative">x coordinate of next point</param>
+        /// <param name="nextPositionYRelative">y coordinate of next point</param>
+        /// <param name="largeArcFlag">flag determining if the large or the small arc is to be drawn</param>
+        /// <param name="sweepFlag">flag determining in which direction the arc is to be drawn (false = ccw, true = cw)</param>
+        /// <returns></returns>
+        private (double[], double[]) sampleCircleArcBiasedNoRotation(double r, double nextPositionXRelative, double nextPositionYRelative, bool largeArcFlag, bool sweepFlag)
+        {
+            // code adapted from https://stackoverflow.com/a/36211852
+            double radsq = r * r;
+            double q = Math.Sqrt(((nextPositionXRelative) * (nextPositionXRelative)) + ((nextPositionYRelative) * (nextPositionYRelative))); //Math.Sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
+
+            double x3 = (nextPositionXRelative) / 2; //(x1 + x2) / 2;
+            double y3 = (nextPositionYRelative) / 2; //(y1 + y2) / 2;
+
+            Console.WriteLine("radsq: " + radsq);
+            Console.WriteLine("q: " + q);
+            Console.WriteLine("x3: " + x3);
+            Console.WriteLine("y3: " + y3);
+
+            bool xPlusFlag; //flags needed to select center point "left" of the line between origin and the endpoint (will be used to select correct one ("left" or "right" one) later together with flags passed as arguments
+            bool yPlusFlag;
+            if (nextPositionXRelative > 0)
+            {
+                yPlusFlag = true; //left point lies above line
+            }
+            else
+            {
+                yPlusFlag = false; //left point lies below line
+            }
+            if (nextPositionYRelative > 0)
+            {
+                xPlusFlag = false; //left point lies left of line
+            }
+            else
+            {
+                xPlusFlag = true; //left point lies right of line
+            }
+
+            if(sweepFlag != largeArcFlag) //need "right" center point, not "left" one (refer to svg specification, sweepFlag means going around the circle in "clockwise" direction, largeArcFlag means tracing the larger of the two possible arcs in the selected direction) 
+            {
+                xPlusFlag = !xPlusFlag;
+                yPlusFlag = !yPlusFlag;
+            }
+
+            double xC; // coordinates of center point of circle
+            double yC;
+            if(xPlusFlag) xC = x3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionYRelative) / q); //x3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((y1 - y2) / q);
+            else xC = x3 - Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionYRelative) / q);
+            if (yPlusFlag) yC = y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q); //y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((x2-x1) / q);
+            else yC = y3 - Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q);
+
+            Console.WriteLine("radsq - ((q / 2) * (q / 2))): " + (radsq - ((q / 2) * (q / 2))));
+            Console.WriteLine("Math.Sqrt(radsq - ((q / 2) * (q / 2))): " + Math.Sqrt(radsq - ((q / 2) * (q / 2))));
+
+            Console.WriteLine("computed center of circle (relative): point1= (0,0), point2= (" + nextPositionXRelative + "," + nextPositionYRelative + "), center= (" + xC + "," + yC + ")");
+
+            (double[], double[]) values = sampleCircleArcBiasedAroundCenter(-xC, -yC, nextPositionXRelative - xC, nextPositionYRelative - yC, r, sweepFlag);
+            for (int j = 0; j < values.Item1.Length; j++)
+            {
+                values.Item1[j] = values.Item1[j] + xC; //correct center point coordinate bias
+                values.Item2[j] = values.Item2[j] + yC; 
+            }
+            return values;
+        }
+
+        /// <summary>
+        /// samples a circular arc with given radius around the center from the startpoint to the endpoint in the specified direction
+        /// </summary>
+        /// <param name="xStartPoint">x coordinate of the start point</param>
+        /// <param name="yStartPoint">y coordinate of the start point</param>
+        /// <param name="xFinalPoint">x coordinate of the final point</param>
+        /// <param name="yFinalPoint">y coordinate of the final point</param>
+        /// <param name="r">radius</param>
+        /// <param name="clockwise">direction</param>
+        /// <returns></returns>
+        private (double[], double[]) sampleCircleArcBiasedAroundCenter(double xStartPoint, double yStartPoint, double xFinalPoint, double yFinalPoint, double r, bool clockwise)
+        {
+            double phiEnd = Math.Atan2(yFinalPoint, xFinalPoint); // angles between points and origin and the positive x Axis
+            double phiStart = Math.Atan2(yStartPoint, xStartPoint);
+
+            double angle = ((double)2 * Math.PI) / (double)samplingRateEllipse; //compute angle increment (equal to the one used for ellipses)
+            int numberOfPoints = (int) Math.Ceiling(Math.Abs(phiEnd - phiStart) / angle);  //compute number of points to sample
+
+            double[] xValues = new double[numberOfPoints];
+            double[] yValues = new double[numberOfPoints];
+            double phiCurrent = phiStart;
+            for (int j = 0; j < numberOfPoints-1; j++) //compute offset values of points for one quadrant
+            {
+                if (clockwise) phiCurrent -= angle; //get new angle
+                else phiCurrent += angle;
+                yValues[j] = Math.Sin(phiCurrent) * r; //angles are relative to positive x Axis!
+                xValues[j] = Math.Cos(phiCurrent) * r;
+            }
+            xValues[numberOfPoints - 1] = xFinalPoint; //(last segment always has an angle of less than or exactly 'angle')
+            yValues[numberOfPoints - 1] = yFinalPoint;
+
+            return (xValues, yValues);
         }
 
         /// <summary>
