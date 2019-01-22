@@ -578,6 +578,10 @@ namespace SketchAssistant
                 }
             }
             normalizePathDeclaration(pathElements); //expand path data to always explicitly have the command descriptor in front of the appropriate number of arguments and to seperate command descriptors, coordinates and other tokens always into seperate list elements (equivalent to seperation with spaces in the input file, but svg allows also for comma as a seperator, and for omitting seperators where possible without losing information (refer to svg grammer) to reduce file size
+            foreach(String s in pathElements)
+            {
+                Console.WriteLine(s);
+            }
             List<Line> element = new List<Line>();
             List<Point> currentLine = new List<Point>();
             double lastBezierControlPointX= 0;
@@ -784,7 +788,7 @@ namespace SketchAssistant
                 String currentElement = pathElements.ElementAt(j);
                 if (currentElement.Length != 1)
                 {
-                    if ((currentElement.First() >= 'A' && currentElement.First() <= 'Z') || (currentElement.First() >= 'a' && currentElement.First() <= 'z')) //seperate a single command descriptor / letter
+                    if (((currentElement.First() >= 'A' && currentElement.First() <= 'Z') || (currentElement.First() >= 'a' && currentElement.First() <= 'z')) && currentElement.First() != 'e') //seperate a single command descriptor / letter
                     {
                         pathElements.RemoveAt(j);
                         pathElements.Insert(j, currentElement.First() + ""); //insert letter as seperate element
@@ -792,7 +796,7 @@ namespace SketchAssistant
                         lastCommand = currentElement.First();
                         argumentCounter = 0;
                     }
-                    else if ((currentElement.First() >= '0' && currentElement.First() <= '9') || currentElement.First() == '-' || currentElement.First() == '+') //seperate a single coordinate / number
+                    else if ((currentElement.First() >= '0' && currentElement.First() <= '9') || currentElement.First() == '-' || currentElement.First() == '+' || currentElement.First() != 'e') //seperate a single coordinate / number
                     {
                         bool decimalPointEncountered = false; //reuse the decimalPointEncountered flag for control flow first...
                         switch (lastCommand){ //ceck for reaching of next command with omitted command descriptor
@@ -864,7 +868,7 @@ namespace SketchAssistant
                             {
                                 decimalPointEncountered = true;
                             }
-                            else if (!((currentElement.ElementAt(k) >= '0' && currentElement.ElementAt(k) <= '9')))
+                            else if (!((currentElement.ElementAt(k) >= '0' && currentElement.ElementAt(k) <= '9') || currentElement.First() == '-' || currentElement.First() == '+' || currentElement.First() != 'e'))
                             {
                                 pathElements.RemoveAt(j);
                                 pathElements.Insert(j, currentElement.Substring(0, k - 1)); //insert number as seperate element
@@ -894,10 +898,78 @@ namespace SketchAssistant
                         lastCommand = currentElement.First();
                         argumentCounter = 0;
                     }
-                    else if(!((currentElement.First() >= '0' && currentElement.First() <= '9') || currentElement.First() == '-' || currentElement.First() == '+')) //not a number
+                    else if(!(currentElement.First() >= '0' && currentElement.First() <= '9')) //not a number
                     {
                         pathElements.RemoveAt(j); //remove element
                         j--; //decrement index pointer so next element will not be skipped (indices of all folowing elements just decreased by 1)
+                    }
+                    else //a single digit number
+                    {
+                        bool repeatCommandDescriptor = false; //reuse the decimalPointEncountered flag for control flow first...
+                        switch (lastCommand)
+                        { //ceck for reaching of next command with omitted command descriptor
+                            case 'M':
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
+                                break;
+                            case 'm':
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
+                                break;
+                            case 'L':
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
+                                break;
+                            case 'l':
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
+                                break;
+                            case 'V':
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
+                                break;
+                            case 'v':
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
+                                break;
+                            case 'H':
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
+                                break;
+                            case 'h':
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
+                                break;
+                            case 'C':
+                                if (argumentCounter >= 6) repeatCommandDescriptor = true;
+                                break;
+                            case 'c':
+                                if (argumentCounter >= 6) repeatCommandDescriptor = true;
+                                break;
+                            case 'S':
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
+                                break;
+                            case 's':
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
+                                break;
+                            case 'Q':
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
+                                break;
+                            case 'q':
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
+                                break;
+                            case 'T':
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
+                                break;
+                            case 't':
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
+                                break;
+                            case 'A':
+                                if (argumentCounter >= 7) repeatCommandDescriptor = true;
+                                break;
+                            case 'a':
+                                if (argumentCounter >= 7) repeatCommandDescriptor = true;
+                                break;
+                        }
+                        if (repeatCommandDescriptor)
+                        {
+                            pathElements.Insert(j, lastCommand + ""); //repeat command descriptor
+                            j++; //skip command descriptor (was put into active position in the list
+                            argumentCounter = 0; //reset argument counter
+                        }
+                        argumentCounter++;
                     }
                 }
             }
@@ -1012,6 +1084,11 @@ namespace SketchAssistant
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
         private (List<Point>, double, double, double, double) parse_C(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
+            Console.WriteLine("parsing C: ");
+            for(int k= 0; k < 7; k++)
+            {
+                Console.WriteLine(pathElements.ElementAt(k));
+            }
             pathElements.RemoveAt(0); //remove element descriptor token
             double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point x coordinate
             pathElements.RemoveAt(0); //remove x coordinate token
