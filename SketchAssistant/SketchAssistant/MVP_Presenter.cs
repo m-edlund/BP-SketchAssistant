@@ -143,7 +143,7 @@ namespace SketchAssistant
         }
 
         /// <summary>
-        /// Pass-trough function that calls the correct Mouse event of the model.
+        /// Pass-trough when the mouse is moved.
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
         /// <param name="e">The Mouse event arguments.</param>
@@ -151,7 +151,27 @@ namespace SketchAssistant
         {
             switch (mouseAction)
             {
+                case MouseAction.Move:
+                    programModel.SetCurrentCursorPosition(ConvertCoordinates(new Point(e.X, e.Y)));
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Pass-trough function that calls the correct Mouse event of the model, when the mouse is clicked.
+        /// </summary>
+        /// <param name="mouseAction">The action which is sent by the View.</param>
+        /// <param name="e">The Mouse event arguments.</param>
+        public void MouseEvent(MouseAction mouseAction)
+        {
+            switch (mouseAction)
+            {
                 case MouseAction.Click:
+                    programModel.MouseDown();
+                    programModel.Tick();
+                    programModel.MouseUp();
                     break;
                 case MouseAction.Down:
                     programModel.MouseDown();
@@ -159,8 +179,7 @@ namespace SketchAssistant
                 case MouseAction.Up:
                     programModel.MouseUp();
                     break;
-                case MouseAction.Move:
-                    programModel.SetCurrentCursorPosition(ConvertCoordinates(new Point(e.X, e.Y)));
+                default:
                     break;
             }
         }

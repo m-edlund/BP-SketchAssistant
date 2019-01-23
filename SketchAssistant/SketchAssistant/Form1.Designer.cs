@@ -86,6 +86,7 @@ namespace SketchAssistant
             this.pictureBoxRight.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBoxRight.TabIndex = 6;
             this.pictureBoxRight.TabStop = false;
+            this.pictureBoxRight.Click += new System.EventHandler(this.pictureBoxRight_Click);
             this.pictureBoxRight.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseDown);
             this.pictureBoxRight.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseMove);
             this.pictureBoxRight.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxRight_MouseUp);
@@ -126,13 +127,13 @@ namespace SketchAssistant
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.examplePictureToolStripMenuItem});
             this.importToolStripMenuItem.Name = "importToolStripMenuItem";
-            this.importToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(119, 22);
             this.importToolStripMenuItem.Text = "Import...";
             // 
             // examplePictureToolStripMenuItem
             // 
             this.examplePictureToolStripMenuItem.Name = "examplePictureToolStripMenuItem";
-            this.examplePictureToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.examplePictureToolStripMenuItem.Size = new System.Drawing.Size(158, 22);
             this.examplePictureToolStripMenuItem.Text = "Example picture";
             this.examplePictureToolStripMenuItem.Click += new System.EventHandler(this.examplePictureToolStripMenuItem_Click);
             // 

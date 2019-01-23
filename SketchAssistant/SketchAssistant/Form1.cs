@@ -136,6 +136,14 @@ namespace SketchAssistant
         }
 
         /// <summary>
+        /// The Picture box is clicked.
+        /// </summary>
+        private void pictureBoxRight_Click(object sender, EventArgs e)
+        {
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Click);
+        }
+
+        /// <summary>
         /// Get current Mouse positon within the right picture box.
         /// </summary>
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
@@ -148,7 +156,7 @@ namespace SketchAssistant
         /// </summary>
         private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
         {
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, e);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
         }
         
         /// <summary>
@@ -156,7 +164,7 @@ namespace SketchAssistant
         /// </summary>
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, e);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
         }
         
         /// <summary>
@@ -311,44 +319,5 @@ namespace SketchAssistant
             return (MessageBox.Show(message, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
         }
 
-        /********************************************/
-        /*** TESTING RELATED FUNCTIONS START HERE ***/
-        /********************************************/
-
-        /*
-
-        /// <summary>
-        /// returns all instance variables in the order of their definition for testing
-        /// </summary>
-        /// <returns>A list of tuples containing names of variables and the variable themselves. 
-        /// Cast according to the Type definitions in the class variable section.</returns>
-        public List<Tuple<String, Object>>GetAllVariables()
-        {
-            var objArr = new (String, object)[] { ("currentState", currentState), ("fileImporter", fileImporter), ("openFileDialog", openFileDialog),
-                ("leftImage", leftImage), ("leftLineList", leftLineList), ("rightImage", rightImage), ("currentLine", currentLine),
-                ("rightLineList", rightLineList), ("mousePressed", mousePressed), ("currentCursorPosition", currentCursorPosition),
-                ("previousCursorPosition", previousCursorPosition), ("cursorPositions", cursorPositions), ("rightGraph", rightGraph),
-                ("isFilledMatrix", isFilledMatrix), ("linesMatrix", linesMatrix), ("deletionRadius", deletionRadius),
-                ("historyOfActions", historyOfActions), ("overlayItems", overlayItems), ("redrawAss", redrawAss), ("markerRadius", markerRadius) };
-            var varArr = new List<Tuple<String, Object>>();
-            foreach((String, object) obj in objArr)
-            {
-                varArr.Add(new Tuple<string, object>(obj.Item1, obj.Item2));
-            }
-            return varArr;
-        }
-
-        /// <summary>
-        /// public method wrapper for testing purposes, invoking DrawEmptyCanvas(...) and BindAndDrawLeftImage(...)
-        /// </summary>
-        /// <param name="width">width of the parsed image</param>
-        /// <param name="height">height of the parsed image</param>
-        /// <param name="newImage">the parsed image</param>
-        public void CreateCanvasAndSetPictureForTesting(int width, int height, List<Line> newImage)
-        {
-            DrawEmptyCanvasLeft(width, height);
-            BindAndDrawLeftImage(newImage);
-        }
-        */
     }
 }
