@@ -73,21 +73,50 @@ namespace SketchAssistant
         }
 
         /// <summary>
+        /// Initialization function that returns the initial list of overlay points.
+        /// </summary>
+        /// <param name="mRad">The radius of the points.</param>
+        /// <returns>The list of overlay points.</returns>
+        public List<Tuple<bool, HashSet<Point>>> Initialize(int mRad)
+        {
+            if (isActive)
+            {
+                List<Tuple<bool, HashSet<Point>>> retList = new List<Tuple<bool, HashSet<Point>>>();
+                SetMarkerRadius(mRad);
+                foreach(Tuple<HashSet<Point>, HashSet<Point>> tup in startAndEndPoints)
+                {
+                    retList.Add(new Tuple<bool, HashSet<Point>>(false, tup.Item1));
+                    retList.Add(new Tuple<bool, HashSet<Point>>(false, tup.Item2));
+                }
+                return retList;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// The main functionality of the RedrawAssistant, which updates the Assistant according to the inputs given.
         /// </summary>
         /// <param name="currentPoint">The current position of the cursor, as a point</param>
         /// <param name="rightLines">The lines on the right canvas</param>
         /// <param name="currLineID">The id of the line currently being drawn.</param>
         /// <param name="lineFinished">A boolean to indicate that the line is finished</param>
-        /// <returns>A List of HashSets of Points, which are markers for the user to redraw lines.</returns>
-        public List<HashSet<Point>> Tick(Point currentPoint, List<Tuple<bool, Line>> rightLines, int currLineID, bool lineFinished)
+        /// <param name="overlayItems">A list containing the overlay items and if they should be drawn.</param>
+        /// <returns>The updated List of overlay items, or the same list if no changes need to be done, 
+        /// along with a boolean indicating if something was changed</returns>
+        public Tuple<bool, List<Tuple<bool, HashSet<Point>>>> Tick(Point currentPoint, List<Tuple<bool, Line>> rightLines, int currLineID, bool lineFinished, 
+            List<Tuple<bool, HashSet<Point>>> overlayItems)
         {
-            List<HashSet<Point>> returnList = new List<HashSet<Point>>();
-            if (!isActive) { return returnList; }
+            if (!isActive) { return new Tuple<bool, List<Tuple<bool, HashSet<Point>>>>(false, overlayItems); }
+
+            if (!currentlyRedrawing)
+            {
+
+            }
+            /*
             Tuple<Line, bool, int> newLineTuple = null;
             var returnAllStartPoints = true;
             CheckForUndrawnLines(rightLines);
-
+            
             // Checking if a startpoint is intersected
             if (!currentlyRedrawing)
             {
@@ -159,8 +188,9 @@ namespace SketchAssistant
                     }
                 }
             }
-
             return returnList;
+            */
+            return new Tuple<bool, List<Tuple<bool, HashSet<Point>>>>(false, overlayItems);
         }
 
         /// <summary>
