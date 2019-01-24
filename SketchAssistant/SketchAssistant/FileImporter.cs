@@ -176,7 +176,10 @@ namespace SketchAssistant
         /// <para />several severe restrictions to the svg standard apply:
         /// <para /> - width and heigth values must be integers
         /// <para /> - the supported svg elements to be drawn must be placed on top level directly inside the 'svg' tag
-        /// <para /> - unsupported and hiererchical svg elements on top level will be ignored during parsing, as will the elements contained in hierarchical top-level elements
+        /// <para /> - except for the global 'svg' tag, no hierarchical elements (elements which contain other svg elements) may exist. in other words: after an opening element tag no other opening element tag may occur before the closing tag of this element.
+        /// <para /> - lines in front of the (single) opening and after the (single) closing global svg tag will be ignored during parsing
+        /// <para /> - unsupported svg elements on top level will be ignored during parsing
+        /// <para /> - the input file must not contain empty lines
         /// <para /> - all input files have to be manually tested and approved for use with this program by a developer or otherwise entitled personnel, otherwise no guarantee about correct and error-free parsing will be given
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
@@ -205,20 +208,20 @@ namespace SketchAssistant
             if (windowWidth / windowHeight > sizedef.Item1 / sizedef.Item2) //height dominant, width has to be smaller than drawing window to preserve xy-scale
             {
                 scale = windowHeight / sizedef.Item2;
-                Console.WriteLine("scale: (heights) " + windowHeight + "/" + sizedef.Item2);
-                Console.WriteLine("widths: " + windowWidth + "/" + sizedef.Item1);
+                //Console.WriteLine("scale: (heights) " + windowHeight + "/" + sizedef.Item2);
+                //Console.WriteLine("widths: " + windowWidth + "/" + sizedef.Item1);
                 height = (int)Math.Round(windowHeight);
                 width = (int) Math.Round(scale * sizedef.Item1);
-                Console.WriteLine(width + "x" + height + " (" + scale + ")");
+                //Console.WriteLine(width + "x" + height + " (" + scale + ")");
             }
             else //width dominant, height has to be smaller than drawing window to preserve xy-scale
             {
                 scale = windowWidth / sizedef.Item1;
-                Console.WriteLine("scale: (widths) " + windowWidth + "/" + sizedef.Item1);
-                Console.WriteLine("heights: " + windowHeight + "/" + sizedef.Item2);
+                //Console.WriteLine("scale: (widths) " + windowWidth + "/" + sizedef.Item1);
+                //Console.WriteLine("heights: " + windowHeight + "/" + sizedef.Item2);
                 width = (int)Math.Round(windowWidth);
                 height = (int)Math.Round(scale * sizedef.Item2);
-                Console.WriteLine(width + "x" + height + " (" + scale + ")");
+                //Console.WriteLine(width + "x" + height + " (" + scale + ")");
             }
             for(int j=0; j < allLines.Length; j++)
             {
@@ -280,6 +283,7 @@ namespace SketchAssistant
                     picture.AddRange(element);
                 }
                 i++;
+                if (i > allLines.Length - 1) throw new FileImporterException("unterminated input file: missing </svg> tag", "the file must not contain empty lines", i + 1);
             }
             return picture;
         }
@@ -292,14 +296,14 @@ namespace SketchAssistant
         private List<Line> ParseSingleSVGElement(string[] allLines)
         {
             String[] currentElement = GetCurrentElement(allLines);
-            if (currentElement[currentElement.Length - 1].EndsWith("/>")) //single line element
-            {
+            //if (currentElement[currentElement.Length - 1].EndsWith("/>")) //single line element
+            //{
                 return ParseSingleLineSVGElement(currentElement);
-            }
-            else //element containing sub-elements
-            {
-                return ParseMultiLineSVGElement(currentElement, allLines);
-            }
+            //}
+            //else //element containing sub-elements
+            //{
+            //    return ParseMultiLineSVGElement(currentElement, allLines);
+            //}
         }
 
         /// <summary>
@@ -335,8 +339,8 @@ namespace SketchAssistant
                     element = parsePath(currentElement);
                     break;
                 default: //unsupported svg element
-                    Console.WriteLine("unsupported element: " + currentElement[0] + currentElement[0].Length);
-                    return null;
+                    //Console.WriteLine("unsupported element: " + currentElement[0]);
+                    return null; //simply ignore
             }
             if (element == null)
             {
@@ -392,7 +396,7 @@ namespace SketchAssistant
             rect.Add(ScaleAndCreatePoint(x + w, y + h));
             rect.Add(ScaleAndCreatePoint(x, y + h));
             rect.Add(ScaleAndCreatePoint(x, y));
-            Console.WriteLine("parsed point: " + x + ";" + y);
+            //Console.WriteLine("parsed point: " + x + ";" + y);
             return rect;
         }
 
@@ -553,10 +557,10 @@ namespace SketchAssistant
             for (int k = 0; k < points.Length - 1; k+=2)
             {
                 polygon.Add(ScaleAndCreatePoint(Convert.ToDouble(points[k], CultureInfo.InvariantCulture), Convert.ToDouble(points[k+1], CultureInfo.InvariantCulture)));
-                Console.WriteLine("parsed point: " + points[k] + ";" + points[k + 1]);
+                //Console.WriteLine("parsed point: " + points[k] + ";" + points[k + 1]);
             }
             polygon.Add(ScaleAndCreatePoint(Convert.ToDouble(points[0], CultureInfo.InvariantCulture), Convert.ToDouble(points[1], CultureInfo.InvariantCulture))); //close polygon
-            Console.WriteLine("parsed point: " + points[0] + ";" + points[1]);
+            //Console.WriteLine("parsed point: " + points[0] + ";" + points[1]);
             return polygon;
         }
 
@@ -803,70 +807,70 @@ namespace SketchAssistant
                     }
                     else if ((currentElement.First() >= '0' && currentElement.First() <= '9') || currentElement.First() == '-' || currentElement.First() == '+' || currentElement.First() != 'e') //seperate a single coordinate / number
                     {
-                        bool decimalPointEncountered = false; //reuse the decimalPointEncountered flag for control flow first...
+                        bool repeatCommandDescriptor = false; 
                         switch (lastCommand){ //ceck for reaching of next command with omitted command descriptor
                             case 'M':
-                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
                                 break;
                             case 'm':
-                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
                                 break;
                             case 'L':
-                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
                                 break;
                             case 'l':
-                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
                                 break;
                             case 'V':
-                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
                                 break;
                             case 'v':
-                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
                                 break;
                             case 'H':
-                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
                                 break;
                             case 'h':
-                                if (argumentCounter >= 1) decimalPointEncountered = true;
+                                if (argumentCounter >= 1) repeatCommandDescriptor = true;
                                 break;
                             case 'C':
-                                if (argumentCounter >= 6) decimalPointEncountered = true;
+                                if (argumentCounter >= 6) repeatCommandDescriptor = true;
                                 break;
                             case 'c':
-                                if (argumentCounter >= 6) decimalPointEncountered = true;
+                                if (argumentCounter >= 6) repeatCommandDescriptor = true;
                                 break;
                             case 'S':
-                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
                                 break;
                             case 's':
-                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
                                 break;
                             case 'Q':
-                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
                                 break;
                             case 'q':
-                                if (argumentCounter >= 4) decimalPointEncountered = true;
+                                if (argumentCounter >= 4) repeatCommandDescriptor = true;
                                 break;
                             case 'T':
-                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
                                 break;
                             case 't':
-                                if (argumentCounter >= 2) decimalPointEncountered = true;
+                                if (argumentCounter >= 2) repeatCommandDescriptor = true;
                                 break;
                             case 'A':
-                                if (argumentCounter >= 7) decimalPointEncountered = true;
+                                if (argumentCounter >= 7) repeatCommandDescriptor = true;
                                 break;
                             case 'a':
-                                if (argumentCounter >= 7) decimalPointEncountered = true;
+                                if (argumentCounter >= 7) repeatCommandDescriptor = true;
                                 break;
                         }
-                        if (decimalPointEncountered)
+                        if (repeatCommandDescriptor)
                         {
                             pathElements.Insert(j, lastCommand + ""); //repeat command descriptor
                             j++; //skip command descriptor (was put into active position in the list
                             argumentCounter = 0; //reset argument counter
                         }
-                        decimalPointEncountered = false;
+                        bool decimalPointEncountered = false;
                         for (int k = 1; k < currentElement.Length; k++)
                         {
                             if (!decimalPointEncountered && currentElement.ElementAt(k) == '.') //allow up to one decimal point in numbers
@@ -910,7 +914,7 @@ namespace SketchAssistant
                     }
                     else //a single digit number
                     {
-                        bool repeatCommandDescriptor = false; //reuse the decimalPointEncountered flag for control flow first...
+                        bool repeatCommandDescriptor = false;
                         switch (lastCommand)
                         { //ceck for reaching of next command with omitted command descriptor
                             case 'M':
@@ -1360,7 +1364,7 @@ namespace SketchAssistant
             double sin = Math.Sin(thetha / 180 * Math.PI);
             double targetXTransformed = cos * nextPositionXRelative - sin * nextPositionYRelative; //rotate target point counterclockwise around the start point by [thetha] degrees, thereby practically rotating an intermediate coordinate system, which has its origin in the start point, clockwise by the same amount
             double targetYTransformed = sin * nextPositionXRelative + cos * nextPositionYRelative;
-            Console.WriteLine("distance between start and end point: " + (Math.Sqrt(nextPositionXRelative * nextPositionXRelative + nextPositionYRelative * nextPositionYRelative)) + " (old)," + Math.Sqrt(targetXTransformed * targetXTransformed + targetYTransformed * targetYTransformed) + " (new)");
+            //Console.WriteLine("distance between start and end point: " + (Math.Sqrt(nextPositionXRelative * nextPositionXRelative + nextPositionYRelative * nextPositionYRelative)) + " (old)," + Math.Sqrt(targetXTransformed * targetXTransformed + targetYTransformed * targetYTransformed) + " (new)");
             (double[], double[]) values = sampleEllipticArcBiasedNoRotation(rx, ry, targetXTransformed, targetYTransformed, largeArcFlag, sweepFlag);
             List<Point> result = new List<Point>();
             for (int j = 0; j < values.Item1.Length; j++)
@@ -1371,7 +1375,7 @@ namespace SketchAssistant
                 double yCoordinateAbsolute = lastPositionY + yCoordinateRelative;
                 result.Add(ScaleAndCreatePoint(xCoordinateAbsolute, yCoordinateAbsolute));
             }
-            Console.WriteLine("last point relative coordinates: (" + nextPositionXRelative + ";" + nextPositionYRelative + ") - (" + (cos * values.Item1[values.Item1.Length - 1] + sin * values.Item2[values.Item1.Length - 1]) + ";" + (cos * values.Item2[values.Item1.Length - 1] - sin * values.Item1[values.Item1.Length - 1]) + ")");
+            //Console.WriteLine("last point relative coordinates: (" + nextPositionXRelative + ";" + nextPositionYRelative + ") - (" + (cos * values.Item1[values.Item1.Length - 1] + sin * values.Item2[values.Item1.Length - 1]) + ";" + (cos * values.Item2[values.Item1.Length - 1] - sin * values.Item1[values.Item1.Length - 1]) + ")");
             //result.Add(ScaleAndCreatePoint(lastPositionX + nextPositionXRelative, lastPositionY + nextPositionYRelative)); //add end point
             return result;
         }
@@ -1685,42 +1689,42 @@ namespace SketchAssistant
             List<Point> ellipse = new List<Point>();
             double angle = ((double)2 * Math.PI) / (double)samplingRateEllipse;
             double yScale = ry / rx;
-            Console.WriteLine("parsing ellipse: " + x + ";" + y + "(" + rx + "x" + ry + ")" + " " + yScale + ":" + angle);
+            //Console.WriteLine("parsing ellipse: " + x + ";" + y + "(" + rx + "x" + ry + ")" + " " + yScale + ":" + angle);
             double[] xValues = new double[samplingRateEllipse / 4];
             double[] yValues = new double[samplingRateEllipse / 4];
             for (int j = 0; j < samplingRateEllipse / 4; j++) //compute offset values of points for one quadrant
             {
                 xValues[j] = Math.Sin((double)j * angle) * rx;
                 yValues[j] = Math.Cos((double)j * angle) * rx;
-                Console.WriteLine("parsed ellipse value: " + xValues[j] + ";" + yValues[j]);
+                //Console.WriteLine("parsed ellipse value: " + xValues[j] + ";" + yValues[j]);
             }
             for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for first quadrant
             {
                 int xCoord = Convert.ToInt32(Math.Round(x + xValues[j]));
                 int yCoord = Convert.ToInt32(Math.Round(y - yValues[j] * yScale));
                 ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
-                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+                //Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
             }
             for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for second quadrant
             {
                 int xCoord = Convert.ToInt32(Math.Round(x + yValues[j]));
                 int yCoord = Convert.ToInt32(Math.Round(y + xValues[j] * yScale));
                 ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
-                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+                //Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
             }
             for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for third quadrant
             {
                 int xCoord = Convert.ToInt32(Math.Round(x - xValues[j]));
                 int yCoord = Convert.ToInt32(Math.Round(y + yValues[j] * yScale));
                 ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
-                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+                //Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
             }
             for (int j = 0; j < samplingRateEllipse / 4; j++) //create actual points for fourth quadrant
             {
                 int xCoord = Convert.ToInt32(Math.Round(x - yValues[j]));
                 int yCoord = Convert.ToInt32(Math.Round(y - xValues[j] * yScale));
                 ellipse.Add(ScaleAndCreatePoint(xCoord, yCoord));
-                Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
+                //Console.WriteLine("parsed ellipse point: " + xCoord + ";" + yCoord + " pointCount: " + (samplingRateEllipse / 4));
             }
             ellipse.Add(ScaleAndCreatePoint(Convert.ToInt32(Math.Round(x + 0)), Convert.ToInt32(Math.Round(y - rx * yScale)))); //close ellipse
             return ellipse;
