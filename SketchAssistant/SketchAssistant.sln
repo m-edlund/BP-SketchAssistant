@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistant", "SketchAs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistant.Tests", "SketchAssistant.Tests\SketchAssistant.Tests.csproj", "{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistantWPF", "SketchAssistantWPF\SketchAssistantWPF.csproj", "{A7673CB5-CAAA-4BF1-BAA9-06A8DB0428D7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A7673CB5-CAAA-4BF1-BAA9-06A8DB0428D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A7673CB5-CAAA-4BF1-BAA9-06A8DB0428D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A7673CB5-CAAA-4BF1-BAA9-06A8DB0428D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A7673CB5-CAAA-4BF1-BAA9-06A8DB0428D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
