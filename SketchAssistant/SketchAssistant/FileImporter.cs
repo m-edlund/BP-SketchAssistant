@@ -1360,6 +1360,7 @@ namespace SketchAssistant
             double sin = Math.Sin(thetha / 180 * Math.PI);
             double targetXTransformed = cos * nextPositionXRelative - sin * nextPositionYRelative; //rotate target point counterclockwise around the start point by [thetha] degrees, thereby practically rotating an intermediate coordinate system, which has its origin in the start point, clockwise by the same amount
             double targetYTransformed = sin * nextPositionXRelative + cos * nextPositionYRelative;
+            Console.WriteLine("distance between start and end point: " + (Math.Sqrt(nextPositionXRelative * nextPositionXRelative + nextPositionYRelative * nextPositionYRelative)) + " (old)," + Math.Sqrt(targetXTransformed * targetXTransformed + targetYTransformed * targetYTransformed) + " (new)");
             (double[], double[]) values = sampleEllipticArcBiasedNoRotation(rx, ry, targetXTransformed, targetYTransformed, largeArcFlag, sweepFlag);
             List<Point> result = new List<Point>();
             for (int j = 0; j < values.Item1.Length; j++)
@@ -1370,7 +1371,8 @@ namespace SketchAssistant
                 double yCoordinateAbsolute = lastPositionY + yCoordinateRelative;
                 result.Add(ScaleAndCreatePoint(xCoordinateAbsolute, yCoordinateAbsolute));
             }
-            result.Add(ScaleAndCreatePoint(lastPositionX + nextPositionXRelative, lastPositionY + nextPositionYRelative)); //add end point
+            Console.WriteLine("last point relative coordinates: (" + nextPositionXRelative + ";" + nextPositionYRelative + ") - (" + (cos * values.Item1[values.Item1.Length - 1] + sin * values.Item2[values.Item1.Length - 1]) + ";" + (cos * values.Item2[values.Item1.Length - 1] - sin * values.Item1[values.Item1.Length - 1]) + ")");
+            //result.Add(ScaleAndCreatePoint(lastPositionX + nextPositionXRelative, lastPositionY + nextPositionYRelative)); //add end point
             return result;
         }
 
@@ -1379,15 +1381,15 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="rx">x radius</param>
         /// <param name="ry">y radius</param>
-        /// <param name="nextPositionXRelative">x coordinate of next point</param>
-        /// <param name="nextPositionYRelative">y coordinate of next point</param>
+        /// <param name="targetXTransformed">x coordinate of next point</param>
+        /// <param name="targetYTransformed">y coordinate of next point</param>
         /// <param name="largeArcFlag">flag determining if the large or the small arc is to be drawn</param>
         /// <param name="sweepFlag">flag determining in which direction the arc is to be drawn (false = ccw, true = cw)</param>
         /// <returns></returns>
-        private (double[], double[]) sampleEllipticArcBiasedNoRotation(double rx, double ry, double nextPositionXRelative, double nextPositionYRelative, bool largeArcFlag, bool sweepFlag)
+        private (double[], double[]) sampleEllipticArcBiasedNoRotation(double rx, double ry, double targetXTransformed, double targetYTransformed, bool largeArcFlag, bool sweepFlag)
         {
             double xStretchFactor = rx / ry; //get rx to ry ratio
-            (double[], double[]) values = sampleCircleArcBiasedNoRotation(ry, nextPositionXRelative, nextPositionYRelative, largeArcFlag, sweepFlag); //get a circular arc with radius ry
+            (double[], double[]) values = sampleCircleArcBiasedNoRotation(ry, targetXTransformed / xStretchFactor, targetYTransformed, largeArcFlag, sweepFlag); //get a circular arc with radius ry
             for (int j = 0; j < values.Item1.Length; j++)
             {
                 values.Item1[j] = values.Item1[j] * xStretchFactor; //correct x coordinates to get an elliptical arc from a circular one
@@ -1413,10 +1415,10 @@ namespace SketchAssistant
             double x3 = (nextPositionXRelative) / 2; //(x1 + x2) / 2;
             double y3 = (nextPositionYRelative) / 2; //(y1 + y2) / 2;
 
-            Console.WriteLine("radsq: " + radsq);
-            Console.WriteLine("q: " + q);
-            Console.WriteLine("x3: " + x3);
-            Console.WriteLine("y3: " + y3);
+            //Console.WriteLine("radsq: " + radsq);
+            //Console.WriteLine("q: " + q);
+            //Console.WriteLine("x3: " + x3);
+            //Console.WriteLine("y3: " + y3);
 
             bool xPlusFlag; //flags needed to select center point "left" of the line between origin and the endpoint (will be used to select correct one ("left" or "right" one) later together with flags passed as arguments
             bool yPlusFlag;
@@ -1450,10 +1452,10 @@ namespace SketchAssistant
             if (yPlusFlag) yC = y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q); //y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((x2-x1) / q);
             else yC = y3 - Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q);
 
-            Console.WriteLine("radsq - ((q / 2) * (q / 2))): " + (radsq - ((q / 2) * (q / 2))));
-            Console.WriteLine("Math.Sqrt(radsq - ((q / 2) * (q / 2))): " + Math.Sqrt(radsq - ((q / 2) * (q / 2))));
+            //Console.WriteLine("radsq - ((q / 2) * (q / 2))): " + (radsq - ((q / 2) * (q / 2))));
+            //Console.WriteLine("Math.Sqrt(radsq - ((q / 2) * (q / 2))): " + Math.Sqrt(radsq - ((q / 2) * (q / 2))));
 
-            Console.WriteLine("computed center of circle (relative): point1= (0,0), point2= (" + nextPositionXRelative + "," + nextPositionYRelative + "), center= (" + xC + "," + yC + ")");
+            //Console.WriteLine("computed center of circle (relative): point1= (0,0), point2= (" + nextPositionXRelative + "," + nextPositionYRelative + "), center= (" + xC + "," + yC + ")");
 
             (double[], double[]) values = sampleCircleArcBiasedAroundCenter(-xC, -yC, nextPositionXRelative - xC, nextPositionYRelative - yC, r, largeArcFlag, sweepFlag);
             for (int j = 0; j < values.Item1.Length; j++)
@@ -1495,19 +1497,19 @@ namespace SketchAssistant
             double[] xValues = new double[numberOfPoints];
             double[] yValues = new double[numberOfPoints];
             double phiCurrent = phiStart;
-            Console.WriteLine("sampling circular arc around origin: from " + phiStart + " until " + phiEnd + ":");
-            Console.WriteLine("parsed start Point: (" + xStartPoint + "," + yStartPoint + ")");
+            //Console.WriteLine("sampling circular arc around origin: from " + phiStart + " until " + phiEnd + ":");
+            //Console.WriteLine("parsed start Point: (" + xStartPoint + "," + yStartPoint + ")");
             for (int j = 0; j < numberOfPoints-1; j++) //compute intermediate points
             {
                 if (clockwise) phiCurrent -= angle; //get new angle
                 else phiCurrent += angle;
                 yValues[j] = Math.Sin(phiCurrent) * r; //angles are relative to positive x Axis!
                 xValues[j] = Math.Cos(phiCurrent) * r;
-                Console.WriteLine("parsed Point: (" + xValues[j] + "," + yValues[j] + ")");
+                //Console.WriteLine("parsed Point: (" + xValues[j] + "," + yValues[j] + ")");
             }
             xValues[numberOfPoints - 1] = xFinalPoint; //(last segment always has an angle of less than or exactly 'angle')
             yValues[numberOfPoints - 1] = yFinalPoint;
-            Console.WriteLine("parsed final Point: (" + xValues[numberOfPoints - 1] + "," + yValues[numberOfPoints - 1] + ")");
+            //Console.WriteLine("parsed final Point: (" + xValues[numberOfPoints - 1] + "," + yValues[numberOfPoints - 1] + ")");
 
             return (xValues, yValues);
         }
