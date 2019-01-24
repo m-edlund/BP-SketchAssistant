@@ -14,7 +14,7 @@ source: https://www.w3schools.com/
   stroke-width="5" fill="none" />
   <path d="M 100 100 a 60 60 0 0 0 100 0 Z"
       fill="yellow" stroke="blue" stroke-width="5" />
-  <path d="M 100 200 a 150 100 20 1 0 100 100"
+  <path d="M 100 200 a 150 80 5 1 1 100 100"
       fill="yellow" stroke="blue" stroke-width="5" />
   <path d="M200,300 Q400,50 600,300 T1000,300"
         fill="none" stroke="red" stroke-width="5"  />

@@ -173,6 +173,11 @@ namespace SketchAssistant
 
         /// <summary>
         /// parses a svg drawing, given as a .svg file
+        /// <para />several severe restrictions to the svg standard apply:
+        /// <para /> - width and heigth values must be integers
+        /// <para /> - the supported svg elements to be drawn must be placed on top level directly inside the 'svg' tag
+        /// <para /> - unsupported and hiererchical svg elements on top level will be ignored during parsing, as will the elements contained in hierarchical top-level elements
+        /// <para /> - all input files have to be manually tested and approved for use with this program by a developer or otherwise entitled personnel, otherwise no guarantee about correct and error-free parsing will be given
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
@@ -578,10 +583,10 @@ namespace SketchAssistant
                 }
             }
             normalizePathDeclaration(pathElements); //expand path data to always explicitly have the command descriptor in front of the appropriate number of arguments and to seperate command descriptors, coordinates and other tokens always into seperate list elements (equivalent to seperation with spaces in the input file, but svg allows also for comma as a seperator, and for omitting seperators where possible without losing information (refer to svg grammer) to reduce file size
-            foreach(String s in pathElements)
-            {
-                Console.WriteLine(s);
-            }
+            //foreach(String s in pathElements)
+            //{
+            //    Console.WriteLine(s);
+            //}
             List<Line> element = new List<Line>();
             List<Point> currentLine = new List<Point>();
             double lastBezierControlPointX= 0;
@@ -1084,11 +1089,11 @@ namespace SketchAssistant
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
         private (List<Point>, double, double, double, double) parse_C(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
-            Console.WriteLine("parsing C: ");
-            for(int k= 0; k < 7; k++)
-            {
-                Console.WriteLine(pathElements.ElementAt(k));
-            }
+            //Console.WriteLine("parsing C: ");
+            //for(int k= 0; k < 7; k++)
+            //{
+            //    Console.WriteLine(pathElements.ElementAt(k));
+            //}
             pathElements.RemoveAt(0); //remove element descriptor token
             double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point x coordinate
             pathElements.RemoveAt(0); //remove x coordinate token
@@ -1355,7 +1360,7 @@ namespace SketchAssistant
             double sin = Math.Sin(thetha / 180 * Math.PI);
             double targetXTransformed = cos * nextPositionXRelative - sin * nextPositionYRelative; //rotate target point counterclockwise around the start point by [thetha] degrees, thereby practically rotating an intermediate coordinate system, which has its origin in the start point, clockwise by the same amount
             double targetYTransformed = sin * nextPositionXRelative + cos * nextPositionYRelative;
-            (double[], double[]) values = sampleEllipticArcBiasedNoRotation(rx, ry, nextPositionXRelative, nextPositionYRelative, largeArcFlag, sweepFlag);
+            (double[], double[]) values = sampleEllipticArcBiasedNoRotation(rx, ry, targetXTransformed, targetYTransformed, largeArcFlag, sweepFlag);
             List<Point> result = new List<Point>();
             for (int j = 0; j < values.Item1.Length; j++)
             {
@@ -1450,7 +1455,7 @@ namespace SketchAssistant
 
             Console.WriteLine("computed center of circle (relative): point1= (0,0), point2= (" + nextPositionXRelative + "," + nextPositionYRelative + "), center= (" + xC + "," + yC + ")");
 
-            (double[], double[]) values = sampleCircleArcBiasedAroundCenter(-xC, -yC, nextPositionXRelative - xC, nextPositionYRelative - yC, r, sweepFlag);
+            (double[], double[]) values = sampleCircleArcBiasedAroundCenter(-xC, -yC, nextPositionXRelative - xC, nextPositionYRelative - yC, r, largeArcFlag, sweepFlag);
             for (int j = 0; j < values.Item1.Length; j++)
             {
                 values.Item1[j] = values.Item1[j] + xC; //correct center point coordinate bias
@@ -1469,26 +1474,40 @@ namespace SketchAssistant
         /// <param name="r">radius</param>
         /// <param name="clockwise">direction</param>
         /// <returns></returns>
-        private (double[], double[]) sampleCircleArcBiasedAroundCenter(double xStartPoint, double yStartPoint, double xFinalPoint, double yFinalPoint, double r, bool clockwise)
+        private (double[], double[]) sampleCircleArcBiasedAroundCenter(double xStartPoint, double yStartPoint, double xFinalPoint, double yFinalPoint, double r, bool largeArcFlag, bool clockwise)
         {
             double phiEnd = Math.Atan2(yFinalPoint, xFinalPoint); // angles between points and origin and the positive x Axis
             double phiStart = Math.Atan2(yStartPoint, xStartPoint);
 
             double angle = ((double)2 * Math.PI) / (double)samplingRateEllipse; //compute angle increment (equal to the one used for ellipses)
-            int numberOfPoints = (int) Math.Ceiling(Math.Abs(phiEnd - phiStart) / angle);  //compute number of points to sample
+            double angleDifference = Math.Abs(phiStart - phiEnd);
+            if (angleDifference > 2 * Math.PI || angleDifference < 0) throw new Exception("angleDifference out of range: " + angleDifference); //TODO remove
+            if (largeArcFlag) // get larger angleDifference
+            {
+                if (angleDifference < Math.PI) angleDifference = ((double)2 * Math.PI) - angleDifference;  // was smaller angleDifference
+            }
+            else // get smaller angleDifference
+            {
+                if(angleDifference > Math.PI) angleDifference = ((double)2 * Math.PI) - angleDifference;  // was larger angleDifference
+            }
+            int numberOfPoints = (int) Math.Ceiling(angleDifference / angle);  //compute number of points to sample
 
             double[] xValues = new double[numberOfPoints];
             double[] yValues = new double[numberOfPoints];
             double phiCurrent = phiStart;
-            for (int j = 0; j < numberOfPoints-1; j++) //compute offset values of points for one quadrant
+            Console.WriteLine("sampling circular arc around origin: from " + phiStart + " until " + phiEnd + ":");
+            Console.WriteLine("parsed start Point: (" + xStartPoint + "," + yStartPoint + ")");
+            for (int j = 0; j < numberOfPoints-1; j++) //compute intermediate points
             {
                 if (clockwise) phiCurrent -= angle; //get new angle
                 else phiCurrent += angle;
                 yValues[j] = Math.Sin(phiCurrent) * r; //angles are relative to positive x Axis!
                 xValues[j] = Math.Cos(phiCurrent) * r;
+                Console.WriteLine("parsed Point: (" + xValues[j] + "," + yValues[j] + ")");
             }
             xValues[numberOfPoints - 1] = xFinalPoint; //(last segment always has an angle of less than or exactly 'angle')
             yValues[numberOfPoints - 1] = yFinalPoint;
+            Console.WriteLine("parsed final Point: (" + xValues[numberOfPoints - 1] + "," + yValues[numberOfPoints - 1] + ")");
 
             return (xValues, yValues);
         }
