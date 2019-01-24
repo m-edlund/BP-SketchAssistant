@@ -1,0 +1,53 @@
+﻿<Window x:Class="SketchAssistantWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SketchAssistantWPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Column="0" Grid.ColumnSpan="7">
+            <ToolBarTray DockPanel.Dock="Top">
+                <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="4">
+                    <Menu>
+                        <MenuItem x:Name="LoadMenuButton" Header="Load">
+                            <MenuItem Header="Load SVG File"/>
+                        </MenuItem>
+                        <MenuItem x:Name="EditMenuButton" Header="Edit">
+                            <MenuItem Header="New Canvas"/>
+                            <MenuItem Header="Undo"/>
+                            <MenuItem Header="Redo"/>
+                        </MenuItem>
+                    </Menu>
+                </ToolBar>
+                <ToolBar x:Name="DrawingToolBar" Grid.Column="4" Grid.ColumnSpan="3">
+                    <Button x:Name="CanvasButton" Command="ApplicationCommands.New" ToolTip="Create a new Canvas" Content="New Canvas" Click="CanvasButton_Click" />
+                    <Button x:Name="DrawButton" Command="ApplicationCommands.New" ToolTip="Enter Drawing Mode" Content="Draw" Click="DrawButton_Click"/>
+                    <Button x:Name="DeleteButton" Command="ApplicationCommands.New" ToolTip="Enter Deletion Mode" Content="Delete" Click="DeleteButton_Click" />
+                    <Button x:Name="UndoButton" Command="ApplicationCommands.New" ToolTip="Undo the last action" Content="Undo" Click="UndoButton_Click" />
+                    <Button x:Name="RedoButton" Command="ApplicationCommands.New" ToolTip="Redo the last undone action" Content="Redo" Click="RedoButton_Click" />
+                </ToolBar>
+            </ToolBarTray>
+        </DockPanel>
+        <Image Name="LeftImageBox"/>
+        <Image Name="RightImageBox" />
+    </Grid>
+</Window>
