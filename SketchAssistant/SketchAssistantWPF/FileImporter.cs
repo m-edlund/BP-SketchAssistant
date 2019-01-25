@@ -15,7 +15,7 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public Tuple<int, int, List<Line>> ParseISADInputFile(String fileName)
+        public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
         {
             return ParseISADInput(System.IO.File.ReadAllLines(fileName));
         }
@@ -25,7 +25,7 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        private Tuple<int, int, List<Line>> ParseISADInput(String[] allLines)
+        private Tuple<int, int, List<InternalLine>> ParseISADInput(String[] allLines)
         {
 
             if (allLines.Length == 0)
@@ -42,9 +42,9 @@ namespace SketchAssistantWPF
             }
 
             Tuple<int, int> dimensions = ParseISADHeader(allLines);
-            List<Line> picture = ParseISADBody(allLines, dimensions.Item1, dimensions.Item2);
+            List<InternalLine> picture = ParseISADBody(allLines, dimensions.Item1, dimensions.Item2);
             
-            return new Tuple<int, int, List<Line>>(dimensions.Item1, dimensions.Item2, picture);
+            return new Tuple<int, int, List<InternalLine>>(dimensions.Item1, dimensions.Item2, picture);
         }
 
 
@@ -73,13 +73,13 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="allLines">the input file as an array of lines</param>
         /// <returns>the parsed picture as a list of lines</returns>
-        private List<Line> ParseISADBody(String[] allLines, int width, int height)
+        private List<InternalLine> ParseISADBody(String[] allLines, int width, int height)
         {
 
             String lineStartString = "line";
             String lineEndString = "endline";
 
-            List<Line> drawing = new List<Line>();
+            List<InternalLine> drawing = new List<InternalLine>();
 
             //number of the line currently being parsed, enumeration starting at 0, body starts at the third line, therefore lin number 2
             int i = 2;
@@ -117,7 +117,7 @@ namespace SketchAssistantWPF
                 //"parse" 'endline' token, syntax already checked at the beginning,  and start parsing next line
                 i++;
                 //add line to drawing
-                drawing.Add(new Line(newLine));
+                drawing.Add(new InternalLine(newLine));
                 //update lineStartPointer to the presumable start of the next line
                 lineStartPointer = i;
             }
@@ -135,7 +135,7 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public Tuple<int, int, List<Line>> ParseISADInputForTesting(String[] allLines)
+        public Tuple<int, int, List<InternalLine>> ParseISADInputForTesting(String[] allLines)
         {
             return ParseISADInput(allLines);
         }

@@ -5,49 +5,150 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SketchAssistantWPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Sketch Assistant" Height="612" Width="914" SizeChanged="Window_SizeChanged">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="450*"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="290*"/>
+            <ColumnDefinition Width="161*"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <DockPanel Grid.Column="0" Grid.ColumnSpan="7">
-            <ToolBarTray DockPanel.Dock="Top">
-                <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="4">
-                    <Menu>
-                        <MenuItem x:Name="LoadMenuButton" Header="Load">
-                            <MenuItem Header="Load SVG File"/>
-                        </MenuItem>
-                        <MenuItem x:Name="EditMenuButton" Header="Edit">
-                            <MenuItem Header="New Canvas"/>
-                            <MenuItem Header="Undo"/>
-                            <MenuItem Header="Redo"/>
-                        </MenuItem>
-                    </Menu>
-                </ToolBar>
-                <ToolBar x:Name="DrawingToolBar" Grid.Column="4" Grid.ColumnSpan="3">
-                    <Button x:Name="CanvasButton" Command="ApplicationCommands.New" ToolTip="Create a new Canvas" Content="New Canvas" Click="CanvasButton_Click" />
-                    <Button x:Name="DrawButton" Command="ApplicationCommands.New" ToolTip="Enter Drawing Mode" Content="Draw" Click="DrawButton_Click"/>
-                    <Button x:Name="DeleteButton" Command="ApplicationCommands.New" ToolTip="Enter Deletion Mode" Content="Delete" Click="DeleteButton_Click" />
-                    <Button x:Name="UndoButton" Command="ApplicationCommands.New" ToolTip="Undo the last action" Content="Undo" Click="UndoButton_Click" />
-                    <Button x:Name="RedoButton" Command="ApplicationCommands.New" ToolTip="Redo the last undone action" Content="Redo" Click="RedoButton_Click" />
-                </ToolBar>
-            </ToolBarTray>
+        <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0">
+            <Menu>
+                <MenuItem x:Name="LoadMenuButton" Header="Load">
+                    <MenuItem Header="Load SVG File"/>
+                </MenuItem>
+                <MenuItem x:Name="EditMenuButton" Header="Edit">
+                    <MenuItem Header="New Canvas" Click="CanvasButton_Click"/>
+                    <MenuItem Header="Undo" Click="UndoButton_Click"/>
+                    <MenuItem Header="Redo" Click="RedoButton_Click"/>
+                </MenuItem>
+            </Menu>
+        </ToolBar>
+
+        <ToolBar x:Name="DrawingToolBar" Grid.Column="4" Grid.Row="0" Grid.ColumnSpan="2">
+            <Button x:Name="CanvasButton" ToolTip="Create a new Canvas" Click="CanvasButton_Click">
+                <Rectangle Width="30" Height="30">
+                    <Rectangle.Fill>
+                        <DrawingBrush>
+                            <DrawingBrush.Drawing>
+                                <DrawingGroup ClipGeometry="M0,0 V60 H60 V0 H0 Z">
+                                    <DrawingGroup Transform="1.0513,0,0,1.0513,-1.5376,-1.5376">
+                                        <GeometryDrawing Geometry="F1 M60,60z M0,0z M11.75,54.375L11.75,5.625 39.438,5.625 48.25,14.438 48.25,54.375 11.75,54.375z">
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="#FFFFFFFF" Thickness="7.1343" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                            </GeometryDrawing.Pen>
+                                        </GeometryDrawing>
+                                        <GeometryDrawing Brush="#FFFFFFFF" Geometry="F1 M60,60z M0,0z M11.75,54.375L11.75,5.625 39.438,5.625 48.25,14.438 48.25,54.375 11.75,54.375z">
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="#FF000000" Thickness="2.3781" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                            </GeometryDrawing.Pen>
+                                        </GeometryDrawing>
+                                        <GeometryDrawing Brush="#FF000000" Geometry="F1 M60,60z M0,0z M39.437,14.438L39.437,5.625 48.25,14.438 39.437,14.438z">
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="#FF000000" Thickness="2.3781" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                            </GeometryDrawing.Pen>
+                                        </GeometryDrawing>
+                                    </DrawingGroup>
+                                </DrawingGroup>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+            <ToggleButton x:Name="DrawButton" ToolTip="Enter Drawing Mode" Click="DrawButton_Click">
+                <Rectangle Width="30" Height="30">
+                    <Rectangle.Fill>
+                        <DrawingBrush>
+                            <DrawingBrush.Drawing>
+                                <DrawingGroup>
+                                    <GeometryDrawing Brush="#FF000000" Geometry="F1 M485.219,485.22z M0,0z M467.476,146.438L446.031,167.893 317.35,39.23 338.795,17.773C362.484,-5.919,400.899,-5.919,424.59,17.773L467.476,60.67C491.133,84.349,491.133,122.748,467.476,146.438z M167.233,403.748C161.311,409.67 161.311,419.261 167.233,425.184 173.158,431.139 182.754,431.139 188.676,425.184L424.59,189.335 403.121,167.878 167.233,403.748z M60,296.54C54.075,302.467 54.075,312.054 60,317.98 65.922,323.903 75.518,323.903 81.443,317.98L317.35,82.113 295.914,60.67 60,296.54z M338.767,103.54L102.881,339.421C91.036,351.243 91.066,370.462 102.881,382.307 114.731,394.153 133.919,394.208 145.795,382.275L381.681,146.438 338.767,103.54z M145.734,446.572C138.481,439.31 134.985,430.107 133.684,420.624 130.601,421.1 127.496,421.543 124.324,421.543 108.122,421.543 92.905,415.21 81.443,403.748 69.981,392.257 63.673,377.061 63.673,360.861 63.673,357.907 64.116,355.028 64.532,352.158 54.729,350.823 45.668,346.529 38.56,339.421 37.878,338.744 37.643,337.825 37.022,337.083L0,485.216 147.748,448.23C147.097,447.637,146.36,447.193,145.734,446.572z" />
+                                </DrawingGroup>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </ToggleButton>
+            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click" >
+                <Rectangle Width="30" Height="30">
+                    <Rectangle.Fill>
+                        <DrawingBrush>
+                            <DrawingBrush.Drawing>
+                                <DrawingGroup ClipGeometry="M0,0 V512 H512 V0 H0 Z">
+                                    <GeometryDrawing Brush="#FF000000" Geometry="F1 M512,512z M0,0z M497.941,273.941C516.686,255.196,516.686,224.804,497.941,206.059L337.941,46.059C319.196,27.314,288.805,27.313,270.058,46.059L14.058,302.059C-4.68700000000001,320.804,-4.68700000000001,351.196,14.058,369.941L110.058,465.941A48.004,48.004,0,0,0,144,480L500,480C506.627,480,512,474.627,512,468L512,428C512,421.373,506.627,416,500,416L355.883,416 497.941,273.941z M195.314,211.314L332.687,348.687 265.373,416 150.628,416 70.628,336 195.314,211.314z" />
+                                </DrawingGroup>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </ToggleButton>
+            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click" >
+                <Rectangle Width="30" Height="30">
+                    <Rectangle.Fill>
+                        <DrawingBrush>
+                            <DrawingBrush.Drawing>
+                                <DrawingGroup ClipGeometry="M0,0 V60 H60 V0 H0 Z">
+                                    <GeometryDrawing Geometry="F1 M60,60z M0,0z M25.063,4.6882L9.445,20.1632 25.063,35.6012 25.063,25.9792C25.442,25.9292 25.778,25.7632 26.176,25.7632 33.176,25.7632 38.85,31.4742 38.85,38.4732 38.85,41.7872 37.521,44.7602 35.439,47.0182L43.733,55.3122C47.934,50.9322 50.555,45.0212 50.555,38.4732 50.555,25.0092 39.64,14.0592 26.176,14.0592 25.797,14.0592 25.437,14.1452 25.063,14.1672L25.063,4.68840000000001z">
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FFFFFFFF" Thickness="8.125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                        </GeometryDrawing.Pen>
+                                    </GeometryDrawing>
+                                    <GeometryDrawing Brush="#FF000000" Geometry="F0 M60,60z M0,0z M25.063,4.6882L9.445,20.1632 25.063,35.6012 25.063,25.9792C25.442,25.9292 25.778,25.7632 26.176,25.7632 33.176,25.7632 38.85,31.4742 38.85,38.4732 38.85,41.7872 37.521,44.7602 35.439,47.0182L43.733,55.3122C47.934,50.9322 50.555,45.0212 50.555,38.4732 50.555,25.0092 39.64,14.0592 26.176,14.0592 25.797,14.0592 25.437,14.1452 25.063,14.1672L25.063,4.68840000000001z">
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FF000000" Thickness="3.125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                        </GeometryDrawing.Pen>
+                                    </GeometryDrawing>
+                                </DrawingGroup>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+            <Button x:Name="RedoButton" ToolTip="Redo the last undone action" Click="RedoButton_Click">
+                <Rectangle Width="30" Height="30">
+                    <Rectangle.Fill>
+                        <DrawingBrush>
+                            <DrawingBrush.Drawing>
+                                <DrawingGroup ClipGeometry="M0,0 V60 H60 V0 H0 Z">
+                                    <DrawingGroup Transform="-1,0,0,1,60,0">
+                                        <GeometryDrawing Geometry="F1 M60,60z M0,0z M25.063,4.6882L9.445,20.1632 25.063,35.6012 25.063,25.9792C25.442,25.9292 25.778,25.7632 26.176,25.7632 33.176,25.7632 38.85,31.4742 38.85,38.4732 38.85,41.7872 37.521,44.7602 35.439,47.0182L43.733,55.3122C47.934,50.9322 50.555,45.0212 50.555,38.4732 50.555,25.0092 39.64,14.0592 26.176,14.0592 25.797,14.0592 25.437,14.1452 25.063,14.1672L25.063,4.68840000000001z">
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="#FFFFFFFF" Thickness="8.125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                            </GeometryDrawing.Pen>
+                                        </GeometryDrawing>
+                                        <GeometryDrawing Brush="#FF000000" Geometry="F0 M60,60z M0,0z M25.063,4.6882L9.445,20.1632 25.063,35.6012 25.063,25.9792C25.442,25.9292 25.778,25.7632 26.176,25.7632 33.176,25.7632 38.85,31.4742 38.85,38.4732 38.85,41.7872 37.521,44.7602 35.439,47.0182L43.733,55.3122C47.934,50.9322 50.555,45.0212 50.555,38.4732 50.555,25.0092 39.64,14.0592 26.176,14.0592 25.797,14.0592 25.437,14.1452 25.063,14.1672L25.063,4.68840000000001z">
+                                            <GeometryDrawing.Pen>
+                                                <Pen Brush="#FF000000" Thickness="3.125" StartLineCap="Round" EndLineCap="Round" LineJoin="Round" />
+                                            </GeometryDrawing.Pen>
+                                        </GeometryDrawing>
+                                    </DrawingGroup>
+                                </DrawingGroup>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+            </Button>
+        </ToolBar>
+        <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto"/>
+
+        <Canvas Name="RightCanvas" Background="SlateGray" Grid.Column="4" Grid.Row="1" Height="auto"
+                    MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2"/>
+
+        <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6">
+            <StatusBar DockPanel.Dock="Bottom" Name="StatusBar"  Background="LightGray">
+                <TextBox Name="LoadStatusBox" Text="nothing loaded" Background="LightGray"/>
+                <Separator/>
+                <TextBox Name="LastActionBox" Text="none" Background="LightGray"/>
+            </StatusBar>
         </DockPanel>
-        <Image Name="LeftImageBox"/>
-        <Image Name="RightImageBox" />
     </Grid>
 </Window>

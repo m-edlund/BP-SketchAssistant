@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 
 namespace SketchAssistantWPF
 {
-    public class Line
+    public class InternalLine
     {
         /// <summary>
         /// list saving all the points of the line in the order of the path from start to end point
@@ -21,15 +22,20 @@ namespace SketchAssistantWPF
         /// flag showing if this is only a temporary line
         /// </summary>
         private bool isTemporary;
+        /// <summary>
+        /// A collection of the original Points defining the line.
+        /// </summary>
+        private PointCollection pointColl;
 
         /// <summary>
         /// The constructor for lines which are only temporary.
         /// If you want nice lines use the other constructor.
         /// </summary>
         /// <param name="points">The points of the line</param>
-        public Line(List<Point> points)
+        public InternalLine(List<Point> points)
         {
             linePoints = new List<Point>(points);
+            pointColl = new PointCollection(linePoints);
             isTemporary = true;
         }
 
@@ -39,9 +45,10 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="points">The points of the line</param>
         /// <param name="id">The identifier of the line</param>
-        public Line(List<Point> points, int id)
+        public InternalLine(List<Point> points, int id)
         {
             linePoints = new List<Point>(points);
+            pointColl = new PointCollection(linePoints);
             identifier = id;
             CleanPoints();
             isTemporary = false;
@@ -65,6 +72,11 @@ namespace SketchAssistantWPF
         public int GetID()
         {
             return identifier;
+        }
+
+        public PointCollection GetPointCollection()
+        {
+            return pointColl;
         }
 
         /// <summary>
@@ -98,12 +110,12 @@ namespace SketchAssistantWPF
                     if (currPoint.X >= 0 && currPoint.Y >= 0 &&
                         currPoint.X < boolMatrix.GetLength(0) && currPoint.Y < boolMatrix.GetLength(1))
                     {
-                        boolMatrix[currPoint.X, currPoint.Y] = true;
-                        if (listMatrix[currPoint.X, currPoint.Y] == null)
+                        boolMatrix[(int) currPoint.X, (int) currPoint.Y] = true;
+                        if (listMatrix[(int) currPoint.X, (int) currPoint.Y] == null)
                         {
-                            listMatrix[currPoint.X, currPoint.Y] = new HashSet<int>();
+                            listMatrix[(int) currPoint.X, (int) currPoint.Y] = new HashSet<int>();
                         }
-                        listMatrix[currPoint.X, currPoint.Y].Add(identifier);
+                        listMatrix[(int) currPoint.X, (int) currPoint.Y].Add(identifier);
                     }
                 }
             }
@@ -120,11 +132,11 @@ namespace SketchAssistantWPF
                 List<Point> tempList = new List<Point>();
                 //Since Point is non-nullable, we must ensure the nullPoints, 
                 //which we remove can not possibly be points of the original given line.
-                int nullValue = linePoints[0].X + 1;
+                int nullValue = (int) linePoints[0].X + 1;
                 //Fill the gaps between points
                 for (int i = 0; i < linePoints.Count - 1; i++)
                 {
-                    nullValue += linePoints[i + 1].X;
+                    nullValue += (int) linePoints[i + 1].X;
                     List<Point> partialList = GeometryCalculator.BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
                     tempList.AddRange(partialList);
                 }

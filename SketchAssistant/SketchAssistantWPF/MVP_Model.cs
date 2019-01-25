@@ -93,13 +93,13 @@ namespace SketchAssistantWPF
         //Images
         Image leftImage;
 
-        List<Line> leftLineList;
+        List<InternalLine> leftLineList;
 
         Image rightImageWithoutOverlay;
 
         Image rightImageWithOverlay;
 
-        List<Tuple<bool, Line>> rightLineList;
+        List<Tuple<bool, InternalLine>> rightLineList;
 
         List<Point> currentLine;
 
@@ -110,7 +110,7 @@ namespace SketchAssistantWPF
             programPresenter = presenter;
             historyOfActions = new ActionHistory();
             //redrawAss = new RedrawAssistant();
-            rightLineList = new List<Tuple<bool, Line>>();
+            rightLineList = new List<Tuple<bool, InternalLine>>();
             overlayItems = new List<Tuple<bool, HashSet<Point>>>();
         }
 
@@ -139,6 +139,7 @@ namespace SketchAssistantWPF
                     + e.ToString() + "\n The Canvas will be set to match your window.");
                 newCanvas = new WriteableBitmap(leftImageBoxWidth, leftImageBoxHeight, 96, 96, PixelFormats.Bgra32, null);
             }
+            newCanvas.WritePixels()
             Graphics graph = Graphics.FromImage(image);
             graph.FillRectangle(Brushes.White, 0, 0, width + 10, height + 10);
             return image;
@@ -171,7 +172,7 @@ namespace SketchAssistantWPF
             var workingCanvas = GetEmptyCanvas(rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height);
             var workingGraph = Graphics.FromImage(workingCanvas);
             //Lines
-            foreach (Tuple<bool, Line> lineBoolTuple in rightLineList)
+            foreach (Tuple<bool, InternalLine> lineBoolTuple in rightLineList)
             {
                 if (lineBoolTuple.Item1)
                 {
@@ -181,7 +182,7 @@ namespace SketchAssistantWPF
             //The Line being currently drawn
             if (currentLine != null && currentLine.Count > 0 && inDrawingMode && mousePressed)
             {
-                var currLine = new Line(currentLine);
+                var currLine = new InternalLine(currentLine);
                 currLine.DrawLine(workingGraph);
             }
             rightImageWithoutOverlay = workingCanvas;
@@ -229,7 +230,7 @@ namespace SketchAssistantWPF
             {
                 if (lineId <= rightLineList.Count - 1 && lineId >= 0)
                 {
-                    rightLineList[lineId] = new Tuple<bool, Line>(shown, rightLineList[lineId].Item2);
+                    rightLineList[lineId] = new Tuple<bool, InternalLine>(shown, rightLineList[lineId].Item2);
                     changed = true;
                 }
             }
@@ -243,9 +244,9 @@ namespace SketchAssistantWPF
         {
             if (rightImageWithoutOverlay != null)
             {
-                isFilledMatrix = new bool[rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height];
-                linesMatrix = new HashSet<int>[rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height];
-                foreach (Tuple<bool, Line> lineTuple in rightLineList)
+                isFilledMatrix = new bool[(int) rightImageWithoutOverlay.Width, (int) rightImageWithoutOverlay.Height];
+                linesMatrix = new HashSet<int>[(int) rightImageWithoutOverlay.Width, (int) rightImageWithoutOverlay.Height];
+                foreach (Tuple<bool, InternalLine> lineTuple in rightLineList)
                 {
                     if (lineTuple.Item1)
                     {
@@ -270,9 +271,9 @@ namespace SketchAssistantWPF
             {
                 if (pnt.X >= 0 && pnt.Y >= 0 && pnt.X < rightImageWithoutOverlay.Width && pnt.Y < rightImageWithoutOverlay.Height)
                 {
-                    if (isFilledMatrix[pnt.X, pnt.Y])
+                    if (isFilledMatrix[(int) pnt.X, (int) pnt.Y])
                     {
-                        returnSet.UnionWith(linesMatrix[pnt.X, pnt.Y]);
+                        returnSet.UnionWith(linesMatrix[(int) pnt.X, (int) pnt.Y]);
                     }
                 }
             }
@@ -333,7 +334,7 @@ namespace SketchAssistantWPF
         /// <param name="width">The width of the left image.</param>
         /// <param name="height">The height of the left image.</param>
         /// <param name="listOfLines">The List of Lines to be displayed in the left image.</param>
-        public void SetLeftLineList(int width, int height, List<Line> listOfLines)
+        public void SetLeftLineList(int width, int height, List<InternalLine> listOfLines)
         {
             var workingCanvas = GetEmptyCanvas(width, height);
             var workingGraph = Graphics.FromImage(workingCanvas);
@@ -341,7 +342,7 @@ namespace SketchAssistantWPF
             //redrawAss = new RedrawAssistant(leftLineList);
             //overlayItems = redrawAss.Initialize(markerRadius);
             //Lines
-            foreach (Line line in leftLineList)
+            foreach (InternalLine line in leftLineList)
             {
                 line.DrawLine(workingGraph);
             }
@@ -349,7 +350,7 @@ namespace SketchAssistantWPF
             programPresenter.UpdateLeftImage(leftImage);
             //Set right image to same size as left image and delete linelist
             DrawEmptyCanvasRight();
-            rightLineList = new List<Tuple<bool, Line>>();
+            rightLineList = new List<Tuple<bool, InternalLine>>();
         }
 
         /// <summary>
@@ -473,8 +474,8 @@ namespace SketchAssistantWPF
             mousePressed = false;
             if (inDrawingMode && currentLine.Count > 0)
             {
-                Line newLine = new Line(currentLine, rightLineList.Count);
-                rightLineList.Add(new Tuple<bool, Line>(true, newLine));
+                InternalLine newLine = new InternalLine(currentLine, rightLineList.Count);
+                rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
                 if (leftImage != null)
@@ -500,7 +501,7 @@ namespace SketchAssistantWPF
             {
                 var rightGraph = Graphics.FromImage(rightImageWithoutOverlay);
                 currentLine.Add(currentCursorPosition);
-                Line drawline = new Line(currentLine);
+                InternalLine drawline = new InternalLine(currentLine);
                 drawline.DrawLine(rightGraph);
                 RedrawRightOverlay();
             }
@@ -516,7 +517,7 @@ namespace SketchAssistantWPF
                         programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete)));
                         foreach (int lineID in linesToDelete)
                         {
-                            rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
+                            rightLineList[lineID] = new Tuple<bool, InternalLine>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
                         if (leftImage != null)

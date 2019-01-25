@@ -43,16 +43,16 @@ namespace SketchAssistantWPF
         void SetToolStripButtonStatus(String buttonName, MainWindow.ButtonState state);
 
         /// <summary>
-        /// Displays an image in the left Picture box.
+        /// Displays a list of lines in the left Picture box.
         /// </summary>
         /// <param name="img">The new image.</param>
-        void DisplayInLeftPictureBox(Image img);
+        void DisplayInLeftPictureBox(List<Line> lineList);
 
         /// <summary>
-        /// Displays an image in the right Picture box.
+        /// Displays a list of lines in the right Picture box.
         /// </summary>
         /// <param name="img">The new image.</param>
-        void DisplayInRightPictureBox(Image img);
+        void DisplayInRightPictureBox(List<Line> lineList);
 
         /// <summary>
         /// shows the given info message in a popup and asks the user to aknowledge it
