@@ -25,10 +25,6 @@ namespace SketchAssistantWPF
         /// A dictionary connecting the id of an InternalLine with the respective Polyline in the right canvas.
         /// </summary>
         Dictionary<int, Polyline> rightPolyLines;
-        /// <summary>
-        /// A dictionary connecting the id of an InternalLine with the respective Polyline in the left canvas.
-        /// </summary>
-        Dictionary<int, Polyline> leftPolyLines;
 
         ImageDimension CanvasSizeLeft = new ImageDimension(0,0);
 
@@ -109,6 +105,7 @@ namespace SketchAssistantWPF
                     Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
                     programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
                     programModel.ChangeState(true);
+                    programModel.CanvasActivated();
                     programView.EnableTimer();
                 }
             }
@@ -159,9 +156,11 @@ namespace SketchAssistantWPF
             }
             if (okToContinue)
             {
-                programModel.canvasActive = true;
+                programModel.ResetRightImage();
+                programModel.CanvasActivated();
                 programModel.ChangeState(true);
                 programView.EnableTimer();
+                ClearRightLines();
             }
         }
 
@@ -244,7 +243,6 @@ namespace SketchAssistantWPF
                 if (!rightPolyLines.ContainsKey(line.GetID()))
                 {
                     Polyline newLine = new Polyline();
-                    newLine.Stroke = Brushes.Black;
                     newLine.Points = line.GetPointCollection();
                     rightPolyLines.Add(line.GetID(), newLine);
                     programView.AddNewLineRight(newLine);
@@ -259,15 +257,15 @@ namespace SketchAssistantWPF
         public void UpdateLeftLines(List<InternalLine> lines)
         {
             programView.RemoveAllLeftLines();
-            leftPolyLines = new Dictionary<int, Polyline>();
-            foreach(InternalLine line in lines)
+            foreach (InternalLine line in lines)
             {
                 Polyline newLine = new Polyline();
                 newLine.Stroke = Brushes.Black;
                 newLine.Points = line.GetPointCollection();
-                leftPolyLines.Add(line.GetID(), newLine);
                 programView.AddNewLineLeft(newLine);
             }
+            programView.SetCanvasState("LeftCanvas", true);
+            programView.SetCanvasState("RightCanvas", true);
         }
 
         /// <summary>
@@ -277,14 +275,15 @@ namespace SketchAssistantWPF
         /// <param name="inDrawingMode">If the model is in Drawing Mode</param>
         /// <param name="canUndo">If actions in the model can be undone</param>
         /// <param name="canRedo">If actions in the model can be redone</param>
-        /// <param name="imageLoaded">If an image is loaded in the model</param>
-        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool imageLoaded)
+        /// <param name="canvasActive">If the right canvas is active</param>
+        /// <param name="graphicLoaded">If an image is loaded in the model</param>
+        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive, bool graphicLoaded)
         {
             Dictionary<String, MainWindow.ButtonState> dict = new Dictionary<String, MainWindow.ButtonState> {
                 {"canvasButton", MainWindow.ButtonState.Enabled }, {"drawButton", MainWindow.ButtonState.Disabled}, {"deleteButton",MainWindow.ButtonState.Disabled },
                 {"undoButton", MainWindow.ButtonState.Disabled },{"redoButton",  MainWindow.ButtonState.Disabled}};
 
-            if (imageLoaded)
+            if (canvasActive)
             {
                 if (inDrawingMode)
                 {
@@ -303,6 +302,8 @@ namespace SketchAssistantWPF
             {
                 programView.SetToolStripButtonStatus(entry.Key, entry.Value);
             }
+            programView.SetCanvasState("RightCanvas", canvasActive);
+            programView.SetCanvasState("LeftCanvas", graphicLoaded);
         }
 
 
@@ -354,7 +355,7 @@ namespace SketchAssistantWPF
         /// <param name="visible">Whether or not it should be visible.</param>
         private void SetVisibility(Polyline line, bool visible)
         {
-            if (visible)
+            if (!visible)
             {
                 line.Opacity = 0.00001;
             }
@@ -372,6 +373,7 @@ namespace SketchAssistantWPF
         private Point ConvertCoordinates(Point cursorPosition)
         {
             if (!programModel.canvasActive) { return cursorPosition; }
+            if (programModel.canvasActive && !programModel.graphicLoaded) { return cursorPosition; }
             ImageDimension rightImageDimensions = programModel.rightImageSize;
             Point realCoordinates = new Point(0, 0);
 

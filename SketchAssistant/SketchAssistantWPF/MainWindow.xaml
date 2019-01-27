@@ -10,10 +10,11 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="450*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="5"/>
-            <ColumnDefinition Width="290*"/>
-            <ColumnDefinition Width="161*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
@@ -22,10 +23,10 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="0">
-            <Menu>
+        <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Background="LightGray">
+            <Menu Background="LightGray">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
-                    <MenuItem Header="Load SVG File"/>
+                    <MenuItem Header="Load SVG File" Click="MenuItem_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="EditMenuButton" Header="Edit">
                     <MenuItem Header="New Canvas" Click="CanvasButton_Click"/>
@@ -35,7 +36,7 @@
             </Menu>
         </ToolBar>
         <!-- All Icons in the Toolbar taken from openclipart.org -->
-        <ToolBar x:Name="DrawingToolBar" Grid.Column="4" Grid.Row="0" Grid.ColumnSpan="2">
+        <ToolBar x:Name="DrawingToolBar" Grid.Column="5" Grid.Row="0" Grid.ColumnSpan="2" Background="LightGray">
             <Button x:Name="CanvasButton" ToolTip="Create a new Canvas" Click="CanvasButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
@@ -169,12 +170,12 @@
                 </Rectangle>
             </Button>
         </ToolBar>
-        <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto"/>
+        <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="2"/>
+        <Canvas Name="CanvasSeperator" Grid.Column="4" Grid.Row="1" Background="LightGray"/>
+        <Canvas Name="RightCanvas" Background="SlateGray" Grid.Column="5" Grid.Row="1" Height="auto"
+            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2"/>
 
-        <Canvas Name="RightCanvas" Background="SlateGray" Grid.Column="4" Grid.Row="1" Height="auto"
-                    MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2"/>
-
-        <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6">
+        <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="7">
             <StatusBar DockPanel.Dock="Bottom" Name="StatusBar"  Background="LightGray">
                 <TextBox Name="LoadStatusBox" Text="nothing loaded" Background="LightGray"/>
                 <Separator/>

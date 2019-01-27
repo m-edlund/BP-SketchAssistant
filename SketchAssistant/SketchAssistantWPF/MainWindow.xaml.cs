@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -28,9 +29,11 @@ namespace SketchAssistantWPF
             InitializeComponent();
             ProgramPresenter = new MVP_Presenter(this);
             //  DispatcherTimer setup
-            dispatcherTimer = new DispatcherTimer();
+            dispatcherTimer = new DispatcherTimer(DispatcherPriority.Render);
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 33);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
+                new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
         }
 
         public enum ButtonState
@@ -149,40 +152,48 @@ namespace SketchAssistantWPF
             ProgramPresenter.Tick();
         }
 
+        /// <summary>
+        /// Import button, will open an OpenFileDialog
+        /// </summary>
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ProgramPresenter.ExamplePictureToolStripMenuItemClick();
+        }
+
         /*************************/
         /*** PRESENTER -> VIEW ***/
         /*************************/
-        
-            /*
-        /// <summary>
-        /// Displays a list of lines in the left Picture box.
-        /// </summary>
-        /// <param name="img">The new image.</param>
-        public void DisplayInLeftPictureBox(List<InternalLine> lineList)
-        {
-            foreach (InternalLine line in lineList)
-            {
-                Polyline newPolyLine = new Polyline();
-                newPolyLine.Stroke = Brushes.Black;
-                newPolyLine.Points = line.GetPointCollection();
-                LeftCanvas.Children.Add(newPolyLine);
-            }
-        }
 
-        /// <summary>
-        /// Displays a list of lines in the right Picture box.
-        /// </summary>
-        /// <param name="img">The new image.</param>
-        public void DisplayInRightPictureBox(List<InternalLine> lineList)
+        /*
+    /// <summary>
+    /// Displays a list of lines in the left Picture box.
+    /// </summary>
+    /// <param name="img">The new image.</param>
+    public void DisplayInLeftPictureBox(List<InternalLine> lineList)
+    {
+        foreach (InternalLine line in lineList)
         {
-            foreach (InternalLine line in lineList)
-            {
-                Polyline newPolyLine = new Polyline();
-                newPolyLine.Stroke = Brushes.Black;
-                newPolyLine.Points = line.GetPointCollection();
-                LeftCanvas.Children.Add(newPolyLine);
-            }
-        }*/
+            Polyline newPolyLine = new Polyline();
+            newPolyLine.Stroke = Brushes.Black;
+            newPolyLine.Points = line.GetPointCollection();
+            LeftCanvas.Children.Add(newPolyLine);
+        }
+    }
+
+    /// <summary>
+    /// Displays a list of lines in the right Picture box.
+    /// </summary>
+    /// <param name="img">The new image.</param>
+    public void DisplayInRightPictureBox(List<InternalLine> lineList)
+    {
+        foreach (InternalLine line in lineList)
+        {
+            Polyline newPolyLine = new Polyline();
+            newPolyLine.Stroke = Brushes.Black;
+            newPolyLine.Points = line.GetPointCollection();
+            LeftCanvas.Children.Add(newPolyLine);
+        }
+    }*/
 
         /// <summary>
         /// Remove the current line.
@@ -228,6 +239,8 @@ namespace SketchAssistantWPF
         /// <param name="newLine">The new Polyline to be added displayed.</param>
         public void AddNewLineLeft(Polyline newLine)
         {
+            newLine.Stroke = Brushes.Black;
+            newLine.StrokeThickness = 2;
             LeftCanvas.Children.Add(newLine);
         }
 
@@ -237,6 +250,8 @@ namespace SketchAssistantWPF
         /// <param name="newLine">The new Polyline to be added displayed.</param>
         public void AddNewLineRight(Polyline newLine)
         {
+            newLine.Stroke = Brushes.Black;
+            newLine.StrokeThickness = 2;
             RightCanvas.Children.Add(newLine);
         }
 
@@ -315,14 +330,20 @@ namespace SketchAssistantWPF
                     case ButtonState.Active:
                         ((ToggleButton)buttonToChange).IsEnabled = true;
                         ((ToggleButton)buttonToChange).IsChecked = true;
+                        ((ToggleButton)buttonToChange).Opacity = 1;
+                        ((ToggleButton)buttonToChange).Background = Brushes.SkyBlue;
                         break;
                     case ButtonState.Disabled:
                         ((ToggleButton)buttonToChange).IsEnabled = false;
                         ((ToggleButton)buttonToChange).IsChecked = false;
+                        ((ToggleButton)buttonToChange).Opacity = 0.5;
+                        ((ToggleButton)buttonToChange).Background = Brushes.LightGray;
                         break;
                     case ButtonState.Enabled:
                         ((ToggleButton)buttonToChange).IsEnabled = true;
                         ((ToggleButton)buttonToChange).IsChecked = false;
+                        ((ToggleButton)buttonToChange).Opacity = 1;
+                        ((ToggleButton)buttonToChange).Background = Brushes.LightGray;
                         break;
                 }
             }
@@ -332,9 +353,11 @@ namespace SketchAssistantWPF
                 {
                     case ButtonState.Disabled:
                         ((Button)buttonToChange).IsEnabled = false;
+                        ((Button)buttonToChange).Opacity = 0.5;
                         break;
                     default:
                         ((Button)buttonToChange).IsEnabled = true;
+                        ((Button)buttonToChange).Opacity = 1;
                         break;
                 }
             }
@@ -367,6 +390,34 @@ namespace SketchAssistantWPF
         {
             MessageBoxResult result = MessageBox.Show(message, "Warning", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             return (result.Equals(MessageBoxResult.Yes));
+        }
+
+        /// <summary>
+        /// Updates the colour of a canvas.
+        /// </summary>
+        /// <param name="canvasName">The name of the canvas to be updated.</param>
+        /// <param name="active">Whether or not the canvas is active.</param>
+        public void SetCanvasState(string canvasName, bool active)
+        {
+            Canvas canvas;
+            switch (canvasName){
+                case ("LeftCanvas"):
+                    canvas = LeftCanvas;
+                    break;
+                case ("RightCanvas"):
+                    canvas = RightCanvas;
+                    break;
+                default:
+                    throw new InvalidOperationException("Unknown canvas name, Check that the canvas passed is either LeftCanvas or RightCanvas");
+            }
+            if (active)
+            {
+                canvas.Background = Brushes.White;
+            }
+            else
+            {
+                canvas.Background = Brushes.SlateGray;
+            }
         }
     }
 }

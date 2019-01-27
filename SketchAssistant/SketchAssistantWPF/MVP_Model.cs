@@ -93,8 +93,14 @@ namespace SketchAssistantWPF
         public ImageDimension leftImageSize { get; private set; }
 
         public ImageDimension rightImageSize { get; private set; }
-
+        /// <summary>
+        /// Indicates whether or not the canvas on the right side is active.
+        /// </summary>
         public bool canvasActive {get; set;}
+        /// <summary>
+        /// Indicates if there is a graphic loaded in the left canvas.
+        /// </summary>
+        public bool graphicLoaded { get; set; }
 
         //Images
         Image leftImage;
@@ -107,7 +113,7 @@ namespace SketchAssistantWPF
 
         List<Tuple<bool, InternalLine>> rightLineList;
 
-        List<Point> currentLine;
+        List<Point> currentLine = new List<Point>();
 
 
 
@@ -119,6 +125,9 @@ namespace SketchAssistantWPF
             //overlayItems = new List<Tuple<bool, HashSet<Point>>>();
             rightLineList = new List<Tuple<bool, InternalLine>>();
             canvasActive = false;
+            UpdateUI();
+            rightImageSize = new ImageDimension(0, 0);
+            leftImageSize = new ImageDimension(0, 0);
         }
 
         /**************************/
@@ -147,7 +156,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RepopulateDeletionMatrixes()
         {
-            if (rightImageWithoutOverlay != null)
+            if (canvasActive)
             {
                 isFilledMatrix = new bool[rightImageSize.Width, rightImageSize.Height];
                 linesMatrix = new HashSet<int>[rightImageSize.Width, rightImageSize.Height];
@@ -166,7 +175,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void UpdateUI()
         {
-            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), canvasActive);
+            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), canvasActive, graphicLoaded);
         }
 
         /// <summary>
@@ -202,7 +211,8 @@ namespace SketchAssistantWPF
         /// </summary>
         public void ResetRightImage()
         {
-            rightLineList = new List<Tuple<bool, InternalLine>>();
+            rightLineList.Clear();
+            programPresenter.PassLastActionTaken(historyOfActions.Reset());
             programPresenter.ClearRightLines();
         }
 
@@ -217,7 +227,9 @@ namespace SketchAssistantWPF
             leftImageSize = new ImageDimension(width, height);
             rightImageSize = new ImageDimension(width, height);
             leftLineList = listOfLines;
+            graphicLoaded = true;
             programPresenter.UpdateLeftLines(leftLineList);
+            CanvasActivated();
             /*
             var workingCanvas = GetEmptyCanvas(width, height);
             var workingGraph = Graphics.FromImage(workingCanvas);
@@ -235,6 +247,16 @@ namespace SketchAssistantWPF
             DrawEmptyCanvasRight();
             rightLineList = new List<Tuple<bool, InternalLine>>();
             */
+        }
+
+        /// <summary>
+        /// A function to tell the model a new canvas was activated.
+        /// </summary>
+        public void CanvasActivated()
+        {
+            canvasActive = true;
+            RepopulateDeletionMatrixes();
+            UpdateUI();
         }
 
         /// <summary>
@@ -324,7 +346,7 @@ namespace SketchAssistantWPF
             mousePressed = true;
             if (inDrawingMode)
             {
-                currentLine = new List<Point>();
+                currentLine.Clear();
             }
         }
 
@@ -342,6 +364,8 @@ namespace SketchAssistantWPF
                 programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
                 //TODO: Add check if overlay needs to be added
                 programPresenter.UpdateRightLines(rightLineList);
+                currentLine.Clear();
+                programPresenter.UpdateCurrentLine(currentLine);
             }
             UpdateUI();
         }
@@ -421,7 +445,7 @@ namespace SketchAssistantWPF
         {
             return !historyOfActions.IsEmpty();
         }
-
+    
         /**************************/
         /*** INTERNAL FUNCTIONS ***/
         /**************************/

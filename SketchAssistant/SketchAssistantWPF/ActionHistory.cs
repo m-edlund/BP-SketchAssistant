@@ -21,6 +21,17 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Resets the action history to its initial state.
+        /// </summary>
+        /// <returns>The new Last Action taken.</returns>
+        public String Reset()
+        {
+            actionHistory.Clear();
+            currentAction = new Tuple<int, SketchAction>(-1, null);
+            return AddNewAction(new SketchAction(SketchAction.ActionType.Start, -1));
+        }
+
+        /// <summary>
         /// Adds a new action to the action history.
         /// </summary>
         /// <param name="newAction">The newly added action.</param>

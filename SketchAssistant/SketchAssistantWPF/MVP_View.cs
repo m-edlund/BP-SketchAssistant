@@ -10,6 +10,12 @@ namespace SketchAssistantWPF
 {
     public interface MVP_View
     {
+        /// <summary>
+        /// Updates the colour of a canvas.
+        /// </summary>
+        /// <param name="canvasName">The name of the canvas to be updated.</param>
+        /// <param name="active">Whether or not the canvas is active.</param>
+        void SetCanvasState(string canvasName, bool active);
 
         /// <summary>
         /// Remove the current line.
