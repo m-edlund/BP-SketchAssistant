@@ -78,7 +78,7 @@ namespace SketchAssistantWPF
         {
             return pointColl;
         }
-
+        /*
         /// <summary>
         /// A function that takes a Graphics element and returns it with
         /// the line drawn on it.
@@ -95,7 +95,7 @@ namespace SketchAssistantWPF
             if (linePoints.Count == 1) { canvas.FillRectangle(Brushes.Black, linePoints[0].X, linePoints[0].Y, 1, 1); }
             return canvas;
         }
-
+        */
         /// <summary>
         /// A function that will take to matrixes and populate the with the line data of this line object
         /// </summary>

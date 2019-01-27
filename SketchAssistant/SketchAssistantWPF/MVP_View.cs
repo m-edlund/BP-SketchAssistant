@@ -4,11 +4,45 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Shapes;
 
 namespace SketchAssistantWPF
 {
     public interface MVP_View
     {
+
+        /// <summary>
+        /// Remove the current line.
+        /// </summary>
+        void RemoveCurrLine();
+
+        /// <summary>
+        /// Display the current line.
+        /// </summary>
+        /// <param name="line">The current line to display</param>
+        void DisplayCurrLine(Polyline line);
+
+        /// <summary>
+        /// Removes all Lines from the left canvas.
+        /// </summary>
+        void RemoveAllLeftLines();
+
+        /// <summary>
+        /// Removes all lines in the right canvas.
+        /// </summary>
+        void RemoveAllRightLines();
+
+        /// <summary>
+        /// Adds another Line that will be displayed in the left display.
+        /// </summary>
+        /// <param name="newLine">The new Polyline to be added displayed.</param>
+        void AddNewLineLeft(Polyline newLine);
+
+        /// <summary>
+        /// Adds another Line that will be displayed in the right display.
+        /// </summary>
+        /// <param name="newLine">The new Polyline to be added displayed.</param>
+        void AddNewLineRight(Polyline newLine);
 
         /// <summary>
         /// Enables the timer of the View, which will tick the Presenter.
@@ -41,18 +75,6 @@ namespace SketchAssistantWPF
         /// <param name="buttonName">The name of the button.</param>
         /// <param name="state">The new state of the button.</param>
         void SetToolStripButtonStatus(String buttonName, MainWindow.ButtonState state);
-
-        /// <summary>
-        /// Displays a list of lines in the left Picture box.
-        /// </summary>
-        /// <param name="img">The new image.</param>
-        void DisplayInLeftPictureBox(List<Line> lineList);
-
-        /// <summary>
-        /// Displays a list of lines in the right Picture box.
-        /// </summary>
-        /// <param name="img">The new image.</param>
-        void DisplayInRightPictureBox(List<Line> lineList);
 
         /// <summary>
         /// shows the given info message in a popup and asks the user to aknowledge it

@@ -98,32 +98,37 @@ namespace SketchAssistantWPF
         /// <returns>All points between p0 and p1 (including p0 and p1)</returns>
         public static List<Point> BresenhamLineAlgorithm(Point p0, Point p1)
         {
-            int deltaX = p1.X - p0.X;
-            int deltaY = p1.Y - p0.Y;
+            int p1x = (int)p1.X;
+            int p1y = (int)p1.Y;
+            int p0x = (int)p0.X;
+            int p0y = (int)p0.Y;
+
+            int deltaX = p1x - p0x;
+            int deltaY = p1y - p0y;
             List<Point> returnList;
 
             if (Math.Abs(deltaY) < Math.Abs(deltaX))
             {
                 if (p0.X > p1.X)
                 {
-                    returnList = GetLineLow(p1.X, p1.Y, p0.X, p0.Y);
+                    returnList = GetLineLow(p1x, p1y, p0x, p0y);
                     returnList.Reverse();
                 }
                 else
                 {
-                    returnList = GetLineLow(p0.X, p0.Y, p1.X, p1.Y);
+                    returnList = GetLineLow(p0x, p0y, p1x, p1y);
                 }
             }
             else
             {
                 if (p0.Y > p1.Y)
                 {
-                    returnList = GetLineHigh(p1.X, p1.Y, p0.X, p0.Y);
+                    returnList = GetLineHigh(p1x, p1y, p0x, p0y);
                     returnList.Reverse();
                 }
                 else
                 {
-                    returnList = GetLineHigh(p0.X, p0.Y, p1.X, p1.Y);
+                    returnList = GetLineHigh(p0x, p0y, p1x, p1y);
                 }
             }
             return returnList;

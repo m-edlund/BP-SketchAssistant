@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace SketchAssistantWPF
 {
@@ -19,6 +21,22 @@ namespace SketchAssistantWPF
         /// The Model of the MVP-Model.
         /// </summary>
         MVP_Model programModel;
+        /// <summary>
+        /// A dictionary connecting the id of an InternalLine with the respective Polyline in the right canvas.
+        /// </summary>
+        Dictionary<int, Polyline> rightPolyLines;
+        /// <summary>
+        /// A dictionary connecting the id of an InternalLine with the respective Polyline in the left canvas.
+        /// </summary>
+        Dictionary<int, Polyline> leftPolyLines;
+
+        ImageDimension CanvasSizeLeft = new ImageDimension(0,0);
+
+        ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
+
+        ImageDimension ImageSizeLeft = new ImageDimension(0, 0);
+
+        ImageDimension ImageSizeRight = new ImageDimension(0, 0);
 
         /*******************/
         /*** ENUMERATORS ***/
@@ -61,11 +79,15 @@ namespace SketchAssistantWPF
         /// <param name="rightPBS">The new size of the left picture box.</param>
         public void Resize(Tuple<int, int> leftPBS, Tuple<int, int> rightPBS)
         {
+            CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
+            CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
+            /*
             programModel.leftImageBoxWidth = leftPBS.Item1;
             programModel.leftImageBoxHeight = leftPBS.Item2;
             programModel.rightImageBoxWidth = rightPBS.Item1;
             programModel.rightImageBoxHeight = rightPBS.Item2;
-            programModel.UpdateSizes();
+            */
+            programModel.UpdateSizes(CanvasSizeRight);
         }
 
         /// <summary>
@@ -84,7 +106,7 @@ namespace SketchAssistantWPF
                 if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
                 {
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    Tuple<int, int, List<Line>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                    Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
                     programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
                     programModel.ChangeState(true);
                     programView.EnableTimer();
@@ -118,6 +140,14 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Pass-trough function for ticking the model.
+        /// </summary>
+        public void Tick()
+        {
+            programModel.Tick();
+        }
+
+        /// <summary>
         /// Checks if there is unsaved progress, and promts the model to generate a new canvas if not.
         /// </summary>
         public void NewCanvas()
@@ -129,18 +159,10 @@ namespace SketchAssistantWPF
             }
             if (okToContinue)
             {
-                programModel.DrawEmptyCanvasRight();
+                programModel.canvasActive = true;
                 programModel.ChangeState(true);
                 programView.EnableTimer();
             }
-        }
-
-        /// <summary>
-        /// Pass-trough function for ticking the model.
-        /// </summary>
-        public void Tick()
-        {
-            programModel.Tick();
         }
 
         /// <summary>
@@ -148,12 +170,12 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
         /// <param name="e">The Mouse event arguments.</param>
-        public void MouseEvent(MouseAction mouseAction, MouseEventArgs e)
+        public void MouseEvent(MouseAction mouseAction, Point position)
         {
             switch (mouseAction)
             {
                 case MouseAction.Move:
-                    programModel.SetCurrentCursorPosition(ConvertCoordinates(e.GetPosition());
+                    programModel.SetCurrentCursorPosition(ConvertCoordinates(position));
                     break;
                 default:
                     break;
@@ -190,6 +212,65 @@ namespace SketchAssistantWPF
         /************************************/
 
         /// <summary>
+        /// Updates the currentline
+        /// </summary>
+        /// <param name="linepoints">The points of the current line.</param>
+        public void UpdateCurrentLine(List<Point> linepoints)
+        {
+            Polyline currentLine = new Polyline();
+            currentLine.Stroke = Brushes.Black;
+            currentLine.Points = new PointCollection(linepoints);
+            programView.DisplayCurrLine(currentLine);
+        }
+
+        /// <summary>
+        /// Clears all Lines in the right canvas.
+        /// </summary>
+        public void ClearRightLines()
+        {
+            programView.RemoveAllRightLines();
+            rightPolyLines = new Dictionary<int, Polyline>();
+        }
+
+        /// <summary>
+        /// A function to update the displayed lines in the right canvas.
+        /// </summary>
+        public void UpdateRightLines(List<Tuple<bool, InternalLine>> lines)
+        {
+            foreach(Tuple<bool, InternalLine> tup in lines)
+            {
+                var status = tup.Item1;
+                var line = tup.Item2;
+                if (!rightPolyLines.ContainsKey(line.GetID()))
+                {
+                    Polyline newLine = new Polyline();
+                    newLine.Stroke = Brushes.Black;
+                    newLine.Points = line.GetPointCollection();
+                    rightPolyLines.Add(line.GetID(), newLine);
+                    programView.AddNewLineRight(newLine);
+                }
+                SetVisibility(rightPolyLines[line.GetID()], status);
+            }
+        }
+
+        /// <summary>
+        /// A function to update the displayed lines in the left canvas.
+        /// </summary>
+        public void UpdateLeftLines(List<InternalLine> lines)
+        {
+            programView.RemoveAllLeftLines();
+            leftPolyLines = new Dictionary<int, Polyline>();
+            foreach(InternalLine line in lines)
+            {
+                Polyline newLine = new Polyline();
+                newLine.Stroke = Brushes.Black;
+                newLine.Points = line.GetPointCollection();
+                leftPolyLines.Add(line.GetID(), newLine);
+                programView.AddNewLineLeft(newLine);
+            }
+        }
+
+        /// <summary>
         /// Called by the model when the state of the Program changes. 
         /// Changes the look of the UI according to the current state of the model.
         /// </summary>
@@ -224,23 +305,25 @@ namespace SketchAssistantWPF
             }
         }
 
+
+        /*
         /// <summary>
         /// Is called by the model when the left image is changed.
         /// </summary>
-        /// <param name="img">The new image.</param>
-        public void UpdateLeftImage(Image img)
+        /// <param name="lineList">The new image.</param>
+        public void UpdateLeftImage(List<InternalLine> lineList)
         {
-            programView.DisplayInLeftPictureBox(img);
+            programView.DisplayInLeftPictureBox(lineList);
         }
 
         /// <summary>
         /// Is called by the model when the right image is changed.
         /// </summary>
-        /// <param name="img">The new image.</param>
-        public void UpdateRightImage(Image img)
+        /// <param name="lineList">The new image.</param>
+        public void UpdateRightImage(List<InternalLine> lineList)
         {
-            programView.DisplayInRightPictureBox(img);
-        }
+            programView.DisplayInRightPictureBox(lineList);
+        }*/
 
         /// <summary>
         /// Pass-trough function to display an info message in the view.
@@ -265,17 +348,35 @@ namespace SketchAssistantWPF
         /*************************/
 
         /// <summary>
+        /// Sets the visibility of a polyline.
+        /// </summary>
+        /// <param name="line">The polyline</param>
+        /// <param name="visible">Whether or not it should be visible.</param>
+        private void SetVisibility(Polyline line, bool visible)
+        {
+            if (visible)
+            {
+                line.Opacity = 0.00001;
+            }
+            else
+            {
+                line.Opacity = 1;
+            }
+        }
+
+        /// <summary>
         /// A function that calculates the coordinates of a point on a zoomed in image.
         /// </summary>
         /// <param name="">The position of the mouse cursor</param>
         /// <returns>The real coordinates of the mouse cursor on the image</returns>
         private Point ConvertCoordinates(Point cursorPosition)
         {
-            var rightImageDimensions = programModel.GetRightImageDimensions();
+            if (!programModel.canvasActive) { return cursorPosition; }
+            ImageDimension rightImageDimensions = programModel.rightImageSize;
             Point realCoordinates = new Point(0, 0);
 
-            int widthImage = rightImageDimensions.Item1;
-            int heightImage = rightImageDimensions.Item2;
+            int widthImage = rightImageDimensions.Width;
+            int heightImage = rightImageDimensions.Height;
             int widthBox = programModel.rightImageBoxWidth;
             int heightBox = programModel.rightImageBoxHeight;
 

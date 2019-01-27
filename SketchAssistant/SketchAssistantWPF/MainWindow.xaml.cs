@@ -28,7 +28,7 @@ namespace SketchAssistantWPF
             InitializeComponent();
             ProgramPresenter = new MVP_Presenter(this);
             //  DispatcherTimer setup
-            dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
+            dispatcherTimer = new DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 33);
         }
@@ -57,49 +57,78 @@ namespace SketchAssistantWPF
         /// The Presenter Component of the MVP-Model
         /// </summary>
         MVP_Presenter ProgramPresenter;
+        /// <summary>
+        /// The line currently being drawn
+        /// </summary>
+        Polyline currentLine;
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
         /********************************************/
 
+        /// <summary>
+        /// Resize Function connected to the form resize event, will refresh the form when it is resized
+        /// </summary>
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-
+            ProgramPresenter.Resize(new Tuple<int, int>((int) LeftCanvas.Width, (int) LeftCanvas.Height),
+                new Tuple<int, int>((int) RightCanvas.Width, (int) RightCanvas.Height));
         }
 
+        /// <summary>
+        /// Redo an Action.
+        /// </summary>
         private void RedoButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ProgramPresenter.Redo();
         }
 
+        /// <summary>
+        /// Undo an Action.
+        /// </summary>
         private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ProgramPresenter.Undo();
         }
 
+        /// <summary>
+        /// Changes the state of the program to deletion
+        /// </summary>
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ProgramPresenter.ChangeState(false);
         }
 
+        /// <summary>
+        /// Changes the state of the program to drawing
+        /// </summary>
         private void DrawButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ProgramPresenter.ChangeState(true);
         }
 
+        /// <summary>
+        /// Hold left mouse button to start drawing.
+        /// </summary>
         private void RightCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
-
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
         }
 
+        /// <summary>
+        /// Lift left mouse button to stop drawing and add a new Line.
+        /// </summary>
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
         }
 
+        /// <summary>
+        /// Get current Mouse positon within the right picture box.
+        /// </summary>
         private void RightCanvas_MouseMove(object sender, MouseEventArgs e)
         {
-
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e.GetPosition(RightCanvas));
         }
 
         /// <summary>
@@ -123,7 +152,8 @@ namespace SketchAssistantWPF
         /*************************/
         /*** PRESENTER -> VIEW ***/
         /*************************/
-
+        
+            /*
         /// <summary>
         /// Displays a list of lines in the left Picture box.
         /// </summary>
@@ -152,6 +182,62 @@ namespace SketchAssistantWPF
                 newPolyLine.Points = line.GetPointCollection();
                 LeftCanvas.Children.Add(newPolyLine);
             }
+        }*/
+
+        /// <summary>
+        /// Remove the current line.
+        /// </summary>
+        public void RemoveCurrLine()
+        {
+            RightCanvas.Children.Remove(currentLine);
+        }
+
+        /// <summary>
+        /// Display the current line.
+        /// </summary>
+        /// <param name="line">The current line to display</param>
+        public void DisplayCurrLine(Polyline line)
+        {
+            if (RightCanvas.Children.Contains(currentLine))
+            {
+                RemoveCurrLine();
+            }
+            RightCanvas.Children.Add(line);
+            currentLine = line;
+        }
+
+        /// <summary>
+        /// Removes all Lines from the left canvas.
+        /// </summary>
+        public void RemoveAllLeftLines()
+        {
+            LeftCanvas.Children.Clear();
+        }
+
+        /// <summary>
+        /// Removes all lines in the right canvas.
+        /// </summary>
+        public void RemoveAllRightLines()
+        {
+            RightCanvas.Children.Clear();
+        }
+
+        /// <summary>
+        /// Adds another Line that will be displayed in the left display.
+        /// </summary>
+        /// <param name="newLine">The new Polyline to be added displayed.</param>
+        public void AddNewLineLeft(Polyline newLine)
+        {
+            LeftCanvas.Children.Add(newLine);
+        }
+
+        /// <summary>
+        /// Adds another Line that will be displayed in the right display.
+        /// </summary>
+        /// <param name="newLine">The new Polyline to be added displayed.</param>
+        public void AddNewLineRight(Polyline newLine)
+        {
+            RightCanvas.Children.Add(newLine);
         }
 
         /// <summary>

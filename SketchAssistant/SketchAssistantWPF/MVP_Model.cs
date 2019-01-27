@@ -90,6 +90,12 @@ namespace SketchAssistantWPF
         /// </summary>
         public int rightImageBoxHeight;
 
+        public ImageDimension leftImageSize { get; private set; }
+
+        public ImageDimension rightImageSize { get; private set; }
+
+        public bool canvasActive {get; set;}
+
         //Images
         Image leftImage;
 
@@ -110,113 +116,15 @@ namespace SketchAssistantWPF
             programPresenter = presenter;
             historyOfActions = new ActionHistory();
             //redrawAss = new RedrawAssistant();
+            //overlayItems = new List<Tuple<bool, HashSet<Point>>>();
             rightLineList = new List<Tuple<bool, InternalLine>>();
-            overlayItems = new List<Tuple<bool, HashSet<Point>>>();
+            canvasActive = false;
         }
 
         /**************************/
-        /*** INTERNAL FUNCTIONS ***/
+        /*** NEW INTERNAL FUNCTIONS ***/
         /**************************/
 
-        /// <summary>
-        /// A function that returns a white canvas for a given width and height.
-        /// </summary>
-        /// <param name="width">The width of the canvas in pixels</param>
-        /// <param name="height">The height of the canvas in pixels</param>
-        /// <returns>The new canvas</returns>
-        private Image GetEmptyCanvas(int width, int height)
-        {
-            Image image;
-            WriteableBitmap newCanvas;
-            try
-            {
-                newCanvas = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
-                image = new Bitmap(width, height);
-            }
-            catch (ArgumentException e)
-            {
-                programPresenter.PassMessageToView("The requested canvas size caused an error: \n"
-                    + e.ToString() + "\n The Canvas will be set to match your window.");
-                newCanvas = new WriteableBitmap(leftImageBoxWidth, leftImageBoxHeight, 96, 96, PixelFormats.Bgra32, null);
-            }
-            newCanvas.WritePixels()
-            Graphics graph = Graphics.FromImage(image);
-            graph.FillRectangle(Brushes.White, 0, 0, width + 10, height + 10);
-            return image;
-        }
-
-
-        /// <summary>
-        /// Creates an empty Canvas on the left
-        /// </summary>
-        /// <param name="width"> width of the new canvas in pixels </param>
-        /// <param name="height"> height of the new canvas in pixels </param>
-        private void DrawEmptyCanvasLeft(int width, int height)
-        {
-            if (width == 0)
-            {
-                leftImage = GetEmptyCanvas(leftImageBoxWidth, leftImageBoxHeight);
-            }
-            else
-            {
-                leftImage = GetEmptyCanvas(width, height);
-            }
-            programPresenter.UpdateLeftImage(leftImage);
-        }
-
-        /// <summary>
-        /// Redraws all lines in rightLineList, for which their associated boolean value equals true and calls RedrawRightOverlay.
-        /// </summary>
-        private void RedrawRightImage()
-        {
-            var workingCanvas = GetEmptyCanvas(rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height);
-            var workingGraph = Graphics.FromImage(workingCanvas);
-            //Lines
-            foreach (Tuple<bool, InternalLine> lineBoolTuple in rightLineList)
-            {
-                if (lineBoolTuple.Item1)
-                {
-                    lineBoolTuple.Item2.DrawLine(workingGraph);
-                }
-            }
-            //The Line being currently drawn
-            if (currentLine != null && currentLine.Count > 0 && inDrawingMode && mousePressed)
-            {
-                var currLine = new InternalLine(currentLine);
-                currLine.DrawLine(workingGraph);
-            }
-            rightImageWithoutOverlay = workingCanvas;
-            //Redraw the Overlay if needed
-            if (leftImage != null)
-            {
-                RedrawRightOverlay();
-            }
-            else
-            {
-                programPresenter.UpdateRightImage(rightImageWithoutOverlay);
-            }
-        }
-
-        /// <summary>
-        /// Redraws all elements in the overlay items for which the respective boolean value is true.
-        /// </summary>
-        private void RedrawRightOverlay()
-        {
-            var workingCanvas = rightImageWithoutOverlay;
-            var workingGraph = Graphics.FromImage(workingCanvas);
-            foreach (Tuple<bool, HashSet<Point>> tup in overlayItems)
-            {
-                if (tup.Item1)
-                {
-                    foreach (Point p in tup.Item2)
-                    {
-                        workingGraph.FillRectangle(Brushes.Green, p.X, p.Y, 1, 1);
-                    }
-                }
-            }
-            rightImageWithOverlay = workingCanvas;
-            programPresenter.UpdateRightImage(rightImageWithOverlay);
-        }
 
         /// <summary>
         /// Change the status of whether or not the lines are shown.
@@ -225,16 +133,13 @@ namespace SketchAssistantWPF
         /// <param name="shown">True if the lines should be shown, false if they should be hidden.</param>
         private void ChangeLines(HashSet<int> lines, bool shown)
         {
-            var changed = false;
             foreach (int lineId in lines)
             {
                 if (lineId <= rightLineList.Count - 1 && lineId >= 0)
                 {
                     rightLineList[lineId] = new Tuple<bool, InternalLine>(shown, rightLineList[lineId].Item2);
-                    changed = true;
                 }
             }
-            if (changed) { RedrawRightImage(); }
         }
 
         /// <summary>
@@ -244,8 +149,8 @@ namespace SketchAssistantWPF
         {
             if (rightImageWithoutOverlay != null)
             {
-                isFilledMatrix = new bool[(int) rightImageWithoutOverlay.Width, (int) rightImageWithoutOverlay.Height];
-                linesMatrix = new HashSet<int>[(int) rightImageWithoutOverlay.Width, (int) rightImageWithoutOverlay.Height];
+                isFilledMatrix = new bool[rightImageSize.Width, rightImageSize.Height];
+                linesMatrix = new HashSet<int>[rightImageSize.Width, rightImageSize.Height];
                 foreach (Tuple<bool, InternalLine> lineTuple in rightLineList)
                 {
                     if (lineTuple.Item1)
@@ -254,6 +159,14 @@ namespace SketchAssistantWPF
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Tells the Presenter to Update the UI
+        /// </summary>
+        private void UpdateUI()
+        {
+            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), canvasActive);
         }
 
         /// <summary>
@@ -269,63 +182,28 @@ namespace SketchAssistantWPF
 
             foreach (Point pnt in GeometryCalculator.FilledCircleAlgorithm(p, (int)range))
             {
-                if (pnt.X >= 0 && pnt.Y >= 0 && pnt.X < rightImageWithoutOverlay.Width && pnt.Y < rightImageWithoutOverlay.Height)
+                if (pnt.X >= 0 && pnt.Y >= 0 && pnt.X < rightImageSize.Width && pnt.Y < rightImageSize.Height)
                 {
-                    if (isFilledMatrix[(int) pnt.X, (int) pnt.Y])
+                    if (isFilledMatrix[(int)pnt.X, (int)pnt.Y])
                     {
-                        returnSet.UnionWith(linesMatrix[(int) pnt.X, (int) pnt.Y]);
+                        returnSet.UnionWith(linesMatrix[(int)pnt.X, (int)pnt.Y]);
                     }
                 }
             }
             return returnSet;
         }
 
-        /*
-        /// <summary>
-        /// Will calculate the start and endpoints of the given line on the right canvas.
-        /// </summary>
-        /// <param name="line">The line.</param>
-        /// <param name="size">The size of the circle with which the endpoints of the line are marked.</param>
-        private Tuple<HashSet<Point>, HashSet<Point>> CalculateStartAndEnd(Line line, int size)
-        {
-            var circle0 = GeometryCalculator.FilledCircleAlgorithm(line.GetStartPoint(), size);
-            var circle1 = GeometryCalculator.FilledCircleAlgorithm(line.GetEndPoint(), size);
-            var currentLineEndings = new Tuple<HashSet<Point>, HashSet<Point>>(circle0, circle1);
-            return currentLineEndings;
-        }
-        */
-
-
-
-        /// <summary>
-        /// Tells the Presenter to Update the UI
-        /// </summary>
-        private void UpdateUI()
-        {
-            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), (rightImageWithoutOverlay != null));
-        }
-
-
         /********************************************/
-        /*** FUNCTIONS TO INTERACT WITH PRESENTER ***/
+        /*** NEW FUNCTIONS TO INTERACT WITH PRESENTER ***/
         /********************************************/
 
         /// <summary>
-        /// Creates an empty Canvas
+        /// A function to reset the right image.
         /// </summary>
-        public void DrawEmptyCanvasRight()
+        public void ResetRightImage()
         {
-            if (leftImage == null)
-            {
-                rightImageWithoutOverlay = GetEmptyCanvas(leftImageBoxWidth, leftImageBoxHeight);
-            }
-            else
-            {
-                rightImageWithoutOverlay = GetEmptyCanvas(leftImage.Width, leftImage.Height);
-            }
-            RepopulateDeletionMatrixes();
-            rightImageWithOverlay = rightImageWithoutOverlay;
-            programPresenter.UpdateRightImage(rightImageWithOverlay);
+            rightLineList = new List<Tuple<bool, InternalLine>>();
+            programPresenter.ClearRightLines();
         }
 
         /// <summary>
@@ -336,6 +214,11 @@ namespace SketchAssistantWPF
         /// <param name="listOfLines">The List of Lines to be displayed in the left image.</param>
         public void SetLeftLineList(int width, int height, List<InternalLine> listOfLines)
         {
+            leftImageSize = new ImageDimension(width, height);
+            rightImageSize = new ImageDimension(width, height);
+            leftLineList = listOfLines;
+            programPresenter.UpdateLeftLines(leftLineList);
+            /*
             var workingCanvas = GetEmptyCanvas(width, height);
             var workingGraph = Graphics.FromImage(workingCanvas);
             leftLineList = listOfLines;
@@ -351,6 +234,7 @@ namespace SketchAssistantWPF
             //Set right image to same size as left image and delete linelist
             DrawEmptyCanvasRight();
             rightLineList = new List<Tuple<bool, InternalLine>>();
+            */
         }
 
         /// <summary>
@@ -375,11 +259,8 @@ namespace SketchAssistantWPF
                     default:
                         break;
                 }
-                if (leftImage != null)
-                {
-                    //overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
-                }
-                RedrawRightImage();
+                //TODO: Add check if overlay needs to be added
+                programPresenter.UpdateRightLines(rightLineList);
             }
             RepopulateDeletionMatrixes();
             programPresenter.PassLastActionTaken(historyOfActions.MoveAction(true));
@@ -409,11 +290,8 @@ namespace SketchAssistantWPF
                     default:
                         break;
                 }
-                if (leftImage != null)
-                {
-                    //overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, -1, false);
-                }
-                RedrawRightImage();
+                //TODO: Add check if overlay needs to be added
+                programPresenter.UpdateRightLines(rightLineList);
                 RepopulateDeletionMatrixes();
             }
             UpdateUI();
@@ -428,23 +306,7 @@ namespace SketchAssistantWPF
             inDrawingMode = nowDrawing;
             UpdateUI();
         }
-
-        /// <summary>
-        /// A method to get the dimensions of the right image.
-        /// </summary>
-        /// <returns>A tuple containing the width and height of the right image.</returns>
-        public Tuple<int, int> GetRightImageDimensions()
-        {
-            if (rightImageWithoutOverlay != null)
-            {
-                return new Tuple<int, int>(rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height);
-            }
-            else
-            {
-                return new Tuple<int, int>(0, 0);
-            }
-        }
-
+        
         /// <summary>
         /// Updates the current cursor position of the model.
         /// </summary>
@@ -478,15 +340,256 @@ namespace SketchAssistantWPF
                 rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
-                if (leftImage != null)
-                {
-                    //Execute a RedrawAssistant tick with the currently finished Line
-                    //overlayItems = redrawAss.Tick(currentCursorPosition, rightLineList, newLine.GetID(), true);
-                }
-                RedrawRightImage();
+                //TODO: Add check if overlay needs to be added
+                programPresenter.UpdateRightLines(rightLineList);
             }
             UpdateUI();
         }
+
+        /// <summary>
+        /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
+        /// </summary>
+        public void Tick()
+        {
+            if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
+            else { previousCursorPosition = currentCursorPosition; }
+            cursorPositions.Enqueue(currentCursorPosition);
+            //Drawing
+            if (inDrawingMode && mousePressed)
+            {
+                currentLine.Add(currentCursorPosition);
+                programPresenter.UpdateCurrentLine(currentLine);
+            }
+            //Deleting
+            if (!inDrawingMode && mousePressed)
+            {
+                List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                foreach (Point currPoint in uncheckedPoints)
+                {
+                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionRadius);
+                    if (linesToDelete.Count > 0)
+                    {
+                        programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete)));
+                        foreach (int lineID in linesToDelete)
+                        {
+                            rightLineList[lineID] = new Tuple<bool, InternalLine>(false, rightLineList[lineID].Item2);
+                        }
+                        RepopulateDeletionMatrixes();
+                        //TODO: Add check if overlay needs to be added
+                        programPresenter.UpdateRightLines(rightLineList);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
+        /// </summary>
+        /// <param name="CanvasSize">The size of the canvas</param>
+        public void UpdateSizes(ImageDimension CanvasSize)
+        {
+            if (rightImageWithoutOverlay != null)
+            {
+                int widthImage = rightImageSize.Width;
+                int heightImage = rightImageSize.Height;
+                int widthBox = CanvasSize.Width;
+                int heightBox = CanvasSize.Height;
+
+                float imageRatio = (float)widthImage / (float)heightImage;
+                float containerRatio = (float)widthBox / (float)heightBox;
+                float zoomFactor = 0;
+                if (imageRatio >= containerRatio)
+                {
+                    //Image is wider than it is high
+                    zoomFactor = (float)widthImage / (float)widthBox;
+                }
+                else
+                {
+                    //Image is higher than it is wide
+                    zoomFactor = (float)heightImage / (float)heightBox;
+                }
+                markerRadius = (int)(10 * zoomFactor);
+                deletionRadius = (int)(5 * zoomFactor);
+            }
+        }
+
+        /// <summary>
+        /// If there is unsaved progress.
+        /// </summary>
+        /// <returns>True if there is progress that has not been saved.</returns>
+        public bool HasUnsavedProgress()
+        {
+            return !historyOfActions.IsEmpty();
+        }
+
+        /**************************/
+        /*** INTERNAL FUNCTIONS ***/
+        /**************************/
+
+        /*
+    /// <summary>
+    /// A function that returns a white canvas for a given width and height.
+    /// </summary>
+    /// <param name="width">The width of the canvas in pixels</param>
+    /// <param name="height">The height of the canvas in pixels</param>
+    /// <returns>The new canvas</returns>
+    private Image GetEmptyCanvas(int width, int height)
+    {
+        Image image;
+        WriteableBitmap newCanvas;
+        try
+        {
+            newCanvas = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgra32, null);
+            image = new Bitmap(width, height);
+        }
+        catch (ArgumentException e)
+        {
+            programPresenter.PassMessageToView("The requested canvas size caused an error: \n"
+                + e.ToString() + "\n The Canvas will be set to match your window.");
+            newCanvas = new WriteableBitmap(leftImageBoxWidth, leftImageBoxHeight, 96, 96, PixelFormats.Bgra32, null);
+        }
+        newCanvas.WritePixels()
+        Graphics graph = Graphics.FromImage(image);
+        graph.FillRectangle(Brushes.White, 0, 0, width + 10, height + 10);
+        return image;
+    }
+
+
+    /// <summary>
+    /// Creates an empty Canvas on the left
+    /// </summary>
+    /// <param name="width"> width of the new canvas in pixels </param>
+    /// <param name="height"> height of the new canvas in pixels </param>
+    private void DrawEmptyCanvasLeft(int width, int height)
+    {
+        if (width == 0)
+        {
+            leftImage = GetEmptyCanvas(leftImageBoxWidth, leftImageBoxHeight);
+        }
+        else
+        {
+            leftImage = GetEmptyCanvas(width, height);
+        }
+        programPresenter.UpdateLeftImage(leftImage);
+    }
+
+    /// <summary>
+    /// Redraws all lines in rightLineList, for which their associated boolean value equals true and calls RedrawRightOverlay.
+    /// </summary>
+    private void RedrawRightImage()
+    {
+        var workingCanvas = GetEmptyCanvas(rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height);
+        var workingGraph = Graphics.FromImage(workingCanvas);
+        //Lines
+        foreach (Tuple<bool, InternalLine> lineBoolTuple in rightLineList)
+        {
+            if (lineBoolTuple.Item1)
+            {
+                lineBoolTuple.Item2.DrawLine(workingGraph);
+            }
+        }
+        //The Line being currently drawn
+        if (currentLine != null && currentLine.Count > 0 && inDrawingMode && mousePressed)
+        {
+            var currLine = new InternalLine(currentLine);
+            currLine.DrawLine(workingGraph);
+        }
+        rightImageWithoutOverlay = workingCanvas;
+        //Redraw the Overlay if needed
+        if (leftImage != null)
+        {
+            RedrawRightOverlay();
+        }
+        else
+        {
+            programPresenter.UpdateRightImage(rightImageWithoutOverlay);
+        }
+    }
+
+        /// <summary>
+        /// Redraws all elements in the overlay items for which the respective boolean value is true.
+        /// </summary>
+        private void RedrawRightOverlay()
+        {
+            var workingCanvas = rightImageWithoutOverlay;
+            var workingGraph = Graphics.FromImage(workingCanvas);
+            foreach (Tuple<bool, HashSet<Point>> tup in overlayItems)
+            {
+                if (tup.Item1)
+                {
+                    foreach (Point p in tup.Item2)
+                    {
+                        workingGraph.FillRectangle(Brushes.Green, p.X, p.Y, 1, 1);
+                    }
+                }
+            }
+            rightImageWithOverlay = workingCanvas;
+            programPresenter.UpdateRightImage(rightImageWithOverlay);
+        }
+    */
+
+
+
+
+        /*
+        /// <summary>
+        /// Will calculate the start and endpoints of the given line on the right canvas.
+        /// </summary>
+        /// <param name="line">The line.</param>
+        /// <param name="size">The size of the circle with which the endpoints of the line are marked.</param>
+        private Tuple<HashSet<Point>, HashSet<Point>> CalculateStartAndEnd(Line line, int size)
+        {
+            var circle0 = GeometryCalculator.FilledCircleAlgorithm(line.GetStartPoint(), size);
+            var circle1 = GeometryCalculator.FilledCircleAlgorithm(line.GetEndPoint(), size);
+            var currentLineEndings = new Tuple<HashSet<Point>, HashSet<Point>>(circle0, circle1);
+            return currentLineEndings;
+        }
+        */
+
+
+
+
+
+
+        /********************************************/
+        /*** FUNCTIONS TO INTERACT WITH PRESENTER ***/
+        /********************************************/
+        /*
+        /// <summary>
+        /// Creates an empty Canvas
+        /// </summary>
+        public void DrawEmptyCanvasRight()
+        {
+            if (leftImage == null)
+            {
+                rightImageWithoutOverlay = GetEmptyCanvas(leftImageBoxWidth, leftImageBoxHeight);
+            }
+            else
+            {
+                rightImageWithoutOverlay = GetEmptyCanvas(leftImage.Width, leftImage.Height);
+            }
+            RepopulateDeletionMatrixes();
+            rightImageWithOverlay = rightImageWithoutOverlay;
+            programPresenter.UpdateRightImage(rightImageWithOverlay);
+        }
+
+
+        /// <summary>
+        /// A method to get the dimensions of the right image.
+        /// </summary>
+        /// <returns>A tuple containing the width and height of the right image.</returns>
+        public Tuple<int, int> GetRightImageDimensions()
+        {
+            if (rightImageWithoutOverlay != null)
+            {
+                return new Tuple<int, int>(rightImageWithoutOverlay.Width, rightImageWithoutOverlay.Height);
+            }
+            else
+            {
+                return new Tuple<int, int>(0, 0);
+            }
+        }
+
 
         /// <summary>
         /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
@@ -531,44 +634,8 @@ namespace SketchAssistantWPF
             }
         }
 
-        /// <summary>
-        /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
-        /// </summary>
-        public void UpdateSizes()
-        {
-            if (rightImageWithoutOverlay != null)
-            {
-                int widthImage = rightImageWithoutOverlay.Width;
-                int heightImage = rightImageWithoutOverlay.Height;
-                int widthBox = rightImageBoxWidth;
-                int heightBox = rightImageBoxHeight;
+    */
 
-                float imageRatio = (float)widthImage / (float)heightImage;
-                float containerRatio = (float)widthBox / (float)heightBox;
-                float zoomFactor = 0;
-                if (imageRatio >= containerRatio)
-                {
-                    //Image is wider than it is high
-                    zoomFactor = (float)widthImage / (float)widthBox;
-                }
-                else
-                {
-                    //Image is higher than it is wide
-                    zoomFactor = (float)heightImage / (float)heightBox;
-                }
-                markerRadius = (int)(10 * zoomFactor);
-                redrawAss.SetMarkerRadius(markerRadius);
-                deletionRadius = (int)(5 * zoomFactor);
-            }
-        }
 
-        /// <summary>
-        /// If there is unsaved progress.
-        /// </summary>
-        /// <returns>True if there is progress that has not been saved.</returns>
-        public bool HasUnsavedProgress()
-        {
-            return !historyOfActions.IsEmpty();
-        }
     }
 }
