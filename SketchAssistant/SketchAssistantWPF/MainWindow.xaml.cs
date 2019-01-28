@@ -31,7 +31,7 @@ namespace SketchAssistantWPF
             //  DispatcherTimer setup
             dispatcherTimer = new DispatcherTimer(DispatcherPriority.Render);
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 5);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
         }
@@ -74,8 +74,8 @@ namespace SketchAssistantWPF
         /// </summary>
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ProgramPresenter.Resize(new Tuple<int, int>((int) LeftCanvas.Width, (int) LeftCanvas.Height),
-                new Tuple<int, int>((int) RightCanvas.Width, (int) RightCanvas.Height));
+            ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.ActualWidth, (int)LeftCanvas.ActualHeight),
+                new Tuple<int, int>((int)RightCanvas.ActualWidth, (int)RightCanvas.ActualHeight));
         }
 
         /// <summary>
@@ -127,6 +127,14 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// If the mouse leaves the canvas, it is treated as if the mouse was released.
+        /// </summary>
+        private void RightCanvas_MouseLeave(object sender, MouseEventArgs e)
+        {
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+        }
+
+        /// <summary>
         /// Get current Mouse positon within the right picture box.
         /// </summary>
         private void RightCanvas_MouseMove(object sender, MouseEventArgs e)
@@ -163,37 +171,6 @@ namespace SketchAssistantWPF
         /*************************/
         /*** PRESENTER -> VIEW ***/
         /*************************/
-
-        /*
-    /// <summary>
-    /// Displays a list of lines in the left Picture box.
-    /// </summary>
-    /// <param name="img">The new image.</param>
-    public void DisplayInLeftPictureBox(List<InternalLine> lineList)
-    {
-        foreach (InternalLine line in lineList)
-        {
-            Polyline newPolyLine = new Polyline();
-            newPolyLine.Stroke = Brushes.Black;
-            newPolyLine.Points = line.GetPointCollection();
-            LeftCanvas.Children.Add(newPolyLine);
-        }
-    }
-
-    /// <summary>
-    /// Displays a list of lines in the right Picture box.
-    /// </summary>
-    /// <param name="img">The new image.</param>
-    public void DisplayInRightPictureBox(List<InternalLine> lineList)
-    {
-        foreach (InternalLine line in lineList)
-        {
-            Polyline newPolyLine = new Polyline();
-            newPolyLine.Stroke = Brushes.Black;
-            newPolyLine.Points = line.GetPointCollection();
-            LeftCanvas.Children.Add(newPolyLine);
-        }
-    }*/
 
         /// <summary>
         /// Remove the current line.

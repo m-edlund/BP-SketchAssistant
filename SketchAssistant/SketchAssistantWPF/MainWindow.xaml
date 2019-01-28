@@ -173,7 +173,7 @@
         <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="2"/>
         <Canvas Name="CanvasSeperator" Grid.Column="4" Grid.Row="1" Background="LightGray"/>
         <Canvas Name="RightCanvas" Background="SlateGray" Grid.Column="5" Grid.Row="1" Height="auto"
-            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2"/>
+            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" MouseLeave="RightCanvas_MouseLeave"/>
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="7">
             <StatusBar DockPanel.Dock="Bottom" Name="StatusBar"  Background="LightGray">

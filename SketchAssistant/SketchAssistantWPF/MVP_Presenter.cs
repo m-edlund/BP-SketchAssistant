@@ -77,13 +77,8 @@ namespace SketchAssistantWPF
         {
             CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
             CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
-            /*
-            programModel.leftImageBoxWidth = leftPBS.Item1;
-            programModel.leftImageBoxHeight = leftPBS.Item2;
-            programModel.rightImageBoxWidth = rightPBS.Item1;
-            programModel.rightImageBoxHeight = rightPBS.Item2;
-            */
             programModel.UpdateSizes(CanvasSizeRight);
+            programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
         }
 
         /// <summary>
@@ -104,9 +99,12 @@ namespace SketchAssistantWPF
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
                     Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
                     programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
-                    programModel.ChangeState(true);
+
+                    programModel.ResetRightImage();
                     programModel.CanvasActivated();
+                    programModel.ChangeState(true);
                     programView.EnableTimer();
+                    ClearRightLines();
                 }
             }
         }
@@ -156,6 +154,7 @@ namespace SketchAssistantWPF
             }
             if (okToContinue)
             {
+                programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
                 programModel.ResetRightImage();
                 programModel.CanvasActivated();
                 programModel.ChangeState(true);
@@ -174,7 +173,7 @@ namespace SketchAssistantWPF
             switch (mouseAction)
             {
                 case MouseAction.Move:
-                    programModel.SetCurrentCursorPosition(ConvertCoordinates(position));
+                    programModel.SetCurrentCursorPosition(position);
                     break;
                 default:
                     break;
@@ -306,25 +305,6 @@ namespace SketchAssistantWPF
             programView.SetCanvasState("LeftCanvas", graphicLoaded);
         }
 
-
-        /*
-        /// <summary>
-        /// Is called by the model when the left image is changed.
-        /// </summary>
-        /// <param name="lineList">The new image.</param>
-        public void UpdateLeftImage(List<InternalLine> lineList)
-        {
-            programView.DisplayInLeftPictureBox(lineList);
-        }
-
-        /// <summary>
-        /// Is called by the model when the right image is changed.
-        /// </summary>
-        /// <param name="lineList">The new image.</param>
-        public void UpdateRightImage(List<InternalLine> lineList)
-        {
-            programView.DisplayInRightPictureBox(lineList);
-        }*/
 
         /// <summary>
         /// Pass-trough function to display an info message in the view.
