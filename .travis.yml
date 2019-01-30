@@ -6,4 +6,4 @@ before_install:
 before_script:
   - nuget restore SketchAssistant.sln
 after_script:
-  - nunit-console "./SketchAssistant/SketchAssistantWPF.Tests/bin/Debug/net461"
+  - nunit-console "./SketchAssistant/SketchAssistantWPF.Tests/bin/Debug/net461/SketchAssistantWPF.Tests.dll"
