@@ -1,4 +1,8 @@
 using NUnit.Framework;
+using System.Collections.Generic;
+using SketchAssistantWPF;
+using System;
+using System.Windows;
 
 namespace Tests
 {
@@ -17,34 +21,37 @@ namespace Tests
     }
 
     /*
-         [TestClass]
     public class LineTests
     {
         //========================//
         //= Bresenham Line Tests =//
         //========================//
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest1()
         {
-            //Test point
-            List<Point> expectedResult = new List<Point>();
-            expectedResult.Add(new Point(1, 2));
-            List<Point> actualResult = SketchAssistant.GeometryCalculator.BresenhamLineAlgorithm(new Point(1, 2), new Point(1, 2));
-            Assert.AreEqual(1, actualResult.Count);
-            for (int i = 0; i < actualResult.Count; i++)
-            {
-                Assert.AreEqual(expectedResult[i], actualResult[i]);
-            }
+            AvalonTestRunner.RunInSTA(
+                delegate
+                {
+                    //Test point
+                    List<System.Windows.Point> expectedResult = new List<System.Windows.Point>();
+                    expectedResult.Add(new System.Windows.Point(1, 2));
+                    List<System.Windows.Point> actualResult = GeometryCalculator.BresenhamLineAlgorithm(new System.Windows.Point(1, 2), new System.Windows.Point(1, 2));
+                    Assert.AreEqual(1, actualResult.Count);
+                    for (int i = 0; i < actualResult.Count; i++)
+                    {
+                        Assert.AreEqual(expectedResult[i], actualResult[i]);
+                    }
+                });
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest2()
         {
             //Test line going from left to right
-            List<Point> expectedResult = new List<Point>();
-            for (int i = 1; i <= 6; i++) { expectedResult.Add(new Point(i, 2)); }
-            List<Point> actualResult = SketchAssistant.GeometryCalculator.BresenhamLineAlgorithm(new Point(1, 2), new Point(6, 2));
+            List<System.Windows.Point> expectedResult = new List<System.Windows.Point>();
+            for (int i = 1; i <= 6; i++) { expectedResult.Add(new System.Windows.Point(i, 2)); }
+            List<System.Windows.Point> actualResult = SketchAssistantWPF.GeometryCalculator.BresenhamLineAlgorithm(new System.Windows.Point(1, 2), new System.Windows.Point(6, 2));
             Assert.AreEqual(expectedResult.Count, actualResult.Count);
             for (int i = 0; i < actualResult.Count; i++)
             {
@@ -52,13 +59,13 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest3()
         {
             //Test line going from right to left
-            List<Point> expectedResult = new List<Point>();
-            for (int i = 6; i >= 1; i--) { expectedResult.Add(new Point(i, 2)); }
-            List<Point> actualResult = SketchAssistant.GeometryCalculator.BresenhamLineAlgorithm(new Point(6, 2), new Point(1, 2));
+            List<System.Windows.Point> expectedResult = new List<System.Windows.Point>();
+            for (int i = 6; i >= 1; i--) { expectedResult.Add(new System.Windows.Point(i, 2)); }
+            List<System.Windows.Point> actualResult = SketchAssistantWPF.GeometryCalculator.BresenhamLineAlgorithm(new System.Windows.Point(6, 2), new System.Windows.Point(1, 2));
             Assert.AreEqual(expectedResult.Count, actualResult.Count);
             for (int i = 0; i < actualResult.Count; i++)
             {
@@ -66,13 +73,13 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest4()
         {
             //Test line going from top to bottom
-            List<Point> expectedResult = new List<Point>();
-            for (int i = 5; i <= 25; i++) { expectedResult.Add(new Point(7, i)); }
-            List<Point> actualResult = SketchAssistant.GeometryCalculator.BresenhamLineAlgorithm(new Point(7, 5), new Point(7, 25));
+            List<System.Windows.Point> expectedResult = new List<System.Windows.Point>();
+            for (int i = 5; i <= 25; i++) { expectedResult.Add(new System.Windows.Point(7, i)); }
+            List<System.Windows.Point> actualResult = SketchAssistantWPF.GeometryCalculator.BresenhamLineAlgorithm(new System.Windows.Point(7, 5), new System.Windows.Point(7, 25));
             Assert.AreEqual(expectedResult.Count, actualResult.Count);
             for (int i = 0; i < actualResult.Count; i++)
             {
@@ -80,13 +87,13 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest5()
         {
             //Test line going from bottom to top
-            List<Point> expectedResult = new List<Point>();
-            for (int i = 25; i >= 5; i--) { expectedResult.Add(new Point(7, i)); }
-            List<Point> actualResult = SketchAssistant.GeometryCalculator.BresenhamLineAlgorithm(new Point(7, 25), new Point(7, 5));
+            List<System.Windows.Point> expectedResult = new List<System.Windows.Point>();
+            for (int i = 25; i >= 5; i--) { expectedResult.Add(new System.Windows.Point(7, i)); }
+            List<System.Windows.Point> actualResult = SketchAssistantWPF.GeometryCalculator.BresenhamLineAlgorithm(new System.Windows.Point(7, 25), new System.Windows.Point(7, 5));
             Assert.AreEqual(expectedResult.Count, actualResult.Count);
             for (int i = 0; i < actualResult.Count; i++)
             {
@@ -94,13 +101,13 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest6()
         {
             //Test exactly diagonal line from top left to bottom right
-            List<Point> expectedResult = new List<Point>();
-            for (int i = 5; i <= 25; i++) { expectedResult.Add(new Point(i + 2, i)); }
-            List<Point> actualResult = SketchAssistant.GeometryCalculator.BresenhamLineAlgorithm(new Point(7, 5), new Point(27, 25));
+            List<System.Windows.Point> expectedResult = new List<System.Windows.Point>();
+            for (int i = 5; i <= 25; i++) { expectedResult.Add(new System.Windows.Point(i + 2, i)); }
+            List<System.Windows.Point> actualResult = SketchAssistantWPF.GeometryCalculator.BresenhamLineAlgorithm(new System.Windows.Point(7, 5), new System.Windows.Point(27, 25));
             Assert.AreEqual(expectedResult.Count, actualResult.Count);
             for (int i = 0; i < actualResult.Count; i++)
             {
@@ -108,13 +115,13 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void BresenhamLineTest7()
         {
             //Test exactly diagonal line from bottom right to top left
-            List<Point> expectedResult = new List<Point>();
-            for (int i = 25; i >= 5; i--) { expectedResult.Add(new Point(i + 2, i)); }
-            List<Point> actualResult = SketchAssistant.GeometryCalculator.BresenhamLineAlgorithm(new Point(27, 25), new Point(7, 5));
+            List<System.Windows.Point> expectedResult = new List<System.Windows.Point>();
+            for (int i = 25; i >= 5; i--) { expectedResult.Add(new System.Windows.Point(i + 2, i)); }
+            List<System.Windows.Point> actualResult = SketchAssistantWPF.GeometryCalculator.BresenhamLineAlgorithm(new System.Windows.Point(27, 25), new System.Windows.Point(7, 5));
             Assert.AreEqual(expectedResult.Count, actualResult.Count);
             for (int i = 0; i < actualResult.Count; i++)
             {
@@ -126,18 +133,18 @@ namespace Tests
         //= Matrix Population Tests =//
         //===========================//
 
-        [TestMethod]
+        [Test]
         public void MatrixTest1()
         {
             //Populate Matrix for temporary Line
-            List<Point> thePoints = new List<Point>();
-            thePoints.Add(new Point(1, 1));
-            thePoints.Add(new Point(1, 2));
+            List<System.Windows.Point> thePoints = new List<System.Windows.Point>();
+            thePoints.Add(new System.Windows.Point(1, 1));
+            thePoints.Add(new System.Windows.Point(1, 2));
             bool[,] testBoolMatrix = new bool[5, 5];
             List<int>[,] testLineMatrix = new List<int>[5, 5];
             bool[,] resultBoolMatrix = new bool[5, 5];
             HashSet<int>[,] resultLineMatrix = new HashSet<int>[5, 5];
-            Line testLine = new Line(thePoints);
+            InternalLine testLine = new InternalLine(thePoints);
             testLine.PopulateMatrixes(resultBoolMatrix, resultLineMatrix);
             for (int i = 0; i < 5; i++)
             {
@@ -149,13 +156,13 @@ namespace Tests
             }
         }
 
-        [TestMethod]
+        [Test]
         public void MatrixTest2()
         {
-            //Populate Matrix for non-temporary Line
-            List<Point> thePoints = new List<Point>();
-            thePoints.Add(new Point(1, 1));
-            thePoints.Add(new Point(3, 3));
+            //Populate Matrix for non-temporary InternalLine
+            List<System.Windows.Point> thePoints = new List<System.Windows.Point>();
+            thePoints.Add(new System.Windows.Point(1, 1));
+            thePoints.Add(new System.Windows.Point(3, 3));
             bool[,] testBoolMatrix = new bool[5, 5];
             HashSet<int>[,] testLineMatrix = new HashSet<int>[5, 5];
             for (int i = 1; i <= 3; i++)
@@ -167,7 +174,7 @@ namespace Tests
             }
             bool[,] resultBoolMatrix = new bool[5, 5];
             HashSet<int>[,] resultLineMatrix = new HashSet<int>[5, 5];
-            Line testLine = new Line(thePoints, 5);
+            InternalLine testLine = new InternalLine(thePoints, 5);
             testLine.PopulateMatrixes(resultBoolMatrix, resultLineMatrix);
             for (int i = 0; i < 5; i++)
             {
@@ -189,21 +196,21 @@ namespace Tests
         //= Line Constructor Test =//
         //=========================//
 
-        [TestMethod]
+        [Test]
         public void ConstructorTest()
         {
             //Create non-temporary Line and check points
             //reference Points
-            List<Point> comparisonPoints = new List<Point> {new Point(2,2), new Point(3, 1), new Point(4, 1), new Point(5, 1), new Point(6, 2),
-                new Point(7, 3), new Point(8, 4), new Point(9, 5), new Point(10, 6), new Point(11, 5), new Point(11, 4), new Point(11, 3),
-                new Point(10, 2), new Point(9, 1), new Point(8, 2), new Point(7, 3), new Point(6, 4), new Point(5, 5), new Point(4, 5),
-                new Point(3, 5), new Point(2, 5), new Point(1, 4)};
+            List<System.Windows.Point> comparisonPoints = new List<System.Windows.Point> {new System.Windows.Point(2,2), new System.Windows.Point(3, 1), new System.Windows.Point(4, 1), new System.Windows.Point(5, 1), new System.Windows.Point(6, 2),
+                new System.Windows.Point(7, 3), new System.Windows.Point(8, 4), new System.Windows.Point(9, 5), new System.Windows.Point(10, 6), new System.Windows.Point(11, 5), new System.Windows.Point(11, 4), new System.Windows.Point(11, 3),
+                new System.Windows.Point(10, 2), new System.Windows.Point(9, 1), new System.Windows.Point(8, 2), new System.Windows.Point(7, 3), new System.Windows.Point(6, 4), new System.Windows.Point(5, 5), new System.Windows.Point(4, 5),
+                new System.Windows.Point(3, 5), new System.Windows.Point(2, 5), new System.Windows.Point(1, 4)};
             //test Points, with intermediate points missing & duplicate points
-            List<Point> testPoints = new List<Point> {new Point(2,2), new Point(3, 1), new Point(5, 1), new Point(5, 1), new Point(5, 1),
-                new Point(8, 4), new Point(10, 6), new Point(11, 5), new Point(11, 3), new Point(9, 1), new Point(9, 1), new Point(9, 1),
-                new Point(5, 5), new Point(2, 5), new Point(2, 5), new Point(1, 4) };
-            Line testLine = new Line(testPoints, 0);
-            List<Point> returnedPoints = testLine.GetPoints();
+            List<System.Windows.Point> testPoints = new List<System.Windows.Point> {new System.Windows.Point(2,2), new System.Windows.Point(3, 1), new System.Windows.Point(5, 1), new System.Windows.Point(5, 1), new System.Windows.Point(5, 1),
+                new System.Windows.Point(8, 4), new System.Windows.Point(10, 6), new System.Windows.Point(11, 5), new System.Windows.Point(11, 3), new System.Windows.Point(9, 1), new System.Windows.Point(9, 1), new System.Windows.Point(9, 1),
+                new System.Windows.Point(5, 5), new System.Windows.Point(2, 5), new System.Windows.Point(2, 5), new System.Windows.Point(1, 4) };
+            InternalLine testLine = new InternalLine(testPoints, 0);
+            List<System.Windows.Point> returnedPoints = testLine.GetPoints();
             Assert.AreEqual(comparisonPoints.Count, returnedPoints.Count);
             for (int i = 0; i < returnedPoints.Count; i++)
             {
@@ -211,8 +218,8 @@ namespace Tests
             }
         }
     }
+    */
 
-    [TestClass]
     public class ActionHistoryTests
     {
 
@@ -221,10 +228,9 @@ namespace Tests
             return new ActionHistory();
         }
 
-        [DataTestMethod]
-        [DataRow(SketchAction.ActionType.Start, 5, -1, "A new canvas was created.")]
-        [DataRow(SketchAction.ActionType.Draw, 5, 5, "Line number 5 was drawn.")]
-        [DataRow(SketchAction.ActionType.Delete, 10, 10, "Line number 10 was deleted.")]
+        [TestCase(SketchAction.ActionType.Start, 5, -1, "A new canvas was created.")]
+        [TestCase(SketchAction.ActionType.Draw, 5, 5, "Line number 5 was drawn.")]
+        [TestCase(SketchAction.ActionType.Delete, 10, 10, "Line number 10 was deleted.")]
         public void ScetchActionTest1(SketchAction.ActionType type, int id, int exit, String response)
         {
             HashSet<int> actualResult = new HashSet<int>();
@@ -235,10 +241,9 @@ namespace Tests
             Assert.AreEqual(response, testAction.GetActionInformation());
         }
 
-        [DataTestMethod]
-        [DataRow(SketchAction.ActionType.Start, 1, 2, 3, "A new canvas was created.")]
-        [DataRow(SketchAction.ActionType.Draw, 3, 3, 3, "Line number 3 was drawn.")]
-        [DataRow(SketchAction.ActionType.Delete, 20, 30, 40, "Several Lines were deleted.")]
+        [TestCase(SketchAction.ActionType.Start, 1, 2, 3, "A new canvas was created.")]
+        [TestCase(SketchAction.ActionType.Draw, 3, 3, 3, "Line number 3 was drawn.")]
+        [TestCase(SketchAction.ActionType.Delete, 20, 30, 40, "Several Lines were deleted.")]
         public void ScetchActionTest2(SketchAction.ActionType type, int id1, int id2, int id3, String response)
         {
             HashSet<int> actualResult = new HashSet<int>();
@@ -254,9 +259,8 @@ namespace Tests
             Assert.AreEqual(response, testAction.GetActionInformation());
         }
 
-        [DataTestMethod]
-        [DataRow(SketchAction.ActionType.Start, SketchAction.ActionType.Start, true)]
-        [DataRow(SketchAction.ActionType.Draw, SketchAction.ActionType.Delete, false)]
+        [TestCase(SketchAction.ActionType.Start, SketchAction.ActionType.Start, true)]
+        [TestCase(SketchAction.ActionType.Draw, SketchAction.ActionType.Delete, false)]
         public void ActionHistoryTest1(SketchAction.ActionType action1, SketchAction.ActionType action2, bool isEmpty)
         {
             ActionHistory testHistory = GetActionHistory();
@@ -265,9 +269,8 @@ namespace Tests
             Assert.AreEqual(isEmpty, testHistory.IsEmpty());
         }
 
-        [DataTestMethod]
-        [DataRow(SketchAction.ActionType.Draw, "Last Action: Line number 0 was drawn.")]
-        [DataRow(SketchAction.ActionType.Delete, "Last Action: Line number 0 was deleted.")]
+        [TestCase(SketchAction.ActionType.Draw, "Last Action: Line number 0 was drawn.")]
+        [TestCase(SketchAction.ActionType.Delete, "Last Action: Line number 0 was deleted.")]
         public void ActionHistoryUndoRedoTest(SketchAction.ActionType actionType, String message)
         {
             ActionHistory testHistory = GetActionHistory();
@@ -281,6 +284,4 @@ namespace Tests
             Assert.AreEqual(message, lastActionLabel);
         }
     }
-    
-     */
 }

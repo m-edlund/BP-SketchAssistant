@@ -3,13 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28010.2050
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistant", "SketchAssistant\SketchAssistant.csproj", "{0336F628-A2F7-4170-8B2E-9277C23118D4}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistant.Tests", "SketchAssistant.Tests\SketchAssistant.Tests.csproj", "{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistantWPF", "SketchAssistantWPF\SketchAssistantWPF.csproj", "{EE53AE79-2AA0-4F43-9638-1789B189D5C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistantWPF.Tests", "SketchAssistantWPF.Tests\SketchAssistantWPF.Tests.csproj", "{85E43C79-6128-467A-8F7C-5250D1C89B32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SketchAssistantWPF.Tests", "SketchAssistantWPF.Tests\SketchAssistantWPF.Tests.csproj", "{85E43C79-6128-467A-8F7C-5250D1C89B32}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,14 +13,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{0336F628-A2F7-4170-8B2E-9277C23118D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0336F628-A2F7-4170-8B2E-9277C23118D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0336F628-A2F7-4170-8B2E-9277C23118D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0336F628-A2F7-4170-8B2E-9277C23118D4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7DCDC31A-8291-4B05-93D6-DCC5DE27A4A0}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EE53AE79-2AA0-4F43-9638-1789B189D5C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EE53AE79-2AA0-4F43-9638-1789B189D5C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE53AE79-2AA0-4F43-9638-1789B189D5C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
