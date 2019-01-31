@@ -2,4 +2,4 @@ image:
  - Visual Studio 2017
 
 install:
-    - "nuget install Nunit"
+    - "nuget restore"
