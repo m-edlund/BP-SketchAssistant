@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
 
@@ -94,5 +95,29 @@ namespace SketchAssistantWPF
         /// <param name="message">The message of the warning.</param>
         /// <returns>True if the user confirms (Yes), negative if he doesn't (No)</returns>
         bool ShowWarning(String message);
+
+        /// <summary>
+        /// If the mouse is pressed or not.
+        /// </summary>
+        /// <returns>Whether or not the mouse is pressed.</returns>
+        bool IsMousePressed();
+
+        /// <summary>
+        /// Adds a point to the right canvas
+        /// </summary>
+        /// <param name="newPoint">The point</param>
+        void AddNewPointRight(Ellipse newPoint);
+
+        /// <summary>
+        /// Adds a point to the left canvas
+        /// </summary>
+        /// <param name="newPoint">The point</param>
+        void AddNewPointLeft(Ellipse newPoint);
+
+        /// <summary>
+        /// Returns the cursor position.
+        /// </summary>
+        /// <returns>The cursor Position</returns>
+        Point GetCursorPosition();
     }
 }

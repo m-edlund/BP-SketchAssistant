@@ -24,7 +24,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// A dictionary connecting the id of an InternalLine with the respective Polyline in the right canvas.
         /// </summary>
-        Dictionary<int, Polyline> rightPolyLines;
+        Dictionary<int, Shape> rightPolyLines;
 
         ImageDimension CanvasSizeLeft = new ImageDimension(0,0);
 
@@ -210,6 +210,15 @@ namespace SketchAssistantWPF
         /************************************/
 
         /// <summary>
+        /// Return the position of the cursor
+        /// </summary>
+        /// <returns>The position of the cursor</returns>
+        public Point GetCursorPosition()
+        {
+            return programView.GetCursorPosition();
+        }
+
+        /// <summary>
         /// Updates the currentline
         /// </summary>
         /// <param name="linepoints">The points of the current line.</param>
@@ -227,7 +236,7 @@ namespace SketchAssistantWPF
         public void ClearRightLines()
         {
             programView.RemoveAllRightLines();
-            rightPolyLines = new Dictionary<int, Polyline>();
+            rightPolyLines = new Dictionary<int, Shape>();
         }
 
         /// <summary>
@@ -241,10 +250,21 @@ namespace SketchAssistantWPF
                 var line = tup.Item2;
                 if (!rightPolyLines.ContainsKey(line.GetID()))
                 {
-                    Polyline newLine = new Polyline();
-                    newLine.Points = line.GetPointCollection();
-                    rightPolyLines.Add(line.GetID(), newLine);
-                    programView.AddNewLineRight(newLine);
+                    if (!line.isPoint)
+                    {
+                        Polyline newLine = new Polyline();
+                        newLine.Points = line.GetPointCollection();
+                        rightPolyLines.Add(line.GetID(), newLine);
+                        programView.AddNewLineRight(newLine);
+                    }
+                    else
+                    {
+                        Ellipse newPoint = new Ellipse();
+                        newPoint.SetValue(Canvas.LeftProperty, line.point.X);
+                        newPoint.SetValue(Canvas.TopProperty, line.point.Y);
+                        rightPolyLines.Add(line.GetID(), newPoint);
+                        programView.AddNewPointRight(newPoint);
+                    }
                 }
                 SetVisibility(rightPolyLines[line.GetID()], status);
             }
@@ -324,6 +344,15 @@ namespace SketchAssistantWPF
             programView.SetLastActionTakenText(msg);
         }
 
+        /// <summary>
+        /// Passes whether or not the mouse is pressed.
+        /// </summary>
+        /// <returns>Whether or not the mouse is pressed</returns>
+        public bool IsMousePressed()
+        {
+            return programView.IsMousePressed();
+        }
+
         /*************************/
         /*** HELPING FUNCTIONS ***/
         /*************************/
@@ -333,7 +362,7 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="line">The polyline</param>
         /// <param name="visible">Whether or not it should be visible.</param>
-        private void SetVisibility(Polyline line, bool visible)
+        private void SetVisibility(Shape line, bool visible)
         {
             if (!visible)
             {

@@ -7,6 +7,8 @@ using TestStack.White.UIItems;
 using TestStack.White.UIItems.WindowItems;
 using TestStack.White.UIItems.Finders;
 using System.Threading;
+using SketchAssistantWPF;
+using System.Windows;
 
 namespace WhiteTests
 {
@@ -30,10 +32,10 @@ namespace WhiteTests
             setupapp();
             Window mainWindow = application.GetWindow("Sketch Assistant");
             Thread.Sleep(100);
-            Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LAST_ACTION_TAKEN_BOX")).Text.ToString());
-            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CANVAS_BUTTON")).Click();
+            Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
             Thread.Sleep(100);
-            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LAST_ACTION_TAKEN_BOX")).Text.ToString());
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
     }

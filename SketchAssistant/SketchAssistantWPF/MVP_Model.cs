@@ -35,10 +35,6 @@ namespace SketchAssistantWPF
         /// </summary>
         bool inDrawingMode;
         /// <summary>
-        /// If the mouse is currently pressed or not.
-        /// </summary>
-        bool mousePressed;
-        /// <summary>
         /// Size of deletion area
         /// </summary>
         int deletionRadius = 5;
@@ -348,10 +344,10 @@ namespace SketchAssistantWPF
         /// </summary>
         public void MouseDown()
         {
-            mousePressed = true;
             if (inDrawingMode)
             {
                 currentLine.Clear();
+                currentLine.Add(currentCursorPosition);
             }
         }
 
@@ -360,7 +356,6 @@ namespace SketchAssistantWPF
         /// </summary>
         public void MouseUp()
         {
-            mousePressed = false;
             if (inDrawingMode && currentLine.Count > 0)
             {
                 InternalLine newLine = new InternalLine(currentLine, rightLineList.Count);
@@ -384,13 +379,13 @@ namespace SketchAssistantWPF
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
             //Drawing
-            if (inDrawingMode && mousePressed)
+            if (inDrawingMode && programPresenter.IsMousePressed())
             {
                 currentLine.Add(currentCursorPosition);
                 programPresenter.UpdateCurrentLine(currentLine);
             }
             //Deleting
-            if (!inDrawingMode && mousePressed)
+            if (!inDrawingMode && programPresenter.IsMousePressed())
             {
                 List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
                 foreach (Point currPoint in uncheckedPoints)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
@@ -32,7 +33,7 @@ namespace SketchAssistantWPF
             //  DispatcherTimer setup
             dispatcherTimer = new DispatcherTimer(DispatcherPriority.Render);
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 5);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
         }
@@ -134,6 +135,14 @@ namespace SketchAssistantWPF
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
         }
+        
+        /// <summary>
+        /// If the finger leaves the canvas, it is treated as if the finger was released.
+        /// </summary>
+        private void RightCanvas_TouchLeave(object sender, TouchEventArgs e)
+        {
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+        }
 
         /// <summary>
         /// Get current Mouse positon within the right picture box.
@@ -151,6 +160,21 @@ namespace SketchAssistantWPF
         private void CanvasButton_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.NewCanvas();
+        }
+
+        /// <summary>
+        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// </summary>
+        private void DebugButton(object sender, RoutedEventArgs e)
+        {
+            dispatcherTimer.Stop();
+            ProgramPresenter.NewCanvas(); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(200);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(20,20)); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(200, 200)); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(30, 80)); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
+            dispatcherTimer.Start();
         }
 
         /// <summary>
@@ -172,6 +196,24 @@ namespace SketchAssistantWPF
         /*************************/
         /*** PRESENTER -> VIEW ***/
         /*************************/
+
+        /// <summary>
+        /// Returns the cursor position.
+        /// </summary>
+        /// <returns>The cursor Position</returns>
+        public Point GetCursorPosition()
+        {
+            return Mouse.GetPosition(RightCanvas);
+        }
+
+        /// <summary>
+        /// If the mouse is pressed or not.
+        /// </summary>
+        /// <returns>Whether or not the mouse is pressed.</returns>
+        public bool IsMousePressed()
+        {
+            return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed));
+        }
 
         /// <summary>
         /// Remove the current line.
@@ -231,6 +273,28 @@ namespace SketchAssistantWPF
             newLine.Stroke = Brushes.Black;
             newLine.StrokeThickness = 2;
             RightCanvas.Children.Add(newLine);
+        }
+
+        /// <summary>
+        /// Adds a point to the right canvas
+        /// </summary>
+        /// <param name="newPoint">The point</param>
+        public void AddNewPointRight(Ellipse newPoint)
+        {
+            newPoint.Height = 3; newPoint.Width = 3;
+            newPoint.Fill = Brushes.Black;
+            RightCanvas.Children.Add(newPoint);
+        }
+
+        /// <summary>
+        /// Adds a point to the left canvas
+        /// </summary>
+        /// <param name="newPoint">The point</param>
+        public void AddNewPointLeft(Ellipse newPoint)
+        {
+            newPoint.Height = 3; newPoint.Width = 3;
+            newPoint.Fill = Brushes.Black;
+            LeftCanvas.Children.Add(newPoint);
         }
 
         /// <summary>

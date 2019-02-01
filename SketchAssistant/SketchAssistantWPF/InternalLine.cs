@@ -26,6 +26,14 @@ namespace SketchAssistantWPF
         /// A collection of the original Points defining the line.
         /// </summary>
         private PointCollection pointColl;
+        /// <summary>
+        /// Indicates if this is a single point.
+        /// </summary>
+        public bool isPoint { get; private set; }
+        /// <summary>
+        /// The location of the point, if this is a point
+        /// </summary>
+        public Point point { get; private set; }
 
         /// <summary>
         /// The constructor for lines which are only temporary.
@@ -78,24 +86,7 @@ namespace SketchAssistantWPF
         {
             return pointColl;
         }
-        /*
-        /// <summary>
-        /// A function that takes a Graphics element and returns it with
-        /// the line drawn on it.
-        /// </summary>
-        /// <param name="canvas">The Graphics element on which the line shall be drawn</param>
-        /// <returns>The given Graphics element with the additional line</returns>
-        public Graphics DrawLine(Graphics canvas)
-        {
-            for (int i = 0; i < linePoints.Count - 1; i++)
-            {
-                canvas.DrawLine(Pens.Black, linePoints[i], linePoints[i + 1]);
-            }
-            //If there is only one point
-            if (linePoints.Count == 1) { canvas.FillRectangle(Brushes.Black, linePoints[0].X, linePoints[0].Y, 1, 1); }
-            return canvas;
-        }
-        */
+
         /// <summary>
         /// A function that will take to matrixes and populate the with the line data of this line object
         /// </summary>
@@ -128,36 +119,53 @@ namespace SketchAssistantWPF
         {
             if (linePoints.Count > 1)
             {
-                List<Point> newList = new List<Point>();
-                List<Point> tempList = new List<Point>();
-                //Since Point is non-nullable, we must ensure the nullPoints, 
-                //which we remove can not possibly be points of the original given line.
-                int nullValue = (int) linePoints[0].X + 1;
-                //Fill the gaps between points
-                for (int i = 0; i < linePoints.Count - 1; i++)
+                //if this is a point or not
+                bool isP = true;
+                //check if its a point
+                foreach(Point p in linePoints)
                 {
-                    nullValue += (int) linePoints[i + 1].X;
-                    List<Point> partialList = GeometryCalculator.BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
-                    tempList.AddRange(partialList);
+                    if (p.X != linePoints[0].X || p.Y != linePoints[0].Y)
+                        isP = false;
                 }
-                Point nullPoint = new Point(nullValue, 0);
-                //Set duplicate points to the null point
-                for (int i = 1; i < tempList.Count; i++)
-                {
-                    if ((tempList[i].X == tempList[i - 1].X) && (tempList[i].Y == tempList[i - 1].Y))
+                if (!isP) {
+                    List<Point> newList = new List<Point>();
+                    List<Point> tempList = new List<Point>();
+                    //Since Point is non-nullable, we must ensure the nullPoints, 
+                    //which we remove can not possibly be points of the original given line.
+                    int nullValue = (int) linePoints[0].X + 1;
+                    //Fill the gaps between points
+                    for (int i = 0; i < linePoints.Count - 1; i++)
                     {
-                        tempList[i - 1] = nullPoint;
+                        nullValue += (int) linePoints[i + 1].X;
+                        List<Point> partialList = GeometryCalculator.BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
+                        tempList.AddRange(partialList);
                     }
-                }
-                //remove the null points
-                foreach (Point tempPoint in tempList)
-                {
-                    if (tempPoint.X != nullValue)
+                    Point nullPoint = new Point(nullValue, 0);
+                    //Set duplicate points to the null point
+                    for (int i = 1; i < tempList.Count; i++)
                     {
-                        newList.Add(tempPoint);
+                        if ((tempList[i].X == tempList[i - 1].X) && (tempList[i].Y == tempList[i - 1].Y))
+                        {
+                            tempList[i - 1] = nullPoint;
+                        }
                     }
+                    //remove the null points
+                    foreach (Point tempPoint in tempList)
+                    {
+                        if (tempPoint.X != nullValue)
+                        {
+                            newList.Add(tempPoint);
+                        }
+                    }
+                    linePoints = new List<Point>(newList);
                 }
-                linePoints = new List<Point>(newList);
+                else
+                {
+                    isPoint = true;
+                    point = linePoints[0];
+                    linePoints = new List<Point>();
+                    linePoints.Add(point);
+                }
             }
         }
     }

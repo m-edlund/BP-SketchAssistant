@@ -1,9 +1,9 @@
 ﻿<Window x:Class="SketchAssistantWPF.MainWindow"
+        xmlns:local="clr-namespace:SketchAssistantWPF"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SketchAssistantWPF"
         mc:Ignorable="d"
         Title="Sketch Assistant" Height="612" Width="914" SizeChanged="Window_SizeChanged">
     <Grid>
@@ -26,18 +26,19 @@
         <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Background="LightGray">
             <Menu Background="LightGray">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
-                    <MenuItem Header="Load SVG File" Click="MenuItem_Click" AutomationProperties.AutomationId="SVG_MENU_BUTTON"/>
+                    <MenuItem x:Name="SVGMenuButton" Header="Load SVG File" Click="MenuItem_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="EditMenuButton" Header="Edit">
-                    <MenuItem Header="New Canvas" Click="CanvasButton_Click" AutomationProperties.AutomationId="CANVAS_MENU_BUTTON"/>
-                    <MenuItem Header="Undo" Click="UndoButton_Click" AutomationProperties.AutomationId="UNDO_MENU_BUTTON"/>
-                    <MenuItem Header="Redo" Click="RedoButton_Click" AutomationProperties.AutomationId="REDO_MENU_BUTTON"/>
+                    <MenuItem x:Name="CanvasMenuButton" Header="New Canvas" Click="CanvasButton_Click"/>
+                    <MenuItem x:Name="UndoMenuButton" Header="Undo" Click="UndoButton_Click"/>
+                    <MenuItem x:Name="RedoMenuButton" Header="Redo" Click="RedoButton_Click"/>
+                    <MenuItem x:Name="DebugMode" Header="Start Test Input" Click="DebugButton"/>
                 </MenuItem>
             </Menu>
         </ToolBar>
         <!-- All Icons in the Toolbar taken from openclipart.org -->
         <ToolBar x:Name="DrawingToolBar" Grid.Column="5" Grid.Row="0" Grid.ColumnSpan="2" Background="LightGray">
-            <Button x:Name="CanvasButton" ToolTip="Create a new Canvas" Click="CanvasButton_Click" AutomationProperties.AutomationId="CANVAS_BUTTON">
+            <Button x:Name="CanvasButton" ToolTip="Create a new Canvas" Click="CanvasButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -66,7 +67,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </Button>
-            <ToggleButton x:Name="DrawButton" ToolTip="Enter Drawing Mode" Click="DrawButton_Click" AutomationProperties.AutomationId="DRAW_BUTTON">
+            <ToggleButton x:Name="DrawButton" ToolTip="Enter Drawing Mode" Click="DrawButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -81,7 +82,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click" AutomationProperties.AutomationId="DELETE_BUTTON">
+            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -123,7 +124,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click" AutomationProperties.AutomationId="UNDO_BUTTON">
+            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -145,7 +146,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </Button>
-            <Button x:Name="RedoButton" ToolTip="Redo the last undone action" Click="RedoButton_Click" AutomationProperties.AutomationId="REDO_BUTTON">
+            <Button x:Name="RedoButton" ToolTip="Redo the last undone action" Click="RedoButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -170,17 +171,17 @@
                 </Rectangle>
             </Button>
         </ToolBar>
-        <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="2" AutomationProperties.AutomationId="LEFT_CANVAS"/>
+        <local:CustomCanvas x:Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="2"/>
         <Canvas Name="CanvasSeperator" Grid.Column="4" Grid.Row="1" Background="LightGray"/>
-        <Canvas Name="RightCanvas" Background="SlateGray" Grid.Column="5" Grid.Row="1" Height="auto"
-            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" MouseLeave="RightCanvas_MouseLeave"
-                AutomationProperties.AutomationId="RIGHT_CANVAS"/>
+        <local:CustomCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="5" Grid.Row="1" Height="auto"
+            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" MouseLeave="RightCanvas_MouseLeave" TouchLeave="RightCanvas_TouchLeave" />
+
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="7">
             <StatusBar DockPanel.Dock="Bottom" Name="StatusBar"  Background="LightGray">
-                <TextBox Name="LoadStatusBox" Text="nothing loaded" Background="LightGray" AutomationProperties.AutomationId="LOAD_STATUS_BOX"/>
+                <TextBox Name="LoadStatusBox" Text="nothing loaded" Background="LightGray"/>
                 <Separator/>
-                <TextBox Name="LastActionBox" Text="none" Background="LightGray" AutomationProperties.AutomationId="LAST_ACTION_TAKEN_BOX"/>
+                <TextBox Name="LastActionBox" Text="none" Background="LightGray"/>
             </StatusBar>
         </DockPanel>
     </Grid>
