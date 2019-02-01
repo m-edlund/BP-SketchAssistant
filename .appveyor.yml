@@ -5,4 +5,4 @@ install:
  - "nuget install TestStack.White"
  - "nuget install MSTest.TestAdapter"
  - "nuget install MSTest.TestFramework"
- - "nuget restore"
+ - "nuget restore SketchAssistant/SketchAssistant.sln"
