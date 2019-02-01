@@ -4,4 +4,3 @@ image:
 install:
     - "nuget install Microsoft.VisualStudio.TestPlatform.TestFramework"
     - "nuget install Castle.Core"
-	- "nuget install TestStack.White"
