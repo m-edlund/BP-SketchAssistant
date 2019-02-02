@@ -1,9 +1,0 @@
-language: csharp
-solution: "./SketchAssistant/SketchAssistant.sln"
-
-before_install:
-  - sudo apt-get install nunit-console
-before_script:
-  - nuget restore "./SketchAssistant/SketchAssistant.sln"
-after_script:
-  - nunit-console "./SketchAssistant/SketchAssistantWPF.Tests/bin/Debug/net461/SketchAssistantWPF.Tests.dll"
