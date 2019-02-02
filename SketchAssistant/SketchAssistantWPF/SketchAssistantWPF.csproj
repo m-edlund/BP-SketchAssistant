@@ -75,6 +75,7 @@
     </ApplicationDefinition>
     <Compile Include="ActionHistory.cs" />
     <Compile Include="CustomCanvas.cs" />
+    <Compile Include="DebugData.cs" />
     <Compile Include="FileImporter.cs" />
     <Compile Include="FileImporterException.cs" />
     <Compile Include="GeometryCalculator.cs" />

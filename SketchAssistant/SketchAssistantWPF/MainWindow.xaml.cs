@@ -28,7 +28,20 @@ namespace SketchAssistantWPF
     {
         public MainWindow()
         {
+            bool InDebugMode = false;
+            String[] commArgs = Environment.GetCommandLineArgs();
             InitializeComponent();
+            if (commArgs.Length > 1)
+            {
+                if (commArgs[1].Equals("-debug"))
+                {
+                    InDebugMode = true;
+                }
+            }
+            if(!InDebugMode)
+            {
+                DebugMode.Visibility = Visibility.Collapsed;
+            }
             ProgramPresenter = new MVP_Presenter(this);
             //  DispatcherTimer setup
             dispatcherTimer = new DispatcherTimer(DispatcherPriority.Render);
@@ -66,6 +79,14 @@ namespace SketchAssistantWPF
         /// The line currently being drawn
         /// </summary>
         Polyline currentLine;
+        /// <summary>
+        /// If the debug function is running.
+        /// </summary>
+        bool debugRunning = false;
+        /// <summary>
+        /// Point collections for debugging.
+        /// </summary>
+        DebugData debugDat = new DebugData();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -118,6 +139,7 @@ namespace SketchAssistantWPF
         private void RightCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
+            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);");
         }
 
         /// <summary>
@@ -126,6 +148,7 @@ namespace SketchAssistantWPF
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);");
         }
 
         /// <summary>
@@ -150,6 +173,7 @@ namespace SketchAssistantWPF
         private void RightCanvas_MouseMove(object sender, MouseEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e.GetPosition(RightCanvas));
+            //System.Diagnostics.Debug.WriteLine("new Point(" + ((int)e.GetPosition(RightCanvas).X).ToString() + "," + ((int)e.GetPosition(RightCanvas).Y).ToString() + "), ");
         }
 
         /// <summary>
@@ -164,17 +188,20 @@ namespace SketchAssistantWPF
 
         /// <summary>
         /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// Takes 7000ms
         /// </summary>
-        private void DebugButton(object sender, RoutedEventArgs e)
+        private void DebugOne_Click(object sender, RoutedEventArgs e)
         {
-            dispatcherTimer.Stop();
-            ProgramPresenter.NewCanvas(); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(200);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(20,20)); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(200, 200)); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(30, 80)); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up); Thread.Sleep(50); ProgramPresenter.Tick(); Thread.Sleep(50);
-            dispatcherTimer.Start();
+            Debug(1);
+        }
+
+        /// <summary>
+        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// Takes 24000ms
+        /// </summary>
+        private void DebugTwo_Click(object sender, RoutedEventArgs e)
+        {
+            Debug(2);
         }
 
         /// <summary>
@@ -183,6 +210,7 @@ namespace SketchAssistantWPF
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             ProgramPresenter.Tick();
+            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.Tick();");
         }
 
         /// <summary>
@@ -212,7 +240,9 @@ namespace SketchAssistantWPF
         /// <returns>Whether or not the mouse is pressed.</returns>
         public bool IsMousePressed()
         {
-            return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed));
+            if (!debugRunning) {
+                return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed)); }
+            else return true;
         }
 
         /// <summary>
@@ -460,6 +490,42 @@ namespace SketchAssistantWPF
             {
                 canvas.Background = Brushes.SlateGray;
             }
+        }
+
+        /************************/
+        /*** HELPING FUNCTION ***/
+        /************************/
+
+        /// <summary>
+        /// A function which simulates canvas input for debugging.
+        /// </summary>
+        /// <param name="option"></param>
+        private async void Debug(int option)
+        {
+            Point[] points;
+            if (option == 1)
+                points = debugDat.debugPoints1;
+            else if (option == 2)
+                points = debugDat.debugPoints2;
+            else { return; }
+            dispatcherTimer.Stop();
+            debugRunning = true;
+            ProgramPresenter.Tick(); await Task.Delay(10);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(50, 50));
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down); await Task.Delay(10);
+            for (int x = 0; x < points.Length; x++)
+            {
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, points[x]);
+                await Task.Delay(1);
+                if (x % 5 == 0)
+                {
+                    ProgramPresenter.Tick();
+                    await Task.Delay(1);
+                }
+            }
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up); await Task.Delay(1);
+            debugRunning = false;
+            dispatcherTimer.Start();
         }
     }
 }

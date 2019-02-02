@@ -32,7 +32,10 @@
                     <MenuItem x:Name="CanvasMenuButton" Header="New Canvas" Click="CanvasButton_Click"/>
                     <MenuItem x:Name="UndoMenuButton" Header="Undo" Click="UndoButton_Click"/>
                     <MenuItem x:Name="RedoMenuButton" Header="Redo" Click="RedoButton_Click"/>
-                    <MenuItem x:Name="DebugMode" Header="Start Test Input" Click="DebugButton"/>
+                    <MenuItem x:Name="DebugMode" Header="Debug Input">
+                        <MenuItem x:Name="DebugOne" Header="Debug 1" Click="DebugOne_Click"/>
+                        <MenuItem x:Name="DebugTwo" Header="Debug 2" Click="DebugTwo_Click"/>
+                    </MenuItem>
                 </MenuItem>
             </Menu>
         </ToolBar>
