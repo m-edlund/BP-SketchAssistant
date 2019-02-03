@@ -1,6 +1,0 @@
-language: csharp
-solution: "./SketchAssistant/SketchAssistant.sln"
-
-install:
-  - nuget restore "./SketchAssistant/SketchAssistant.sln"
-  - nuget install NUnit.ConsoleRunner -Version 3.9.0 -OutputDirectory testrunner

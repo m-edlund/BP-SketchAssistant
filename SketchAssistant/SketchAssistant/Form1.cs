@@ -9,25 +9,29 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 
-
 // This is the code for your desktop app.
 // Press Ctrl+F5 (or go to Debug > Start Without Debugging) to run your app.
 
 namespace SketchAssistant
 {
-    public partial class Form1 : Form
+    public partial class Form1 : Form, MVP_View
     {
         public Form1()
         {
             InitializeComponent();
-            fileImporter = new FileImporter();
+            ProgramPresenter = new MVP_Presenter(this);
         }
 
         /**********************************/
         /*** CLASS VARIABLES START HERE ***/
         /**********************************/
 
-        //important: add new variables only at the end of the list to keep the order of definition consistent with the order in which they are returned by GetAllVariables()
+        public enum ButtonState
+        {
+            Enabled,
+            Disabled,
+            Active
+        }
 
         /// <summary>
         /// Different Program States
@@ -38,72 +42,23 @@ namespace SketchAssistant
             Draw,
             Delete
         }
-        /// <summary>
-        /// Current Program State
-        /// </summary>
-        private ProgramState currentState;
-        /// <summary>
-        /// instance of FileImporter to handle drawing imports
-        /// </summary>
-        private FileImporter fileImporter;
+
         /// <summary>
         /// Dialog to select a file.
         /// </summary>
         OpenFileDialog openFileDialog = new OpenFileDialog();
         /// <summary>
-        /// Image loaded on the left
-        /// </summary>
-        private Image leftImage = null;
-        /// <summary>
-        /// the graphic shown in the left window, represented as a list of polylines
-        /// </summary>
-        private List<Line> leftLineList;
-        /// <summary>
-        /// Image on the right
-        /// </summary>
-        Image rightImage = null;
-        /// <summary>
-        /// Current Line being Drawn
-        /// </summary>
-        List<Point> currentLine;
-        /// <summary>
         /// All Lines in the current session
         /// </summary>
-        List<Tuple<bool,Line>> rightLineList = new List<Tuple<bool, Line>>();
-        /// <summary>
-        /// Whether the Mouse is currently pressed in the rightPictureBox
-        /// </summary>
-        bool mousePressed = false;
-        /// <summary>
-        /// The Position of the Cursor in the right picture box
-        /// </summary>
-        Point currentCursorPosition;
-        /// <summary>
-        /// The Previous Cursor Position in the right picture box
-        /// </summary>
-        Point previousCursorPosition;
+        List<Tuple<bool, Line>> rightLineList = new List<Tuple<bool, Line>>();
         /// <summary>
         /// Queue for the cursorPositions
         /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
         /// <summary>
-        /// The graphic representation of the right image
+        /// The Presenter Component of the MVP-Model
         /// </summary>
-        Graphics rightGraph = null;
-        /// <summary>
-        /// Deletion Matrixes for checking postions of lines in the image
-        /// </summary>
-        bool[,] isFilledMatrix;
-        HashSet<int>[,] linesMatrix;
-        /// <summary>
-        /// Size of deletion area
-        /// </summary>
-        uint deletionSize = 2;
-
-        /// <summary>
-        /// History of Actions
-        /// </summary>
-        ActionHistory historyOfActions;
+        MVP_Presenter ProgramPresenter;
 
         /******************************************/
         /*** FORM SPECIFIC FUNCTIONS START HERE ***/
@@ -111,31 +66,17 @@ namespace SketchAssistant
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            currentState = ProgramState.Idle;
             this.DoubleBuffered = true;
-            historyOfActions = new ActionHistory(null);
-            UpdateButtonStatus();
         }
 
-        //Resize Function connected to the form resize event, will refresh the form when it is resized
+        /// <summary>
+        /// Resize Function connected to the form resize event, will refresh the form when it is resized
+        /// </summary>
         private void Form1_Resize(object sender, System.EventArgs e)
         {
+            ProgramPresenter.Resize(new Tuple<int, int>(pictureBoxLeft.Width, pictureBoxLeft.Height), 
+                new Tuple<int, int>(pictureBoxRight.Width, pictureBoxRight.Height));
             this.Refresh();
-        }
-        
-        //Load button, will open an OpenFileDialog
-        private void loadToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            openFileDialog.Filter = "Image|*.jpg;*.png;*.jpeg";
-            if(openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
-                leftImage = Image.FromFile(openFileDialog.FileName);
-                pictureBoxLeft.Image = leftImage;
-                //Refresh the left image box when the content is changed
-                this.Refresh();
-            }
-            UpdateButtonStatus();
         }
 
         /// <summary>
@@ -143,22 +84,7 @@ namespace SketchAssistant
         /// </summary>
         private void examplePictureToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = "Interactive Sketch-Assistant Drawing|*.isad";
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
-                try
-                {
-                    (int, int, List<Line>) values = fileImporter.ParseISADInputFile(openFileDialog.FileName);
-                    DrawEmptyCanvasLeft(values.Item1, values.Item2);
-                    BindAndDrawLeftImage(values.Item3);
-                    this.Refresh();
-                }
-                catch(FileImporterException ex)
-                {
-                    ShowInfoMessage(ex.ToString());
-                }
-            }
+            ProgramPresenter.ExamplePictureToolStripMenuItemClick();
         }
 
         /// <summary>
@@ -166,486 +92,239 @@ namespace SketchAssistant
         /// </summary>
         private void SVGDrawingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            openFileDialog.Filter = "Scalable Vector Graphics|*.svg";
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                toolStripLoadStatus.Text = openFileDialog.SafeFileName;
-                try
-                {
-                    (int, int, List<Line>) drawing = fileImporter.ParseSVGInputFile(openFileDialog.FileName, pictureBoxLeft.Width, pictureBoxLeft.Height);
-                    DrawEmptyCanvasLeft(drawing.Item1, drawing.Item2);
-                    BindAndDrawLeftImage(drawing.Item3);
-                    this.Refresh();
-                }
-                catch (FileImporterException ex)
-                {
-                    ShowInfoMessage(ex.ToString());
-                }
-                catch (Exception ex)
-                {
-                    ShowInfoMessage("exception occured while trying to parse svg file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace);
-                }
-            }
+            ProgramPresenter.SVGToolStripMenuItemClick();
         }
 
-        //Changes the state of the program to drawing
+        /// <summary>
+        /// Changes the state of the program to drawing
+        /// </summary>
         private void drawButton_Click(object sender, EventArgs e)
         {
-            if(rightImage != null)
-            {
-                if (currentState.Equals(ProgramState.Draw))
-                {
-                    ChangeState(ProgramState.Idle);
-                }
-                else
-                {
-                    ChangeState(ProgramState.Draw);
-                }
-            }
-            UpdateButtonStatus();
+            ProgramPresenter.ChangeState(true);
         }
 
-        //Changes the state of the program to deletion
+        /// <summary>
+        /// Changes the state of the program to deletion
+        /// </summary>
         private void deleteButton_Click(object sender, EventArgs e)
         {
-            if (rightImage != null)
-            {
-                if (currentState.Equals(ProgramState.Delete))
-                {
-                    ChangeState(ProgramState.Idle);
-                }
-                else
-                {
-                    ChangeState(ProgramState.Delete);
-                }
-            }
-            UpdateButtonStatus();
+            ProgramPresenter.ChangeState(false);
         }
 
-        //Undo an action
+        /// <summary>
+        /// Undo an Action.
+        /// </summary>
         private void undoButton_Click(object sender, EventArgs e)
         {
-            if (historyOfActions.CanUndo())
-            {
-                HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
-                SketchAction.ActionType  undoAction = historyOfActions.GetCurrentAction().GetActionType();
-                switch (undoAction)
-                {
-                    case SketchAction.ActionType.Delete:
-                        //Deleted Lines need to be shown
-                        ChangeLines(affectedLines, true);
-                        break;
-                    case SketchAction.ActionType.Draw:
-                        //Drawn lines need to be hidden
-                        ChangeLines(affectedLines, false);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            historyOfActions.MoveAction(true);
-            UpdateButtonStatus();
+            ProgramPresenter.Undo();
         }
 
-        //Redo an action
+        /// <summary>
+        /// Redo an Action.
+        /// </summary>
         private void redoButton_Click(object sender, EventArgs e)
         {
-            if (historyOfActions.CanRedo())
-            {
-                historyOfActions.MoveAction(false);
-                HashSet<int> affectedLines = historyOfActions.GetCurrentAction().GetLineIDs();
-                SketchAction.ActionType redoAction = historyOfActions.GetCurrentAction().GetActionType();
-                switch (redoAction)
-                {
-                    case SketchAction.ActionType.Delete:
-                        //Deleted Lines need to be redeleted
-                        ChangeLines(affectedLines, false);
-                        break;
-                    case SketchAction.ActionType.Draw:
-                        //Drawn lines need to be redrawn
-                        ChangeLines(affectedLines, true);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            UpdateButtonStatus();
+            ProgramPresenter.Redo();
         }
 
-        //Detect Keyboard Shortcuts
+        /// <summary>
+        /// Detect Keyboard Shortcuts.
+        /// </summary>
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Z)
             {
-                undoButton_Click(sender, e);
+                ProgramPresenter.Undo();
             }
             if (e.Modifiers == Keys.Control && e.KeyCode == Keys.Y)
             {
-                redoButton_Click(sender, e);
+                ProgramPresenter.Redo();
             }
         }
 
-        //get current Mouse positon within the right picture box
+        /// <summary>
+        /// The Picture box is clicked.
+        /// </summary>
+        private void pictureBoxRight_Click(object sender, EventArgs e)
+        {
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Click);
+        }
+
+        /// <summary>
+        /// Get current Mouse positon within the right picture box.
+        /// </summary>
         private void pictureBoxRight_MouseMove(object sender, MouseEventArgs e)
         {
-            currentCursorPosition = ConvertCoordinates(new Point(e.X, e.Y));
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e);
         }
-
-        //hold left mouse button to draw.
+        
+        /// <summary>
+        /// Hold left mouse button to start drawing.
+        /// </summary>
         private void pictureBoxRight_MouseDown(object sender, MouseEventArgs e)
         {
-            mousePressed = true;
-            if (currentState.Equals(ProgramState.Draw))
-            {
-                currentLine = new List<Point>();
-            }
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
         }
-
-        //Lift left mouse button to stop drawing and add a new Line.
+        
+        /// <summary>
+        /// Lift left mouse button to stop drawing and add a new Line.
+        /// </summary>
         private void pictureBoxRight_MouseUp(object sender, MouseEventArgs e)
         {
-            mousePressed = false;
-            if (currentState.Equals(ProgramState.Draw) && currentLine.Count > 0)
-            {
-                Line newLine = new Line(currentLine, rightLineList.Count);
-                rightLineList.Add(new Tuple<bool, Line>(true, newLine));
-                newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
-                historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID()));
-            }
-            UpdateButtonStatus();
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
         }
-
-        //Button to create a new Canvas. Will create an empty image 
-        //which is the size of the left image, if there is one.
-        //If there is no image loaded the canvas will be the size of the right picture box
+        
+        /// <summary>
+        /// Button to create a new Canvas. Will create an empty image 
+        /// which is the size of the left image, if there is one.
+        /// If there is no image loaded the canvas will be the size of the right picture box
+        /// </summary>
         private void canvasButton_Click(object sender, EventArgs e)
         {
-            if (!historyOfActions.IsEmpty())
-            {
-                if (MessageBox.Show("You have unsaved changes, creating a new canvas will discard these.", 
-                    "Attention", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.OK)
-                {
-                    historyOfActions = new ActionHistory(lastActionTakenLabel);
-                    DrawEmptyCanvasRight();
-                    //The following lines cannot be in DrawEmptyCanvas()
-                    isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
-                    linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                    rightLineList = new List<Tuple<bool, Line>>();
-                }
-            }
-            else
-            {
-                historyOfActions = new ActionHistory(lastActionTakenLabel);
-                DrawEmptyCanvasRight();
-                //The following lines cannot be in DrawEmptyCanvas()
-                isFilledMatrix = new bool[rightImage.Width, rightImage.Height];
-                linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                rightLineList = new List<Tuple<bool, Line>>();
-            }
-            UpdateButtonStatus();
+            ProgramPresenter.NewCanvas();
         }
 
-        //add a Point on every tick to the Drawpath
+        /// <summary>
+        /// Add a Point on every tick to the Drawpath.
+        /// Or detect lines for deletion on every tick
+        /// </summary>
         private void mouseTimer_Tick(object sender, EventArgs e)
         {
-            cursorPositions.Enqueue(currentCursorPosition);
-            previousCursorPosition = cursorPositions.Dequeue();
-            if (currentState.Equals(ProgramState.Draw) && mousePressed)
-            {
-                currentLine.Add(currentCursorPosition);
-                Line drawline = new Line(currentLine);
-                drawline.DrawLine(rightGraph);
-                pictureBoxRight.Image = rightImage;
-            }
-            if (currentState.Equals(ProgramState.Delete) && mousePressed)
-            {
-                List<Point> uncheckedPoints = Line.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
-                foreach (Point currPoint in uncheckedPoints)
-                {
-                    HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionSize);
-                    if (linesToDelete.Count > 0)
-                    {
-                        historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Delete, linesToDelete));
-                        foreach (int lineID in linesToDelete)
-                        {
-                            rightLineList[lineID] = new Tuple<bool, Line>(false, rightLineList[lineID].Item2);
-                        }
-                        RepopulateDeletionMatrixes();
-                        RedrawRightImage();
-                    }
-                }
-            }
+            ProgramPresenter.Tick();
         }
 
-        /***********************************/
-        /*** HELPER FUNCTIONS START HERE ***/
-        /***********************************/
+        /*************************/
+        /*** PRESENTER -> VIEW ***/
+        /*************************/
 
         /// <summary>
-        /// Creates an empty Canvas
+        /// Enables the timer of the View, which will tick the Presenter.
         /// </summary>
-        private void DrawEmptyCanvasRight()
+        public void EnableTimer()
         {
-            if (leftImage == null)
-            {
-                rightImage = new Bitmap(pictureBoxRight.Width, pictureBoxRight.Height);
-                rightGraph = Graphics.FromImage(rightImage);
-                rightGraph.FillRectangle(Brushes.White, 0, 0, pictureBoxRight.Width + 10, pictureBoxRight.Height + 10);
-                pictureBoxRight.Image = rightImage;
-            }
-            else
-            {
-                rightImage = new Bitmap(leftImage.Width, leftImage.Height);
-                rightGraph = Graphics.FromImage(rightImage);
-                rightGraph.FillRectangle(Brushes.White, 0, 0, leftImage.Width + 10, leftImage.Height + 10);
-                pictureBoxRight.Image = rightImage;
-            }
-            this.Refresh();
-            pictureBoxRight.Refresh();
+            mouseTimer.Enabled = true;
         }
 
         /// <summary>
-        /// Creates an empty Canvas on the left
+        /// A function that opens a file dialog and returns the filename.
         /// </summary>
-        /// <param name="width"> width of the new canvas in pixels </param>
-        /// <param name="height"> height of the new canvas in pixels </param>
-        private void DrawEmptyCanvasLeft(int width, int height)
+        /// <param name="Filter">The filter that should be applied to the new Dialog.</param>
+        /// <returns>Returns the FileName and the SafeFileName if the user correctly selects a file, 
+        /// else returns a tuple with empty strigns</returns>
+        public Tuple<String, String> openNewDialog(String Filter)
         {
-            if (width == 0)
+            openFileDialog.Filter = Filter;
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                leftImage = new Bitmap(pictureBoxLeft.Width, pictureBoxLeft.Height);
+                return new Tuple<string, string>(openFileDialog.FileName, openFileDialog.SafeFileName);
             }
             else
             {
-                leftImage = new Bitmap(width, height);
+                return new Tuple<string, string>("", "");
             }
-            Graphics.FromImage(leftImage).FillRectangle(Brushes.White, 0, 0, pictureBoxLeft.Width + 10, pictureBoxLeft.Height + 10);
-            pictureBoxLeft.Image = leftImage;
-            
-            this.Refresh();
+        }
+
+        /// <summary>
+        /// Sets the contents of the load status indicator label.
+        /// </summary>
+        /// <param name="message">The new contents</param>
+        public void SetToolStripLoadStatus(String message)
+        {
+            toolStripLoadStatus.Text = message;
+        }
+
+        /// <summary>
+        /// Sets the contents of the last action taken indicator label.
+        /// </summary>
+        /// <param name="message">The new contents</param>
+        public void SetLastActionTakenText(String message)
+        {
+            lastActionTakenLabel.Text = message;
+        }
+
+        /// <summary>
+        /// Changes the states of a tool strip button.
+        /// </summary>
+        /// <param name="buttonName">The name of the button.</param>
+        /// <param name="state">The new state of the button.</param>
+        public void SetToolStripButtonStatus(String buttonName, ButtonState state)
+        {
+            ToolStripButton buttonToChange;
+            switch (buttonName)
+            {
+                case "canvasButton":
+                    buttonToChange = canvasButton;
+                    break;
+                case "drawButton":
+                    buttonToChange = drawButton;
+                    break;
+                case "deleteButton":
+                    buttonToChange = deleteButton;
+                    break;
+                case "undoButton":
+                    buttonToChange = undoButton;
+                    break;
+                case "redoButton":
+                    buttonToChange = redoButton;
+                    break;
+                default:
+                    Console.WriteLine("Invalid Button was given to SetToolStripButton. \nMaybe you forgot to add a case?");
+                    return;
+            }
+            switch (state)
+            {
+                case ButtonState.Active:
+                    buttonToChange.Checked = true;
+                    break;
+                case ButtonState.Disabled:
+                    buttonToChange.Checked = false;
+                    buttonToChange.Enabled = false;
+                    break;
+                case ButtonState.Enabled:
+                    buttonToChange.Checked = false;
+                    buttonToChange.Enabled = true;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Displays an image in the left Picture box.
+        /// </summary>
+        /// <param name="img">The new image.</param>
+        public void DisplayInLeftPictureBox(Image img)
+        {
+            pictureBoxLeft.Image = img;
             pictureBoxLeft.Refresh();
         }
 
         /// <summary>
-        /// Redraws all lines in lineList, for which their associated boolean value equals true.
+        /// Displays an image in the right Picture box.
         /// </summary>
-        private void RedrawRightImage()
+        /// <param name="img">The new image.</param>
+        public void DisplayInRightPictureBox(Image img)
         {
-            DrawEmptyCanvasRight();
-            foreach (Tuple<bool, Line> lineBoolTuple in rightLineList)
-            {
-                if (lineBoolTuple.Item1)
-                {
-                    lineBoolTuple.Item2.DrawLine(rightGraph);
-                }
-            }
+            pictureBoxRight.Image = img;
             pictureBoxRight.Refresh();
-        }
-
-        /// <summary>
-        /// Change the status of whether or not the lines are shown.
-        /// </summary>
-        /// <param name="lines">The HashSet containing the affected Line IDs.</param>
-        /// <param name="shown">True if the lines should be shown, false if they should be hidden.</param>
-        private void ChangeLines(HashSet<int> lines, bool shown)
-        {
-            foreach (int lineId in lines)
-            {
-                if (lineId <= rightLineList.Count - 1 && lineId >= 0)
-                {
-                    rightLineList[lineId] = new Tuple<bool, Line>(shown, rightLineList[lineId].Item2);
-                }
-            }
-            RedrawRightImage();
-        }
-
-        /// <summary>
-        /// Updates the active status of buttons. Currently draw, delete, undo and redo button.
-        /// </summary>
-        private void UpdateButtonStatus()
-        {
-            undoButton.Enabled = historyOfActions.CanUndo();
-            redoButton.Enabled = historyOfActions.CanRedo();
-            drawButton.Enabled = (rightImage != null);
-            deleteButton.Enabled = (rightImage != null);
-        }
-
-        /// <summary>
-        /// A helper function which handles tasks associated witch changing states, 
-        /// such as checking and unchecking buttons and changing the state.
-        /// </summary>
-        /// <param name="newState">The new state of the program</param>
-        private void ChangeState(ProgramState newState)
-        {
-            switch (currentState)
-            {
-                case ProgramState.Draw:
-                    drawButton.CheckState = CheckState.Unchecked;
-                    mouseTimer.Enabled = false;
-                    break;
-                case ProgramState.Delete:
-                    deleteButton.CheckState = CheckState.Unchecked;
-                    mouseTimer.Enabled = false;
-                    break;
-                default:
-                    break;
-            }
-            switch (newState)
-            {
-                case ProgramState.Draw:
-                    drawButton.CheckState = CheckState.Checked;
-                    mouseTimer.Enabled = true;
-                    break;
-                case ProgramState.Delete:
-                    deleteButton.CheckState = CheckState.Checked;
-                    mouseTimer.Enabled = true;
-                    break;
-                default:
-                    break;
-            }
-            currentState = newState;
-            pictureBoxRight.Refresh();
-        }
-
-        /// <summary>
-        /// A function that calculates the coordinates of a point on a zoomed in image.
-        /// </summary>
-        /// <param name="">The position of the mouse cursor</param>
-        /// <returns>The real coordinates of the mouse cursor on the image</returns>
-        private Point ConvertCoordinates(Point cursorPosition)
-        {
-            Point realCoordinates = new Point(5,3);
-            if(pictureBoxRight.Image == null)
-            {
-                return cursorPosition;
-            }
-
-            int widthImage = pictureBoxRight.Image.Width;
-            int heightImage = pictureBoxRight.Image.Height;
-            int widthBox = pictureBoxRight.Width;
-            int heightBox = pictureBoxRight.Height;
-
-            float imageRatio = (float)widthImage / (float)heightImage;
-            float containerRatio = (float)widthBox / (float)heightBox;
-
-            if (imageRatio >= containerRatio)
-            {
-                //Image is wider than it is high
-                float zoomFactor = (float)widthImage / (float)widthBox;
-                float scaledHeight = heightImage / zoomFactor;
-                float filler = (heightBox - scaledHeight) / 2;
-                realCoordinates.X = (int)(cursorPosition.X * zoomFactor);
-                realCoordinates.Y = (int)((cursorPosition.Y - filler) * zoomFactor);
-            }
-            else
-            {
-                //Image is higher than it is wide
-                float zoomFactor = (float)heightImage / (float)heightBox;
-                float scaledWidth = widthImage / zoomFactor;
-                float filler = (widthBox - scaledWidth) / 2;
-                realCoordinates.X = (int)((cursorPosition.X - filler) * zoomFactor);
-                realCoordinates.Y = (int)(cursorPosition.Y * zoomFactor);
-            }
-            return realCoordinates;
-        }
-
-        /// <summary>
-        /// A function that populates the matrixes needed for deletion detection with line data.
-        /// </summary>
-        private void RepopulateDeletionMatrixes()
-        {
-            if(rightImage != null)
-            {
-                isFilledMatrix = new bool[rightImage.Width,rightImage.Height];
-                linesMatrix = new HashSet<int>[rightImage.Width, rightImage.Height];
-                foreach(Tuple<bool,Line> lineTuple in rightLineList)
-                {
-                    if (lineTuple.Item1)
-                    {
-                        lineTuple.Item2.PopulateMatrixes(isFilledMatrix, linesMatrix);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// A function that checks the deletion matrixes at a certain point 
-        /// and returns all Line ids at that point and in a square around it in a certain range.
-        /// </summary>
-        /// <param name="p">The point around which to check.</param>
-        /// <param name="range">The range around the point. If range is 0, only the point is checked.</param>
-        /// <returns>A List of all lines.</returns>
-        private HashSet<int> CheckDeletionMatrixesAroundPoint(Point p, uint range)
-        {
-            HashSet<int> returnSet = new HashSet<int>();
-
-            if (p.X >= 0 && p.Y >= 0 && p.X < rightImage.Width && p.Y < rightImage.Height)
-            {
-                if (isFilledMatrix[p.X, p.Y])
-                {
-                    returnSet.UnionWith(linesMatrix[p.X, p.Y]);
-                }
-            }
-            for (int x_mod = (int)range*(-1); x_mod < range; x_mod++)
-            {
-                for (int y_mod = (int)range * (-1); y_mod < range; y_mod++)
-                {
-                    if (p.X + x_mod >= 0 && p.Y + y_mod >= 0 && p.X + x_mod < rightImage.Width && p.Y + y_mod < rightImage.Height)
-                    {
-                        if (isFilledMatrix[p.X + x_mod, p.Y + y_mod])
-                        {
-                            returnSet.UnionWith(linesMatrix[p.X + x_mod, p.Y + y_mod]);
-                        }
-                    }
-                }
-            }
-            return returnSet;
-        }
-
-        /// <summary>
-        /// binds the given picture to templatePicture and draws it
-        /// </summary>
-        /// <param name="newTemplatePicture"> the new template picture, represented as a list of polylines </param>
-        /// <returns></returns>
-        private void BindAndDrawLeftImage(List<Line> newTemplatePicture)
-        {
-            leftLineList = newTemplatePicture;
-            foreach(Line l in leftLineList)
-            {
-                l.DrawLine(Graphics.FromImage(leftImage));
-            }
         }
 
         /// <summary>
         /// shows the given info message in a popup and asks the user to aknowledge it
         /// </summary>
         /// <param name="message">the message to show</param>
-        private void ShowInfoMessage(String message)
+        public void ShowInfoMessage(String message)
         {
             MessageBox.Show(message);
         }
 
         /// <summary>
-        /// returns all instance variables in the order of their definition for testing
+        /// Shows a warning box with the given message (Yes/No Buttons)and returns true if the user aknowledges it.
         /// </summary>
-        /// <returns>all instance variables in the order of their definition</returns>
-        public Object[]/*(ProgramState, FileImporter, OpenFileDialog, Image, List<Line>, Image, List<Point>, List<Tuple<bool, Line>>, bool, Point, Point, Queue<Point>, Graphics, bool[,], HashSet<int>[,], uint, ActionHistory)*/ GetAllVariables()
+        /// <param name="message">The message of the warning.</param>
+        /// <returns>True if the user confirms (Yes), negative if he doesn't (No)</returns>
+        public bool ShowWarning(String message)
         {
-            return new Object[] { currentState, fileImporter, openFileDialog, leftImage, leftLineList, rightImage, currentLine, rightLineList, mousePressed, currentCursorPosition, previousCursorPosition, cursorPositions, rightGraph, isFilledMatrix, linesMatrix, deletionSize, historyOfActions };
+            return (MessageBox.Show(message, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes);
         }
-
-        /// <summary>
-        /// public method wrapper for testing purposes, invoking DrawEmptyCanvas(...) and BindAndDrawLeftImage(...)
-        /// </summary>
-        /// <param name="width">width of the parsed image</param>
-        /// <param name="height">height of the parsed image</param>
-        /// <param name="newImage">the parsed image</param>
-        public void CreateCanvasAndSetPictureForTesting(int width, int height, List<Line> newImage)
-        {
-            DrawEmptyCanvasLeft(width, height);
-            BindAndDrawLeftImage(newImage);
-        }
-
 
     }
 }

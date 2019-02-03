@@ -69,8 +69,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MVP_View.cs" />
+    <Compile Include="MVP_Presenter.cs" />
+    <Compile Include="MVP_Model.cs" />
+    <Compile Include="RedrawAssistant.cs" />
     <Compile Include="FileImporter.cs" />
     <Compile Include="FileImporterException.cs" />
+    <Compile Include="GeometryCalculator.cs" />
     <Compile Include="SketchAction.cs" />
     <Compile Include="ActionHistory.cs" />
     <Compile Include="Line.cs" />

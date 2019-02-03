@@ -1,0 +1,8 @@
+image:
+ - Visual Studio 2017
+ 
+install:
+ - "nuget install TestStack.White"
+ - "nuget install MSTest.TestAdapter"
+ - "nuget install MSTest.TestFramework"
+ - "nuget restore SketchAssistant/SketchAssistant.sln"

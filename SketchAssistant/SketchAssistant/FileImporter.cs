@@ -37,10 +37,6 @@ namespace SketchAssistant
         /// </summary>
         readonly int samplingRateBezier = 101;
 
-        public FileImporter()
-        {
-        }
-
         /// <summary>
         /// parses a drawing consisting of line objects, given as a file in the application specific .isad format
         /// </summary>
