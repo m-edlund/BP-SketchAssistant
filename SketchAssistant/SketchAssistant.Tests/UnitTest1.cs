@@ -284,7 +284,7 @@ namespace Tests
         public void ParseISADInputSuccessfulTest(int[] xCoordinates, int[] yCoordinates)
         {
             Form1 program = new Form1();
-            FileImporter uut = new SketchAssistant.FileImporter(program);
+            FileImporter uut = new SketchAssistant.FileImporter();
 
             List<String> file = new List<string>();
             file.Add("drawing");
@@ -335,7 +335,7 @@ namespace Tests
         {
             bool exceptionThrown = false;
             Form1 program = new Form1();
-            FileImporter uut = new SketchAssistant.FileImporter(program);
+            FileImporter uut = new SketchAssistant.FileImporter();
             //check that left image initially is uninitialized
             Assert.IsNull(GetLeftImage(program));
             //initialize left image with a valid isad drawing

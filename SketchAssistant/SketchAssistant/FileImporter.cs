@@ -33,7 +33,7 @@ namespace SketchAssistant
         readonly int samplingRateEllipse = 12;
 
         /// <summary>
-        /// number of points to create on a bezier curve, including start and end point (even numbr will result in "flat" bezier curves, uneven number in "pointed" ones
+        /// number of points to create on a bezier curve, including start and end point (even number will result in "flat" bezier curves, uneven number in "pointed" ones)
         /// </summary>
         readonly int samplingRateBezier = 101;
 
