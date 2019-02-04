@@ -754,6 +754,10 @@ namespace SketchAssistant
             return element;
         }
 
+        /// <summary>
+        /// normalizes the declaration of the data field of a path declaration by splitting coordinates still connected by a semicolon and command descriptors which are directly attached to the following coordinate into seperate tokens, also repeats omitted command descriptor tokens when the same command is repeated multiple times
+        /// </summary>
+        /// <param name="pathElements">the list of tokens to normalize, by splitting up existing tokens and adding new command descriptor tokens</param>
         private void NormalizePathDeclaration(List<string> pathElements)
         {
             Char lastCommand = 'M';
@@ -950,6 +954,13 @@ namespace SketchAssistant
             }
         }
 
+        /// <summary>
+        /// parses a "closeloop" path element
+        /// </summary>
+        /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
+        /// <param name="initialPositionX">absolute x coordinate of the last initial point of this subpath</param>
+        /// <param name="initialPositionY">absolute y coordinate of the last initial point of this subpath</param>
+        /// <returns></returns>
         private (Point, double, double) Parse_Z(List<string> pathElements, double initialPositionX, double initialPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
