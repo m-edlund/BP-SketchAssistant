@@ -282,7 +282,7 @@ namespace SketchAssistantWPF
                     default:
                         break;
                 }
-                //TODO: Add check if overlay needs to be added
+                //TODO: For the person implementing overlay: Add check if overlay needs to be added
                 programPresenter.UpdateRightLines(rightLineList);
             }
             RepopulateDeletionMatrixes();
@@ -313,7 +313,7 @@ namespace SketchAssistantWPF
                     default:
                         break;
                 }
-                //TODO: Add check if overlay needs to be added
+                //TODO: For the person implementing overlay: Add check if overlay needs to be added
                 programPresenter.UpdateRightLines(rightLineList);
                 RepopulateDeletionMatrixes();
             }
@@ -362,7 +362,7 @@ namespace SketchAssistantWPF
                 rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
                 newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                 programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
-                //TODO: Add check if overlay needs to be added
+                //TODO: For the person implementing overlay: Add check if overlay needs to be added
                 programPresenter.UpdateRightLines(rightLineList);
                 currentLine.Clear();
                 programPresenter.UpdateCurrentLine(currentLine);
@@ -399,7 +399,7 @@ namespace SketchAssistantWPF
                             rightLineList[lineID] = new Tuple<bool, InternalLine>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
-                        //TODO: Add check if overlay needs to be added
+                        //TODO: For the person implementing overlay: Add check if overlay needs to be added
                         programPresenter.UpdateRightLines(rightLineList);
                     }
                 }

@@ -503,11 +503,17 @@ namespace SketchAssistantWPF
         private async void Debug(int option)
         {
             Point[] points;
-            if (option == 1)
-                points = debugDat.debugPoints1;
-            else if (option == 2)
-                points = debugDat.debugPoints2;
-            else { return; }
+            switch (option)
+            {
+                case 1:
+                    points = debugDat.debugPoints1;
+                    break;
+                case 2:
+                    points = debugDat.debugPoints2;
+                    break;
+                default:
+                    return;
+            }
             dispatcherTimer.Stop();
             debugRunning = true;
             ProgramPresenter.Tick(); await Task.Delay(10);

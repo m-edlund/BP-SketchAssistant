@@ -20,21 +20,20 @@ namespace WhiteTests
     {
         private TestStack.White.Application application;
 
-        public void setupapp()
+        public Window setupapp()
         {
             string outputDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string editedDir = outputDir.Replace("WhiteTests", "SketchAssistantWPF");
             string app_path = editedDir + @"\SketchAssistantWPF.exe";
             ProcessStartInfo processStart = new ProcessStartInfo(app_path, "-debug");
             application = Application.Launch(processStart);
-            Window mainWindow = application.GetWindow("Sketch Assistant");
+            return application.GetWindow("Sketch Assistant");
         }
 
         [TestMethod]
         public void CreateCanvasTest()
         {
-            setupapp();
-            Window mainWindow = application.GetWindow("Sketch Assistant");
+            Window mainWindow = setupapp();
             Thread.Sleep(20);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
@@ -46,8 +45,7 @@ namespace WhiteTests
         [TestMethod]
         public void DrawLineTest()
         {
-            setupapp();
-            Window mainWindow = application.GetWindow("Sketch Assistant");
+            Window mainWindow = setupapp();
             Thread.Sleep(20);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();

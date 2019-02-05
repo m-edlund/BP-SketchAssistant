@@ -88,7 +88,7 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// A function that will take to matrixes and populate the with the line data of this line object
+        /// A function that will take two matrixes and populate them with the line data of this line object
         /// </summary>
         /// <param name="boolMatrix">The Matrix of booleans, in which is saved wether there is a line at this position.</param>
         /// <param name="listMatrix">The Matrix of Lists of integers, in which is saved which lines are at this position</param>
@@ -120,14 +120,14 @@ namespace SketchAssistantWPF
             if (linePoints.Count > 1)
             {
                 //if this is a point or not
-                bool isP = true;
+                var localIsPoint = true;
                 //check if its a point
                 foreach(Point p in linePoints)
                 {
                     if (p.X != linePoints[0].X || p.Y != linePoints[0].Y)
-                        isP = false;
+                        localIsPoint = false;
                 }
-                if (!isP) {
+                if (!localIsPoint) {
                     List<Point> newList = new List<Point>();
                     List<Point> tempList = new List<Point>();
                     //Since Point is non-nullable, we must ensure the nullPoints, 
