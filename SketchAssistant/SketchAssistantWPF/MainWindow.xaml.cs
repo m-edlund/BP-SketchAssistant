@@ -205,6 +205,15 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// Takes 7000ms
+        /// </summary>
+        private void DebugThree_Click(object sender, RoutedEventArgs e)
+        {
+            Debug(3);
+        }
+
+        /// <summary>
         /// Ticks the Presenter.
         /// </summary>
         private void dispatcherTimer_Tick(object sender, EventArgs e)

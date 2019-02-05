@@ -35,6 +35,7 @@
                     <MenuItem x:Name="DebugMode" Header="Debug Input">
                         <MenuItem x:Name="DebugOne" Header="Debug 1" Click="DebugOne_Click"/>
                         <MenuItem x:Name="DebugTwo" Header="Debug 2" Click="DebugTwo_Click"/>
+                        <MenuItem x:Name="DebugThree" Header="Debug 3" Click="DebugThree_Click"/>
                     </MenuItem>
                 </MenuItem>
             </Menu>
