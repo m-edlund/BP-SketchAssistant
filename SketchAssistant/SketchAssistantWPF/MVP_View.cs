@@ -119,5 +119,11 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <returns>The cursor Position</returns>
         Point GetCursorPosition();
-    }
+
+		/// <summary>
+		/// Sets the contents of the last action taken indicator label.
+		/// </summary>
+		/// <param name="message">The new contents</param>
+		void SetOptiTrackText(String message);
+	}
 }

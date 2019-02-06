@@ -186,6 +186,8 @@
                 <TextBox Name="LoadStatusBox" Text="nothing loaded" Background="LightGray"/>
                 <Separator/>
                 <TextBox Name="LastActionBox" Text="none" Background="LightGray"/>
+                <Separator/>
+                <TextBox Name="OptiTrackBox" Text="none" Background="LightGray"/>
             </StatusBar>
         </DockPanel>
     </Grid>

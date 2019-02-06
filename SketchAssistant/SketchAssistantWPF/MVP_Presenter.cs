@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using OptiTrack;
 
 namespace SketchAssistantWPF
 {
@@ -353,16 +354,24 @@ namespace SketchAssistantWPF
             return programView.IsMousePressed();
         }
 
-        /*************************/
-        /*** HELPING FUNCTIONS ***/
-        /*************************/
+		public void PassOptiTrackMessage(OptiTrack.Frame frame)
+		{
+			float x = frame.Trackables[0].X;
+			float y = frame.Trackables[0].Y;
+			float z = frame.Trackables[0].Z;
+			programView.SetOptiTrackText("X: " + x + "Y: " + y + "Z: " + z);
+		}
 
-        /// <summary>
-        /// Sets the visibility of a polyline.
-        /// </summary>
-        /// <param name="line">The polyline</param>
-        /// <param name="visible">Whether or not it should be visible.</param>
-        private void SetVisibility(Shape line, bool visible)
+		/*************************/
+		/*** HELPING FUNCTIONS ***/
+		/*************************/
+
+		/// <summary>
+		/// Sets the visibility of a polyline.
+		/// </summary>
+		/// <param name="line">The polyline</param>
+		/// <param name="visible">Whether or not it should be visible.</param>
+		private void SetVisibility(Shape line, bool visible)
         {
             if (!visible)
             {
@@ -419,5 +428,7 @@ namespace SketchAssistantWPF
             }
             return realCoordinates;
         }
-    }
+
+		
+	}
 }

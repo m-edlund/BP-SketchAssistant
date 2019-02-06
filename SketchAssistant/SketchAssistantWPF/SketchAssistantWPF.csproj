@@ -78,8 +78,11 @@
     <Compile Include="DebugData.cs" />
     <Compile Include="FileImporter.cs" />
     <Compile Include="FileImporterException.cs" />
+    <Compile Include="Frame.cs" />
     <Compile Include="GeometryCalculator.cs" />
+    <Compile Include="HighPerformanceTimer.cs" />
     <Compile Include="ImageDimension.cs" />
+    <Compile Include="OptiTrackConnector.cs" />
     <Compile Include="SketchAction.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

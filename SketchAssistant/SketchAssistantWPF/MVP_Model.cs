@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using OptiTrack;
 
 namespace SketchAssistantWPF
 {
@@ -20,11 +21,12 @@ namespace SketchAssistantWPF
         /// History of Actions
         /// </summary>
         ActionHistory historyOfActions;
-        /// <summary>
-        /// The assistant responsible for the redraw mode
-        /// </summary>
-        //RedrawAssistant redrawAss;
-
+		/// <summary>
+		/// The assistant responsible for the redraw mode
+		/// </summary>
+		//RedrawAssistant redrawAss;
+		OptiTrackConnector connector;
+		OptiTrackConnector.OnFrameReady frameReady;
 
         /***********************/
         /*** CLASS VARIABLES ***/
@@ -116,6 +118,7 @@ namespace SketchAssistantWPF
             UpdateUI();
             rightImageSize = new ImageDimension(0, 0);
             leftImageSize = new ImageDimension(0, 0);
+			connector = new OptiTrackConnector();
         }
 
         /**************************/
@@ -375,6 +378,14 @@ namespace SketchAssistantWPF
         /// </summary>
         public void Tick()
         {
+			if(inDrawingMode)
+			{
+				if (connector.Init(@"optitracak_setup.ttp"))
+				{
+					connector.StartTracking(programPresenter.PassOptiTrackMessage);
+				}
+			}
+			
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
