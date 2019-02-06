@@ -359,8 +359,9 @@ namespace SketchAssistantWPF
 			float x = frame.Trackables[0].X;
 			float y = frame.Trackables[0].Y;
 			float z = frame.Trackables[0].Z;
-			programView.SetOptiTrackText("X: " + x + "Y: " + y + "Z: " + z);
-		}
+            MessageBox.Show(x.ToString());
+            //programView.SetOptiTrackText("X: ");// + x + "Y: " + y + "Z: " + z);
+        }
 
 		/*************************/
 		/*** HELPING FUNCTIONS ***/

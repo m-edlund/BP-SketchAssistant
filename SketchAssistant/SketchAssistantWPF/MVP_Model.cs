@@ -380,7 +380,7 @@ namespace SketchAssistantWPF
         {
 			if(inDrawingMode)
 			{
-				if (connector.Init(@"optitracak_setup.ttp"))
+				if (connector.Init(@"C:\Users\videowall-pc-user\Documents\BP-SketchAssistant\SketchAssistant\optitrack_setup.ttp"))
 				{
 					connector.StartTracking(programPresenter.PassOptiTrackMessage);
 				}

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using OptiTrack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +41,7 @@ namespace SketchAssistantWPF
             }
             if(!InDebugMode)
             {
-                DebugMode.Visibility = Visibility.Collapsed;
+//DebugMode.Visibility = Visibility.Collapsed;
             }
             ProgramPresenter = new MVP_Presenter(this);
             //  DispatcherTimer setup
@@ -49,9 +50,22 @@ namespace SketchAssistantWPF
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
+            OptiTrackConnector connector = new OptiTrackConnector();
+            if (connector.Init(@"C:\Users\etri\Desktop\bppp2\optitrack_setup.ttp"))
+            {
+                connector.StartTracking(handleTrackingResult);
+            }
+
         }
 
-        public enum ButtonState
+    private void handleTrackingResult(OptiTrack.Frame frame)
+    {
+            Console.WriteLine(frame.Markers.Length);
+    }
+
+    
+
+    public enum ButtonState
         {
             Enabled,
             Disabled,
@@ -370,6 +384,15 @@ namespace SketchAssistantWPF
         public void SetLastActionTakenText(string message)
         {
             LastActionBox.Text = message;
+        }
+
+        /// <summary>
+        /// Sets the contents of the last action taken indicator label.
+        /// </summary>
+        /// <param name="message">The new contents</param>
+        public void SetOptiTrackText(string message)
+        {
+            OptiTrackBox.Text = "test";
         }
 
         /// <summary>

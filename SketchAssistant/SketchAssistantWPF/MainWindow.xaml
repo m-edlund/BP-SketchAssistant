@@ -1,9 +1,9 @@
 ﻿<Window x:Class="SketchAssistantWPF.MainWindow"
-        xmlns:local="clr-namespace:SketchAssistantWPF"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SketchAssistantWPF"
         mc:Ignorable="d"
         Title="Sketch Assistant" Height="612" Width="914" SizeChanged="Window_SizeChanged">
     <Grid>
@@ -26,17 +26,12 @@
         <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Background="LightGray">
             <Menu Background="LightGray">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
-                    <MenuItem x:Name="SVGMenuButton" Header="Load SVG File" Click="MenuItem_Click"/>
+                    <MenuItem Header="Load SVG File" Click="MenuItem_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="EditMenuButton" Header="Edit">
-                    <MenuItem x:Name="CanvasMenuButton" Header="New Canvas" Click="CanvasButton_Click"/>
-                    <MenuItem x:Name="UndoMenuButton" Header="Undo" Click="UndoButton_Click"/>
-                    <MenuItem x:Name="RedoMenuButton" Header="Redo" Click="RedoButton_Click"/>
-                    <MenuItem x:Name="DebugMode" Header="Debug Input">
-                        <MenuItem x:Name="DebugOne" Header="Debug 1" Click="DebugOne_Click"/>
-                        <MenuItem x:Name="DebugTwo" Header="Debug 2" Click="DebugTwo_Click"/>
-                        <MenuItem x:Name="DebugThree" Header="Debug 3" Click="DebugThree_Click"/>
-                    </MenuItem>
+                    <MenuItem Header="New Canvas" Click="CanvasButton_Click"/>
+                    <MenuItem Header="Undo" Click="UndoButton_Click"/>
+                    <MenuItem Header="Redo" Click="RedoButton_Click"/>
                 </MenuItem>
             </Menu>
         </ToolBar>
@@ -86,7 +81,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click">
+            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click" >
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -128,7 +123,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click">
+            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click" >
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -175,11 +170,10 @@
                 </Rectangle>
             </Button>
         </ToolBar>
-        <local:CustomCanvas x:Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="2"/>
+        <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="2"/>
         <Canvas Name="CanvasSeperator" Grid.Column="4" Grid.Row="1" Background="LightGray"/>
-        <local:CustomCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="5" Grid.Row="1" Height="auto"
-            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" MouseLeave="RightCanvas_MouseLeave" TouchLeave="RightCanvas_TouchLeave" />
-
+        <Canvas Name="RightCanvas" Background="SlateGray" Grid.Column="5" Grid.Row="1" Height="auto"
+            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" MouseLeave="RightCanvas_MouseLeave"/>
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="7">
             <StatusBar DockPanel.Dock="Bottom" Name="StatusBar"  Background="LightGray">
