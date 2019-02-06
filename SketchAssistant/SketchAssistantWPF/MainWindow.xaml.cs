@@ -158,7 +158,31 @@ namespace SketchAssistantWPF
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
         }
-        
+
+        /// <summary>
+        /// If the cursor enters the canvas, it is treated as if the cursor was just pressed if the cursor is pressed.
+        /// </summary>
+        private void RightCanvas_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (IsMousePressed())
+            {
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, Mouse.GetPosition(RightCanvas));
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
+            }
+        }
+
+        /// <summary>
+        /// If the finger enters the canvas, it is treated as if the finger was just pressed if the finger is pressed.
+        /// </summary>
+        private void RightCanvas_TouchEnter(object sender, TouchEventArgs e)
+        {
+            if (IsMousePressed())
+            {
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, Mouse.GetPosition(RightCanvas));
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
+            }
+        }
+
         /// <summary>
         /// If the finger leaves the canvas, it is treated as if the finger was released.
         /// </summary>

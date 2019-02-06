@@ -94,6 +94,10 @@ namespace SketchAssistantWPF
         /// Indicates if there is a graphic loaded in the left canvas.
         /// </summary>
         public bool graphicLoaded { get; set; }
+        /// <summary>
+        /// Whether or not the mouse is pressed.
+        /// </summary>
+        private bool mouseDown;
 
         Image rightImageWithoutOverlay;
 
@@ -337,6 +341,7 @@ namespace SketchAssistantWPF
         public void SetCurrentCursorPosition(Point p)
         {
             currentCursorPosition = p;
+            mouseDown = programPresenter.IsMousePressed();
         }
 
         /// <summary>
@@ -344,7 +349,8 @@ namespace SketchAssistantWPF
         /// </summary>
         public void MouseDown()
         {
-            if (inDrawingMode)
+            mouseDown = true;
+            if (inDrawingMode && mouseDown)
             {
                 currentLine.Clear();
                 currentLine.Add(currentCursorPosition);
@@ -356,6 +362,7 @@ namespace SketchAssistantWPF
         /// </summary>
         public void MouseUp()
         {
+            mouseDown = false;
             if (inDrawingMode && currentLine.Count > 0)
             {
                 InternalLine newLine = new InternalLine(currentLine, rightLineList.Count);
