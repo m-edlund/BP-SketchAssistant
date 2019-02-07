@@ -42,7 +42,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public (int, int, List<Line>) ParseISADInputFile(String fileName)
+        public Tuple<int, int, List<Line>> ParseISADInputFile(String fileName)
         {
             return ParseISADInput(System.IO.File.ReadAllLines(fileName));
         }
@@ -52,7 +52,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        private (int, int, List<Line>) ParseISADInput(String[] allLines)
+        private Tuple<int, int, List<Line>> ParseISADInput(String[] allLines)
         {
             if (allLines.Length == 0)
             {
@@ -66,9 +66,9 @@ namespace SketchAssistant
             {
                 throw new FileImporterException("unterminated drawing definition", ".isad files have to end with the 'enddrawing' token", allLines.Length);
             }
-            (int, int) dimensions = ParseISADHeader(allLines);
+            var dimensions = ParseISADHeader(allLines);
             List<Line> picture = ParseISADBody(allLines, dimensions.Item1, dimensions.Item2);
-            return (dimensions.Item1, dimensions.Item2, picture);
+            return new Tuple<int, int, List<Line>>(dimensions.Item1, dimensions.Item2, picture);
         }
 
 
@@ -78,7 +78,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">the input file as an array of lines</param>
         /// <returns>the width and height of the left canvas</returns>
-        private (int, int) ParseISADHeader(String[] allLines)
+        private Tuple<int, int> ParseISADHeader(String[] allLines)
         {
             int width;
             int height;
@@ -89,7 +89,7 @@ namespace SketchAssistant
             String[] size = allLines[1].Split('x');
             width = Convert.ToInt32(size[0]);
             height = Convert.ToInt32(size[1]);
-            return (width, height);
+            return new Tuple<int, int>(width, height);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public (int, int, List<Line>) ParseISADInputForTesting(String[] allLines)
+        public Tuple<int, int, List<Line>> ParseISADInputForTesting(String[] allLines)
         {
             return ParseISADInput(allLines);
         }
@@ -174,7 +174,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public (int, int, List<Line>) ParseSVGInputFile(String fileName, int windowWidth, int windowHeight)
+        public Tuple<int, int, List<Line>> ParseSVGInputFile(String fileName, int windowWidth, int windowHeight)
         {
             return ParseSVGInput(System.IO.File.ReadAllLines(fileName), windowWidth, windowHeight);
         }
@@ -184,14 +184,14 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        private (int, int, List<Line>) ParseSVGInput(String[] allLines, double windowWidth, double windowHeight)
+        private Tuple<int, int, List<Line>> ParseSVGInput(String[] allLines, double windowWidth, double windowHeight)
         {
             i = 0; //reset line pointer
             if (allLines.Length == 0) //check for empty file
             {
                 throw new FileImporterException("file is empty", "", -1);
             }
-            (int, int) sizedef = ParseSVGHeader(allLines); //parse svg file header and get internal coordinate range
+            var sizedef = ParseSVGHeader(allLines); //parse svg file header and get internal coordinate range
             i++;
             int width; //width of the resulting picture in pixels
             int height; //height of the resulting picture in pixels
@@ -212,7 +212,7 @@ namespace SketchAssistant
                 allLines[j] = allLines[j].Trim(whitespaces);
             }
             List<Line> picture = ParseSVGBody(allLines); //parse whole svg drawing into list of lines
-            return (width, height, picture);
+            return new Tuple<int, int, List<Line>>(width, height, picture);
         }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the internal coordinate range of this drawing</returns>
-        private (int, int) ParseSVGHeader(String[] allLines)
+        private Tuple<int, int> ParseSVGHeader(String[] allLines)
         {
             while (!allLines[i].StartsWith("<svg")) //skip non-relevant metadata at start of svg file
             {
@@ -248,7 +248,7 @@ namespace SketchAssistant
             {
                 throw new FileImporterException("missing height definition in SVG header", "the header should contain the \"height=...\" attribute", i + 1);
             }
-            return (width, height);
+            return new Tuple<int, int>(width, height);
         }
 
         /// <summary>
@@ -569,9 +569,9 @@ namespace SketchAssistant
             double initialPositionX= -1;
             double initialPositionY= -1;
             bool newSubpath = true;
-            (List<Point>, double, double) valuesArc; //list of points, new values for: lastPositionX, lastPositionY
-            (List<Point>, double, double, double, double) valuesBezierCurve; //list of points, new values for: lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY
-            (Point, double, double) valuesSinglePoint = Parse_M_L(pathElements); //new point, new values for: lastPositionX, lastPositionY
+            Tuple<List<Point>, double, double> valuesArc; //list of points, new values for: lastPositionX, lastPositionY
+            Tuple<List<Point>, double, double, double, double> valuesBezierCurve; //list of points, new values for: lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY
+            var valuesSinglePoint = Parse_M_L(pathElements); //new point, new values for: lastPositionX, lastPositionY
             currentLine = new List<Point>();
             currentLine.Add(valuesSinglePoint.Item1);
             lastPositionX = valuesSinglePoint.Item2;
@@ -961,10 +961,10 @@ namespace SketchAssistant
         /// <param name="initialPositionX">absolute x coordinate of the last initial point of this subpath</param>
         /// <param name="initialPositionY">absolute y coordinate of the last initial point of this subpath</param>
         /// <returns></returns>
-        private (Point, double, double) Parse_Z(List<string> pathElements, double initialPositionX, double initialPositionY)
+        private Tuple<Point, double, double> Parse_Z(List<string> pathElements, double initialPositionX, double initialPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
-            return (ScaleAndCreatePoint(initialPositionX, initialPositionY), initialPositionX, initialPositionY);
+            return new Tuple<Point, double, double>(ScaleAndCreatePoint(initialPositionX, initialPositionY), initialPositionX, initialPositionY);
         }
 
         /// <summary>
@@ -972,14 +972,14 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
         /// <returns>the point at the end of the move, close loop or line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) Parse_M_L(List<string> pathElements)
+        private Tuple<Point, double, double> Parse_M_L(List<string> pathElements)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x coordinate
             pathElements.RemoveAt(0); //remove x coordinate token
             double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse y coordinate
             pathElements.RemoveAt(0); //remove y coordinate token
-            return (ScaleAndCreatePoint(x, y), x, y);
+            return new Tuple<Point, double, double>(ScaleAndCreatePoint(x, y), x, y);
         }
 
         /// <summary>
@@ -989,7 +989,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>the point at the end of the move, close loop or line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) Parse_m_l(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<Point, double, double> Parse_m_l(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative x coordinate
@@ -998,7 +998,7 @@ namespace SketchAssistant
             pathElements.RemoveAt(0); //remove y coordinate token
             x = lastPositionX + x; //compute absolute x coordinate
             y = lastPositionY + y; //compute absolute y coordinate
-            return (ScaleAndCreatePoint(x, y), x, y);
+            return new Tuple<Point, double, double>(ScaleAndCreatePoint(x, y), x, y);
         }
 
         /// <summary>
@@ -1007,12 +1007,12 @@ namespace SketchAssistant
         /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>the point at the end of the horizontal line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) Parse_H(List<string> pathElements, double lastPositionY)
+        private Tuple<Point, double, double> Parse_H(List<string> pathElements, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x coordinate
             pathElements.RemoveAt(0); //remove x coordinate token
-            return (ScaleAndCreatePoint(x, lastPositionY), x, lastPositionY);
+            return new Tuple<Point, double, double>(ScaleAndCreatePoint(x, lastPositionY), x, lastPositionY);
         }
 
         /// <summary>
@@ -1022,13 +1022,13 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>the point at the end of the horizontal line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) Parse_h(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<Point, double, double> Parse_h(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative x coordinate
             pathElements.RemoveAt(0); //remove x coordinate token
             x = lastPositionX + x; //compute absolute x coordinate
-            return (ScaleAndCreatePoint(x, lastPositionY), x, lastPositionY);
+            return new Tuple<Point, double, double>(ScaleAndCreatePoint(x, lastPositionY), x, lastPositionY);
         }
 
         /// <summary>
@@ -1037,12 +1037,12 @@ namespace SketchAssistant
         /// <param name="pathElements">a list of all not yet parsed path element tokens and values in correct order, starting with the element to be parsed</param>
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <returns>the point at the end of the vertical line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) Parse_V(List<string> pathElements, double lastPositionX)
+        private Tuple<Point, double, double> Parse_V(List<string> pathElements, double lastPositionX)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse y coordinate
             pathElements.RemoveAt(0); //remove y coordinate token
-            return (ScaleAndCreatePoint(lastPositionX, y), lastPositionX, y);
+            return new Tuple<Point, double, double>(ScaleAndCreatePoint(lastPositionX, y), lastPositionX, y);
         }
 
         /// <summary>
@@ -1052,13 +1052,13 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>the point at the end of the vertical line action and its exact, unscaled coordinates</returns>
-        private (Point, double, double) Parse_v(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<Point, double, double> Parse_v(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse relative y coordinate
             pathElements.RemoveAt(0); //remove y coordinate token
             y = lastPositionY + y; //compute absolute y coordinate
-            return (ScaleAndCreatePoint(lastPositionX, y), lastPositionX, y);
+            return new Tuple<Point, double, double>(ScaleAndCreatePoint(lastPositionX, y), lastPositionX, y);
         }
 
         /// <summary>
@@ -1068,7 +1068,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_C(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<List<Point>, double, double, double, double> Parse_C(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point x coordinate
@@ -1083,7 +1083,7 @@ namespace SketchAssistant
             pathElements.RemoveAt(0); //remove x coordinate token
             double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
             pathElements.RemoveAt(0); //remove y coordinate token
-            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+            return new Tuple<List<Point>, double, double, double, double>(SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
         }
 
         /// <summary>
@@ -1093,7 +1093,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_c(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<List<Point>, double, double, double, double> Parse_c(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse first control point x coordinate
@@ -1114,7 +1114,7 @@ namespace SketchAssistant
             y2 = lastPositionY + y2; //compute absolute y coordinate
             x = lastPositionX + x; //compute absolute x coordinate
             y = lastPositionY + y; //compute absolute y coordinate
-            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+            return new Tuple<List<Point>, double, double, double, double>(SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
         }
 
         /// <summary>
@@ -1126,7 +1126,7 @@ namespace SketchAssistant
         /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
         /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_S(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        private Tuple<List<Point>, double, double, double, double> Parse_S(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point x coordinate
@@ -1139,7 +1139,7 @@ namespace SketchAssistant
             pathElements.RemoveAt(0); //remove y coordinate token
             double x1 = lastPositionX + (lastPositionX - lastBezierControlPointX); //mirror last bezier control point at bezier start point to get first new bezier control point
             double y1 = lastPositionY + (lastPositionY - lastBezierControlPointY); //mirror last bezier control point at bezier start point to get first new bezier control point
-            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+            return new Tuple<List<Point>, double, double, double, double>(SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
         }
 
         /// <summary>
@@ -1151,7 +1151,7 @@ namespace SketchAssistant
         /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
         /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the second bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_s(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        private Tuple<List<Point>, double, double, double, double> Parse_s(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x2 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse second control point x coordinate
@@ -1168,7 +1168,7 @@ namespace SketchAssistant
             y2 = lastPositionY + y2; //compute absolute y coordinate
             x = lastPositionX + x; //compute absolute x coordinate
             y = lastPositionY + y; //compute absolute y coordinate
-            return (SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
+            return new Tuple<List<Point>, double, double, double, double>(SampleCubicBezier(lastPositionX, lastPositionY, x1, y1, x2, y2, x, y), x, y, x2, y2);
         }
 
         /// <summary>
@@ -1178,7 +1178,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_Q(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<List<Point>, double, double, double, double> Parse_Q(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse control point x coordinate
@@ -1189,7 +1189,7 @@ namespace SketchAssistant
             pathElements.RemoveAt(0); //remove x coordinate token
             double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
             pathElements.RemoveAt(0); //remove y coordinate token
-            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+            return new Tuple<List<Point>, double, double, double, double>(SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
         }
 
         /// <summary>
@@ -1199,7 +1199,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_q(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<List<Point>, double, double, double, double> Parse_q(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x1 = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse control point x coordinate
@@ -1214,7 +1214,7 @@ namespace SketchAssistant
             y1 = lastPositionY + y1; //compute absolute y coordinate
             x = lastPositionX + x; //compute absolute x coordinate
             y = lastPositionY + y; //compute absolute y coordinate
-            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+            return new Tuple<List<Point>, double, double, double, double>(SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
         }
 
         /// <summary>
@@ -1226,7 +1226,7 @@ namespace SketchAssistant
         /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
         /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_T(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        private Tuple<List<Point>, double, double, double, double> Parse_T(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
@@ -1235,7 +1235,7 @@ namespace SketchAssistant
             pathElements.RemoveAt(0); //remove y coordinate token
             double x1 = lastPositionX + (lastPositionX - lastBezierControlPointX); //mirror last bezier control point at bezier start point to get first new bezier control point
             double y1 = lastPositionY + (lastPositionY - lastBezierControlPointY); //mirror last bezier control point at bezier start point to get first new bezier control point
-            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+            return new Tuple<List<Point>, double, double, double, double>(SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
         }
 
         /// <summary>
@@ -1247,7 +1247,7 @@ namespace SketchAssistant
         /// <param name="lastBezierControlPointX">absolute x coordinate of the last bezier control point of the previous bezier curve</param>
         /// <param name="lastBezierControlPointY">absolute y coordinate of the last bezier control point of the previous bezier curve</param>
         /// <returns>a List of Points containing all sampled points on the bezier curve, aswell as the unscaled x and y coordinates of the last point of the curve and of the bezier control point</returns>
-        private (List<Point>, double, double, double, double) Parse_t(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
+        private Tuple<List<Point>, double, double, double, double> Parse_t(List<string> pathElements, double lastPositionX, double lastPositionY, double lastBezierControlPointX, double lastBezierControlPointY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double x = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point x coordinate
@@ -1258,7 +1258,7 @@ namespace SketchAssistant
             y = lastPositionY + y; //compute absolute y coordinate
             double x1 = lastPositionX + (lastPositionX - lastBezierControlPointX); //mirror last bezier control point at bezier start point to get first new bezier control point
             double y1 = lastPositionY + (lastPositionY - lastBezierControlPointY); //mirror last bezier control point at bezier start point to get first new bezier control point
-            return (SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
+            return new Tuple<List<Point>, double, double, double, double>(SampleQuadraticBezier(lastPositionX, lastPositionY, x1, y1, x, y), x, y, x1, y1);
         }
 
         /// <summary>
@@ -1268,7 +1268,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>a List of Points containing all sampled points on the elliptic arc, aswell as the unscaled x and y coordinates of the last point of the arc<returns>
-        private (List<Point>, double, double) Parse_A(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<List<Point>, double, double> Parse_A(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double rx = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x radius
@@ -1287,7 +1287,7 @@ namespace SketchAssistant
             pathElements.RemoveAt(0); //remove y coordinate token
             x = x - lastPositionX; //compute relative x coordinate
             y = y - lastPositionY; //compute relative y coordinate
-            return (SampleArc(lastPositionX, lastPositionY, rx, ry, x, y, thetha, largeArcFlag, sweepFlag), x, y);
+            return new Tuple<List<Point>, double, double>(SampleArc(lastPositionX, lastPositionY, rx, ry, x, y, thetha, largeArcFlag, sweepFlag), x, y);
         }
 
         /// <summary>
@@ -1297,7 +1297,7 @@ namespace SketchAssistant
         /// <param name="lastPositionX">absolute x coordinate of the last active point</param>
         /// <param name="lastPositionY">absolute y coordinate of the last active point</param>
         /// <returns>a List of Points containing all sampled points on the elliptic arc, aswell as the unscaled x and y coordinates of the last point of the arc</returns>
-        private (List<Point>, double, double) Parse_a(List<string> pathElements, double lastPositionX, double lastPositionY)
+        private Tuple<List<Point>, double, double> Parse_a(List<string> pathElements, double lastPositionX, double lastPositionY)
         {
             pathElements.RemoveAt(0); //remove element descriptor token
             double rx = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse x radius
@@ -1314,7 +1314,7 @@ namespace SketchAssistant
             pathElements.RemoveAt(0); //remove x coordinate token
             double y = Convert.ToDouble(pathElements.First(), CultureInfo.InvariantCulture); //parse target point y coordinate
             pathElements.RemoveAt(0); //remove y coordinate token
-            return (SampleArc(lastPositionX, lastPositionY, rx, ry, x, y, thetha, largeArcFlag, sweepFlag), x, y);
+            return new Tuple<List<Point>, double, double>(SampleArc(lastPositionX, lastPositionY, rx, ry, x, y, thetha, largeArcFlag, sweepFlag), x, y);
         }
 
         /// <summary>
@@ -1336,7 +1336,7 @@ namespace SketchAssistant
             double sin = Math.Sin(thetha / 180 * Math.PI);
             double targetXTransformed = cos * nextPositionXRelative - sin * nextPositionYRelative; //rotate target point counterclockwise around the start point by [thetha] degrees, thereby practically rotating an intermediate coordinate system, which has its origin in the start point, clockwise by the same amount
             double targetYTransformed = sin * nextPositionXRelative + cos * nextPositionYRelative;
-            (double[], double[]) values = SampleEllipticArcBiasedNoRotation(rx, ry, targetXTransformed, targetYTransformed, largeArcFlag, sweepFlag);
+            var values = SampleEllipticArcBiasedNoRotation(rx, ry, targetXTransformed, targetYTransformed, largeArcFlag, sweepFlag);
             List<Point> result = new List<Point>();
             for (int j = 0; j < values.Item1.Length; j++)
             {
@@ -1359,10 +1359,10 @@ namespace SketchAssistant
         /// <param name="largeArcFlag">flag determining if the large or the small arc is to be drawn</param>
         /// <param name="sweepFlag">flag determining in which direction the arc is to be drawn (false = ccw, true = cw)</param>
         /// <returns></returns>
-        private (double[], double[]) SampleEllipticArcBiasedNoRotation(double rx, double ry, double targetXTransformed, double targetYTransformed, bool largeArcFlag, bool sweepFlag)
+        private Tuple<double[], double[]> SampleEllipticArcBiasedNoRotation(double rx, double ry, double targetXTransformed, double targetYTransformed, bool largeArcFlag, bool sweepFlag)
         {
             double xStretchFactor = rx / ry; //get rx to ry ratio
-            (double[], double[]) values = SampleCircleArcBiasedNoRotation(ry, targetXTransformed / xStretchFactor, targetYTransformed, largeArcFlag, sweepFlag); //get a circular arc with radius ry
+            var values = SampleCircleArcBiasedNoRotation(ry, targetXTransformed / xStretchFactor, targetYTransformed, largeArcFlag, sweepFlag); //get a circular arc with radius ry
             for (int j = 0; j < values.Item1.Length; j++)
             {
                 values.Item1[j] = values.Item1[j] * xStretchFactor; //correct x coordinates to get an elliptical arc from a circular one
@@ -1379,7 +1379,7 @@ namespace SketchAssistant
         /// <param name="largeArcFlag">flag determining if the large or the small arc is to be drawn</param>
         /// <param name="sweepFlag">flag determining in which direction the arc is to be drawn (false = ccw, true = cw)</param>
         /// <returns></returns>
-        private (double[], double[]) SampleCircleArcBiasedNoRotation(double r, double nextPositionXRelative, double nextPositionYRelative, bool largeArcFlag, bool sweepFlag)
+        private Tuple<double[], double[]> SampleCircleArcBiasedNoRotation(double r, double nextPositionXRelative, double nextPositionYRelative, bool largeArcFlag, bool sweepFlag)
         {
             // code for center computation adapted from https://stackoverflow.com/a/36211852
             double radsq = r * r;
@@ -1415,7 +1415,7 @@ namespace SketchAssistant
             else xC = x3 - Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionYRelative) / q);
             if (yPlusFlag) yC = y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q); //y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((x2-x1) / q);
             else yC = y3 - Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q);
-            (double[], double[]) values = SampleCircleArcBiasedAroundCenter(-xC, -yC, nextPositionXRelative - xC, nextPositionYRelative - yC, r, largeArcFlag, sweepFlag);
+            var values = SampleCircleArcBiasedAroundCenter(-xC, -yC, nextPositionXRelative - xC, nextPositionYRelative - yC, r, largeArcFlag, sweepFlag);
             for (int j = 0; j < values.Item1.Length; j++)
             {
                 values.Item1[j] = values.Item1[j] + xC; //correct center point coordinate bias
@@ -1434,7 +1434,7 @@ namespace SketchAssistant
         /// <param name="r">radius</param>
         /// <param name="clockwise">direction</param>
         /// <returns></returns>
-        private (double[], double[]) SampleCircleArcBiasedAroundCenter(double xStartPoint, double yStartPoint, double xFinalPoint, double yFinalPoint, double r, bool largeArcFlag, bool clockwise)
+        private Tuple<double[], double[]> SampleCircleArcBiasedAroundCenter(double xStartPoint, double yStartPoint, double xFinalPoint, double yFinalPoint, double r, bool largeArcFlag, bool clockwise)
         {
             double phiEnd = Math.Atan2(yFinalPoint, xFinalPoint); // angles between points and origin and the positive x Axis
             double phiStart = Math.Atan2(yStartPoint, xStartPoint);
@@ -1462,7 +1462,7 @@ namespace SketchAssistant
             }
             xValues[numberOfPoints - 1] = xFinalPoint; //(last segment always has an angle of less than or exactly 'angle')
             yValues[numberOfPoints - 1] = yFinalPoint;
-            return (xValues, yValues);
+            return new Tuple<double[], double[]>(xValues, yValues);
         }
 
         /// <summary>
@@ -1479,12 +1479,12 @@ namespace SketchAssistant
         /// <returns>a List of Points containing all sampled points</returns>
         private List<Point> SampleCubicBezier(double lastPositionX, double lastPositionY, double controlPoint1X, double controlPoint1Y, double controlPoint2X, double controlPoint2Y, double nextPositionX, double nextPositionY)
         {
-            (double[], double[]) line1 = CreateDiscreteLine(lastPositionX, lastPositionY, controlPoint1X, controlPoint1Y);
-            (double[], double[]) line2 = CreateDiscreteLine(controlPoint1X, controlPoint1Y, controlPoint2X, controlPoint2Y);
-            (double[], double[]) line3 = CreateDiscreteLine(controlPoint2X, controlPoint2Y, nextPositionX, nextPositionY);
-            (double[], double[]) quadraticBezier1 = ComputeBezierStep(line1.Item1, line1.Item2, line2.Item1, line2.Item2);
-            (double[], double[]) quadraticBezier2 = ComputeBezierStep(line2.Item1, line2.Item2, line3.Item1, line3.Item2);
-            (double[], double[]) values = ComputeBezierStep(quadraticBezier1.Item1, quadraticBezier1.Item2, quadraticBezier2.Item1, quadraticBezier2.Item2);
+            var line1 = CreateDiscreteLine(lastPositionX, lastPositionY, controlPoint1X, controlPoint1Y);
+            var line2 = CreateDiscreteLine(controlPoint1X, controlPoint1Y, controlPoint2X, controlPoint2Y);
+            var line3 = CreateDiscreteLine(controlPoint2X, controlPoint2Y, nextPositionX, nextPositionY);
+            var quadraticBezier1 = ComputeBezierStep(line1.Item1, line1.Item2, line2.Item1, line2.Item2);
+            var quadraticBezier2 = ComputeBezierStep(line2.Item1, line2.Item2, line3.Item1, line3.Item2);
+            var values = ComputeBezierStep(quadraticBezier1.Item1, quadraticBezier1.Item2, quadraticBezier2.Item1, quadraticBezier2.Item2);
             List<Point> result = new List<Point>();
             for (int j = 0; j < samplingRateBezier; j++)
             {
@@ -1505,9 +1505,9 @@ namespace SketchAssistant
         /// <returns>a List of Points containing all sampled points</returns>
         private List<Point> SampleQuadraticBezier(double lastPositionX, double lastPositionY, double controlPointX, double controlPointY, double nextPositionX, double nextPositionY)
         {
-            (double[], double[]) line1 = CreateDiscreteLine(lastPositionX, lastPositionY, controlPointX, controlPointY);
-            (double[], double[]) line2 = CreateDiscreteLine(controlPointX, controlPointY, nextPositionX, nextPositionY);
-            (double[], double[]) values = ComputeBezierStep(line1.Item1, line1.Item2, line2.Item1, line2.Item2);
+            var line1 = CreateDiscreteLine(lastPositionX, lastPositionY, controlPointX, controlPointY);
+            var line2 = CreateDiscreteLine(controlPointX, controlPointY, nextPositionX, nextPositionY);
+            var values = ComputeBezierStep(line1.Item1, line1.Item2, line2.Item1, line2.Item2);
             List<Point> result = new List<Point>();
             for (int j = 0; j < samplingRateBezier; j++)
             {
@@ -1524,17 +1524,17 @@ namespace SketchAssistant
         /// <param name="point2X">x coordinate of point 2</param>
         /// <param name="point2Y">y coordinate of point 2</param>
         /// <returns>the discrete line as arrays of x and y coordinates</returns>
-        private (double[], double[]) CreateDiscreteLine(double point1X, double point1Y, double point2X, double point2Y)
+        private Tuple<double[], double[]> CreateDiscreteLine(double point1X, double point1Y, double point2X, double point2Y)
         {
             double[] resultX = new double[samplingRateBezier];
             double[] resultY = new double[samplingRateBezier];
             for (int j = 0; j < samplingRateBezier; j++)
             {
-                (double, double) pointResult = LinearInterpolationForBezier(point1X, point1Y, point2X, point2Y, j);
+                var pointResult = LinearInterpolationForBezier(point1X, point1Y, point2X, point2Y, j);
                 resultX[j] = pointResult.Item1;
                 resultY[j] = pointResult.Item2;
             }
-            return (resultX, resultY);
+            return new Tuple<double[], double[]>(resultX, resultY);
         }
 
         /// <summary>
@@ -1545,17 +1545,17 @@ namespace SketchAssistant
         /// <param name="line2X">x coordinates of all points in line 2</param>
         /// <param name="line2Y">y coordinates of all points in line 2</param>
         /// <returns>the discrete bezier curve</returns>
-        private (double[], double[]) ComputeBezierStep(double[] line1X, double[] line1Y, double[] line2X, double[] line2Y)
+        private Tuple<double[], double[]> ComputeBezierStep(double[] line1X, double[] line1Y, double[] line2X, double[] line2Y)
         {
             double[] resultX = new double[samplingRateBezier];
             double[] resultY = new double[samplingRateBezier];
             for (int j = 0; j < samplingRateBezier; j++)
             {
-                (double, double) pointResult = LinearInterpolationForBezier(line1X[j], line1Y[j], line2X[j], line2Y[j], j);
+                var pointResult = LinearInterpolationForBezier(line1X[j], line1Y[j], line2X[j], line2Y[j], j);
                 resultX[j] = pointResult.Item1;
                 resultY[j] = pointResult.Item2;
             }
-            return (resultX, resultY);
+            return new Tuple<double[], double[]>(resultX, resultY);
         }
 
         /// <summary>
@@ -1567,12 +1567,12 @@ namespace SketchAssistant
         /// <param name="point2Y">y coordinate of point 2</param>
         /// <param name="j">number of point to be interpolated, at a total number of [samplingRateBezier] points</param>
         /// <returns>the linearly interpolated point</returns>
-        private (double, double) LinearInterpolationForBezier(double point1X, double point1Y, double point2X, double point2Y, int j)
+        private Tuple<double, double> LinearInterpolationForBezier(double point1X, double point1Y, double point2X, double point2Y, int j)
         {
             double factor = ((double)1 / (double)(samplingRateBezier - 1)) * (double)j; //factor for linear interpolation
             double x = point1X + ((point2X - point1X) * factor);
             double y = point1Y + ((point2Y - point1Y) * factor);
-            return (x, y);
+            return new Tuple<double, double>(x, y);
         }
 
         /// <summary>

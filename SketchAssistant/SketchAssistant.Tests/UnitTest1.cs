@@ -272,8 +272,9 @@ namespace Tests
             Assert.AreEqual(message, lastActionLabel);
         }
     }
-    
+
     [TestClass]
+    [DeploymentItem(@"SketchAssistant.Tests\test_input_files\")]
     public class FileImporterTests
     { 
 
@@ -392,22 +393,20 @@ namespace Tests
         */
 
         [TestMethod]
-        [DeploymentItem(@"test_input_files")]
+        //[DeploymentItem(@"SketchAssistant.Tests\test_input_files\")]
         public void parseSVGInputNoErrorForWhitelistedFilesTest()
         {
             FileImporter uut = new FileImporter();
 
-            string[] files = Directory.GetFiles(TestContext.DeploymentDirectory, " *.svg", SearchOption.AllDirectories);
-            foreach(string s in files) //parse each of the whitelisted files
+            string[] files = Directory.GetFiles(TestContext.DeploymentDirectory + @"\test_input_files\whitelisted", "*.svg", SearchOption.AllDirectories);
+            Assert.IsTrue(files.Length > 0);
+
+            foreach (string s in files) //parse each of the whitelisted files
             {
                 bool noExceptionThrown = true;
                 try
                 {
                     uut.ParseSVGInputFile(s, 10000, 10000);
-                }
-                catch (FileImporterException e)
-                {
-                    noExceptionThrown = false;
                 }
                 catch (Exception e)
                 {
@@ -415,17 +414,16 @@ namespace Tests
                 }
                 Assert.IsTrue(noExceptionThrown);
             }
-            Assert.IsTrue(files.Length > 0);
         }
 
         [TestMethod]
-        [DeploymentItem(@"test_input_files")]
         public void parseSVGInputNoErrorForBlacklistedFilesTest()
         {
             FileImporter uut = new FileImporter();
 
-            string[] files = Directory.GetFiles(TestContext.DeploymentDirectory, " *.svg", SearchOption.AllDirectories);
-            foreach (string s in files) //parse each of the whitelisted files
+            string[] files = Directory.GetFiles(TestContext.DeploymentDirectory + @"\test_input_files\blacklisted", "*.svg", SearchOption.AllDirectories);
+            Assert.IsTrue(files.Length > 0);
+            foreach (string s in files) //parse each of the blacklisted files
             {
                 bool correctExceptionThrown = false;
                 try
@@ -438,11 +436,9 @@ namespace Tests
                 }
                 catch(Exception e)
                 {
-
                 }
                 Assert.IsTrue(correctExceptionThrown);
             }
-            Assert.IsTrue(files.Length > 0);
         }
     }
 

@@ -83,7 +83,7 @@ namespace SketchAssistant
                 if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
                 {
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    (int, int, List<Line>) values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                    Tuple<int, int, List<Line>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
                     programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
                     programModel.ChangeState(true);
                     programView.EnableTimer();
@@ -106,7 +106,7 @@ namespace SketchAssistant
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
                     try
                     {
-                        (int, int, List<Line>) values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
+                        Tuple<int, int, List<Line>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
                         programModel.ChangeState(true);
                         programView.EnableTimer();

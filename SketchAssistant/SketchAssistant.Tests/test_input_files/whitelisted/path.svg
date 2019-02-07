@@ -1,0 +1,21 @@
+fsfwefafaefcSC
+F
+S
+FSFewFAHBfAg
+<DSFVSF>
+<GSG FS02MAFfm="Fmseikf" />
+source: https://www.w3schools.com/
+<svg height="600" width="1200">
+  <path id="lineAB" d="M 100 350 l 150 -300" stroke="red"
+  stroke-width="3" fill="none" />
+  <path id="lineBC" d="M 250 50 l 150 300" stroke="red"
+  stroke-width="3" fill="none" />
+  <path d="M 100 350 q 150 -300 300 0 z M 175 200 l 150 0" stroke="blue"
+  stroke-width="5" fill="none" />
+  <path d="M 100 100 a 60 60 0 0 0 100 0 Z"
+      fill="yellow" stroke="blue" stroke-width="5" />
+  <path d="M 100 200 a 150 120 45 1 0 100 100"
+      fill="yellow" stroke="blue" stroke-width="5" />
+  <path d="M200,300 Q400,50 600,300 T1000,300"
+        fill="none" stroke="red" stroke-width="5"  />
+</svg>
