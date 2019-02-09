@@ -117,16 +117,10 @@ namespace SketchAssistantWPF
         /// </summary>
         private void CleanPoints()
         {
-            if (linePoints.Count > 1)
+            if (linePoints.Any())
             {
-                //if this is a point or not
-                var localIsPoint = true;
                 //check if its a point
-                foreach(Point p in linePoints)
-                {
-                    if (p.X != linePoints[0].X || p.Y != linePoints[0].Y)
-                        localIsPoint = false;
-                }
+                var localIsPoint = linePoints.All(o => o.X == linePoints.First().X && o.Y == linePoints.First().Y);
                 if (!localIsPoint) {
                     List<Point> newList = new List<Point>();
                     List<Point> tempList = new List<Point>();
@@ -162,8 +156,8 @@ namespace SketchAssistantWPF
                 else
                 {
                     isPoint = true;
-                    point = linePoints[0];
-                    linePoints = new List<Point>();
+                    point = linePoints.First();
+                    linePoints.Clear();
                     linePoints.Add(point);
                 }
             }
