@@ -392,8 +392,10 @@ namespace Tests
         }
         */
 
+        /// <summary>
+        /// parses all whitelisted files and ensures no exceptions are thrown (parsing abortion, e.g. due to corrupted input files, are realized by throwing a FileImporterException)
+        /// </summary>
         [TestMethod]
-        //[DeploymentItem(@"SketchAssistant.Tests\test_input_files\")]
         public void parseSVGInputNoErrorForWhitelistedFilesTest()
         {
             FileImporter uut = new FileImporter();
@@ -416,6 +418,9 @@ namespace Tests
             }
         }
 
+        /// <summary>
+        /// parses all blacklisted files and ensures an instance of FileIporterException is thrown for each file, but no other exceptions occur
+        /// </summary>
         [TestMethod]
         public void parseSVGInputNoErrorForBlacklistedFilesTest()
         {
