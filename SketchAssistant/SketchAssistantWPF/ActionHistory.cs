@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
-namespace SketchAssistant
+namespace SketchAssistantWPF
 {
     public class ActionHistory
     {
@@ -19,6 +18,17 @@ namespace SketchAssistant
             actionHistory = new List<SketchAction>();
             currentAction = new Tuple<int, SketchAction>(-1, null);
             AddNewAction(new SketchAction(SketchAction.ActionType.Start, -1));
+        }
+
+        /// <summary>
+        /// Resets the action history to its initial state.
+        /// </summary>
+        /// <returns>The new Last Action taken.</returns>
+        public String Reset()
+        {
+            actionHistory.Clear();
+            currentAction = new Tuple<int, SketchAction>(-1, null);
+            return AddNewAction(new SketchAction(SketchAction.ActionType.Start, -1));
         }
 
         /// <summary>
@@ -45,11 +55,11 @@ namespace SketchAssistant
         /// <returns>The message to be displayed</returns>
         public String MoveAction(bool moveBack)
         {
-            if(moveBack && CanUndo())
+            if (moveBack && CanUndo())
             {
                 currentAction = new Tuple<int, SketchAction>(currentAction.Item1 - 1, actionHistory[currentAction.Item1 - 1]);
             }
-            if(!moveBack && CanRedo())
+            if (!moveBack && CanRedo())
             {
                 currentAction = new Tuple<int, SketchAction>(currentAction.Item1 + 1, actionHistory[currentAction.Item1 + 1]);
             }

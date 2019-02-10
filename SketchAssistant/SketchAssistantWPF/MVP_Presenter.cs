@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Drawing;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
-namespace SketchAssistant
+namespace SketchAssistantWPF
 {
     public class MVP_Presenter
     {
@@ -18,6 +21,18 @@ namespace SketchAssistant
         /// The Model of the MVP-Model.
         /// </summary>
         MVP_Model programModel;
+        /// <summary>
+        /// A dictionary connecting the id of an InternalLine with the respective Polyline in the right canvas.
+        /// </summary>
+        Dictionary<int, Shape> rightPolyLines;
+
+        ImageDimension CanvasSizeLeft = new ImageDimension(0,0);
+
+        ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
+
+        ImageDimension ImageSizeLeft = new ImageDimension(0, 0);
+
+        ImageDimension ImageSizeRight = new ImageDimension(0, 0);
 
         /*******************/
         /*** ENUMERATORS ***/
@@ -58,13 +73,12 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="leftPBS">The new size of the left picture box.</param>
         /// <param name="rightPBS">The new size of the left picture box.</param>
-        public void Resize(Tuple<int, int> leftPBS,Tuple<int, int> rightPBS)
+        public void Resize(Tuple<int, int> leftPBS, Tuple<int, int> rightPBS)
         {
-            programModel.leftImageBoxWidth = leftPBS.Item1;
-            programModel.leftImageBoxHeight = leftPBS.Item2;
-            programModel.rightImageBoxWidth = rightPBS.Item1;
-            programModel.rightImageBoxHeight = rightPBS.Item2;
-            programModel.UpdateSizes();
+            CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
+            CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
+            programModel.UpdateSizes(CanvasSizeRight);
+            programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
         }
 
         /// <summary>
@@ -83,10 +97,14 @@ namespace SketchAssistant
                 if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
                 {
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    Tuple<int, int, List<Line>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                    Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
                     programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+
+                    programModel.ResetRightImage();
+                    programModel.CanvasActivated();
                     programModel.ChangeState(true);
                     programView.EnableTimer();
+                    ClearRightLines();
                 }
             }
         }
@@ -106,10 +124,13 @@ namespace SketchAssistant
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
                     try
                     {
-                        Tuple<int, int, List<Line>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
+                        Tuple<int, int, List<InternalLine>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                        programModel.ResetRightImage();
+                        programModel.CanvasActivated();
                         programModel.ChangeState(true);
                         programView.EnableTimer();
+                        ClearRightLines();
                     }
                     catch (FileImporterException ex)
                     {
@@ -149,6 +170,14 @@ namespace SketchAssistant
         }
 
         /// <summary>
+        /// Pass-trough function for ticking the model.
+        /// </summary>
+        public void Tick()
+        {
+            programModel.Tick();
+        }
+
+        /// <summary>
         /// Checks if there is unsaved progress, and promts the model to generate a new canvas if not.
         /// </summary>
         public void NewCanvas()
@@ -160,18 +189,13 @@ namespace SketchAssistant
             }
             if (okToContinue)
             {
-                programModel.DrawEmptyCanvasRight();
+                programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
+                programModel.ResetRightImage();
+                programModel.CanvasActivated();
                 programModel.ChangeState(true);
                 programView.EnableTimer();
+                ClearRightLines();
             }
-        }
-
-        /// <summary>
-        /// Pass-trough function for ticking the model.
-        /// </summary>
-        public void Tick()
-        {
-            programModel.Tick();
         }
 
         /// <summary>
@@ -179,12 +203,12 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
         /// <param name="e">The Mouse event arguments.</param>
-        public void MouseEvent(MouseAction mouseAction, MouseEventArgs e)
+        public void MouseEvent(MouseAction mouseAction, Point position)
         {
             switch (mouseAction)
             {
                 case MouseAction.Move:
-                    programModel.SetCurrentCursorPosition(ConvertCoordinates(new Point(e.X, e.Y)));
+                    programModel.SetCurrentCursorPosition(position);
                     break;
                 default:
                     break;
@@ -221,57 +245,121 @@ namespace SketchAssistant
         /************************************/
 
         /// <summary>
+        /// Return the position of the cursor
+        /// </summary>
+        /// <returns>The position of the cursor</returns>
+        public Point GetCursorPosition()
+        {
+            return programView.GetCursorPosition();
+        }
+
+        /// <summary>
+        /// Updates the currentline
+        /// </summary>
+        /// <param name="linepoints">The points of the current line.</param>
+        public void UpdateCurrentLine(List<Point> linepoints)
+        {
+            Polyline currentLine = new Polyline();
+            currentLine.Stroke = Brushes.Black;
+            currentLine.Points = new PointCollection(linepoints);
+            programView.DisplayCurrLine(currentLine);
+        }
+
+        /// <summary>
+        /// Clears all Lines in the right canvas.
+        /// </summary>
+        public void ClearRightLines()
+        {
+            programView.RemoveAllRightLines();
+            rightPolyLines = new Dictionary<int, Shape>();
+        }
+
+        /// <summary>
+        /// A function to update the displayed lines in the right canvas.
+        /// </summary>
+        public void UpdateRightLines(List<Tuple<bool, InternalLine>> lines)
+        {
+            foreach(Tuple<bool, InternalLine> tup in lines)
+            {
+                var status = tup.Item1;
+                var line = tup.Item2;
+                if (!rightPolyLines.ContainsKey(line.GetID()))
+                {
+                    if (!line.isPoint)
+                    {
+                        Polyline newLine = new Polyline();
+                        newLine.Points = line.GetPointCollection();
+                        rightPolyLines.Add(line.GetID(), newLine);
+                        programView.AddNewLineRight(newLine);
+                    }
+                    else
+                    {
+                        Ellipse newPoint = new Ellipse();
+                        newPoint.SetValue(Canvas.LeftProperty, line.point.X);
+                        newPoint.SetValue(Canvas.TopProperty, line.point.Y);
+                        rightPolyLines.Add(line.GetID(), newPoint);
+                        programView.AddNewPointRight(newPoint);
+                    }
+                }
+                SetVisibility(rightPolyLines[line.GetID()], status);
+            }
+        }
+
+        /// <summary>
+        /// A function to update the displayed lines in the left canvas.
+        /// </summary>
+        public void UpdateLeftLines(List<InternalLine> lines)
+        {
+            programView.RemoveAllLeftLines();
+            foreach (InternalLine line in lines)
+            {
+                Polyline newLine = new Polyline();
+                newLine.Stroke = Brushes.Black;
+                newLine.Points = line.GetPointCollection();
+                programView.AddNewLineLeft(newLine);
+            }
+            programView.SetCanvasState("LeftCanvas", true);
+            programView.SetCanvasState("RightCanvas", true);
+        }
+
+        /// <summary>
         /// Called by the model when the state of the Program changes. 
         /// Changes the look of the UI according to the current state of the model.
         /// </summary>
         /// <param name="inDrawingMode">If the model is in Drawing Mode</param>
         /// <param name="canUndo">If actions in the model can be undone</param>
         /// <param name="canRedo">If actions in the model can be redone</param>
-        /// <param name="imageLoaded">If an image is loaded in the model</param>
-        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool imageLoaded)
+        /// <param name="canvasActive">If the right canvas is active</param>
+        /// <param name="graphicLoaded">If an image is loaded in the model</param>
+        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive, bool graphicLoaded)
         {
-            Dictionary<String, Form1.ButtonState> dict = new Dictionary<String, Form1.ButtonState> {
-                {"canvasButton", Form1.ButtonState.Enabled }, {"drawButton", Form1.ButtonState.Disabled}, {"deleteButton",Form1.ButtonState.Disabled },
-                {"undoButton", Form1.ButtonState.Disabled },{"redoButton",  Form1.ButtonState.Disabled}};
+            Dictionary<String, MainWindow.ButtonState> dict = new Dictionary<String, MainWindow.ButtonState> {
+                {"canvasButton", MainWindow.ButtonState.Enabled }, {"drawButton", MainWindow.ButtonState.Disabled}, {"deleteButton",MainWindow.ButtonState.Disabled },
+                {"undoButton", MainWindow.ButtonState.Disabled },{"redoButton",  MainWindow.ButtonState.Disabled}};
 
-            if (imageLoaded)
+            if (canvasActive)
             {
                 if (inDrawingMode)
                 {
-                    dict["drawButton"] = Form1.ButtonState.Active;
-                    dict["deleteButton"] = Form1.ButtonState.Enabled;
+                    dict["drawButton"] = MainWindow.ButtonState.Active;
+                    dict["deleteButton"] = MainWindow.ButtonState.Enabled;
                 }
                 else
                 {
-                    dict["drawButton"] = Form1.ButtonState.Enabled;
-                    dict["deleteButton"] = Form1.ButtonState.Active;
+                    dict["drawButton"] = MainWindow.ButtonState.Enabled;
+                    dict["deleteButton"] = MainWindow.ButtonState.Active;
                 }
-                if (canUndo){dict["undoButton"] = Form1.ButtonState.Enabled;}
-                if (canRedo){dict["redoButton"] = Form1.ButtonState.Enabled;}
+                if (canUndo) { dict["undoButton"] = MainWindow.ButtonState.Enabled; }
+                if (canRedo) { dict["redoButton"] = MainWindow.ButtonState.Enabled; }
             }
-            foreach(KeyValuePair<String, Form1.ButtonState> entry in dict)
+            foreach (KeyValuePair<String, MainWindow.ButtonState> entry in dict)
             {
                 programView.SetToolStripButtonStatus(entry.Key, entry.Value);
             }
+            programView.SetCanvasState("RightCanvas", canvasActive);
+            programView.SetCanvasState("LeftCanvas", graphicLoaded);
         }
 
-        /// <summary>
-        /// Is called by the model when the left image is changed.
-        /// </summary>
-        /// <param name="img">The new image.</param>
-        public void UpdateLeftImage(Image img)
-        {
-            programView.DisplayInLeftPictureBox(img);
-        }
-
-        /// <summary>
-        /// Is called by the model when the right image is changed.
-        /// </summary>
-        /// <param name="img">The new image.</param>
-        public void UpdateRightImage(Image img)
-        {
-            programView.DisplayInRightPictureBox(img);
-        }
 
         /// <summary>
         /// Pass-trough function to display an info message in the view.
@@ -291,9 +379,35 @@ namespace SketchAssistant
             programView.SetLastActionTakenText(msg);
         }
 
+        /// <summary>
+        /// Passes whether or not the mouse is pressed.
+        /// </summary>
+        /// <returns>Whether or not the mouse is pressed</returns>
+        public bool IsMousePressed()
+        {
+            return programView.IsMousePressed();
+        }
+
         /*************************/
         /*** HELPING FUNCTIONS ***/
         /*************************/
+
+        /// <summary>
+        /// Sets the visibility of a polyline.
+        /// </summary>
+        /// <param name="line">The polyline</param>
+        /// <param name="visible">Whether or not it should be visible.</param>
+        private void SetVisibility(Shape line, bool visible)
+        {
+            if (!visible)
+            {
+                line.Opacity = 0.00001;
+            }
+            else
+            {
+                line.Opacity = 1;
+            }
+        }
 
         /// <summary>
         /// A function that calculates the coordinates of a point on a zoomed in image.
@@ -302,11 +416,13 @@ namespace SketchAssistant
         /// <returns>The real coordinates of the mouse cursor on the image</returns>
         private Point ConvertCoordinates(Point cursorPosition)
         {
-            var rightImageDimensions = programModel.GetRightImageDimensions();
+            if (!programModel.canvasActive) { return cursorPosition; }
+            if (programModel.canvasActive && !programModel.graphicLoaded) { return cursorPosition; }
+            ImageDimension rightImageDimensions = programModel.rightImageSize;
             Point realCoordinates = new Point(0, 0);
 
-            int widthImage = rightImageDimensions.Item1;
-            int heightImage = rightImageDimensions.Item2;
+            int widthImage = rightImageDimensions.Width;
+            int heightImage = rightImageDimensions.Height;
             int widthBox = programModel.rightImageBoxWidth;
             int heightBox = programModel.rightImageBoxHeight;
 

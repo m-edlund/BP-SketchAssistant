@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
+//using System.Drawing;
 using System.Globalization;
+using System.Windows;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace SketchAssistant
+namespace SketchAssistantWPF
 {
     public class FileImporter
     {
@@ -42,7 +43,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public Tuple<int, int, List<Line>> ParseISADInputFile(String fileName)
+public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
         {
             return ParseISADInput(System.IO.File.ReadAllLines(fileName));
         }
@@ -52,7 +53,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        private Tuple<int, int, List<Line>> ParseISADInput(String[] allLines)
+        private Tuple<int, int, List<InternalLine>> ParseISADInput(String[] allLines)
         {
             if (allLines.Length == 0)
             {
@@ -66,9 +67,10 @@ namespace SketchAssistant
             {
                 throw new FileImporterException("unterminated drawing definition", ".isad files have to end with the 'enddrawing' token", allLines.Length);
             }
-            var dimensions = ParseISADHeader(allLines);
-            List<Line> picture = ParseISADBody(allLines, dimensions.Item1, dimensions.Item2);
-            return new Tuple<int, int, List<Line>>(dimensions.Item1, dimensions.Item2, picture);
+            Tuple<int, int> dimensions = ParseISADHeader(allLines);
+            List<InternalLine> picture = ParseISADBody(allLines, dimensions.Item1, dimensions.Item2);
+            
+            return new Tuple<int, int, List<InternalLine>>(dimensions.Item1, dimensions.Item2, picture);
         }
 
 
@@ -97,11 +99,11 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">the input file as an array of lines</param>
         /// <returns>the parsed picture as a list of lines</returns>
-        private List<Line> ParseISADBody(String[] allLines, int width, int height)
+        private List<InternalLine> ParseISADBody(String[] allLines, int width, int height)
         {
             String lineStartString = "line";
             String lineEndString = "endline";
-            List<Line> drawing = new List<Line>();
+            List<InternalLine> drawing = new List<InternalLine>();
             //number of the line currently being parsed, enumeration starting at 0, body starts at the third line, therefore lin number 2
             int i = 2;
             //parse 'line' token and complete line definition
@@ -121,7 +123,7 @@ namespace SketchAssistant
                     //parse single point definition
                     if (!Regex.Match(allLines[i], @"^\d+;\d+$", RegexOptions.None).Success)
                     {
-                        throw new FileImporterException("invalid Point definition: wrong format", "format: [xCoordinate];[yCoordinate]", (i + 1) );
+                        throw new FileImporterException("invalid Point definition: wrong format", "format: [xCoordinate];[yCoordinate]", (i + 1));
                     }
                     String[] coordinates = allLines[i].Split(';');
                     //no errors possible, convertability to int already checked above
@@ -129,7 +131,7 @@ namespace SketchAssistant
                     int yCoordinate = Convert.ToInt32(coordinates[1]);
                     if (xCoordinate < 0 || yCoordinate < 0 || xCoordinate > width - 1 || yCoordinate > height - 1)
                     {
-                        throw new FileImporterException("invalid Point definition: point out of bounds", null, (i + 1) );
+                        throw new FileImporterException("invalid Point definition: point out of bounds", null, (i + 1));
                     }
                     newLine.Add(new Point(xCoordinate, yCoordinate));
                     //start parsing next line
@@ -138,12 +140,12 @@ namespace SketchAssistant
                 //"parse" 'endline' token, syntax already checked at the beginning,  and start parsing next line
                 i++;
                 //add line to drawing
-                drawing.Add(new Line(newLine));
+                drawing.Add(new InternalLine(newLine));
                 //update lineStartPointer to the presumable start of the next line
                 lineStartPointer = i;
             }
             //check if end of body is reached after there are no more line definitions
-            if(i != allLines.Length - 1)
+            if (i != allLines.Length - 1)
             {
                 throw new FileImporterException("missing or invalid line definition token", "line definitions start with the 'line' token", (i + 1));
             }
@@ -156,7 +158,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public Tuple<int, int, List<Line>> ParseISADInputForTesting(String[] allLines)
+        public Tuple<int, int, List<InternalLine>> ParseISADInputForTesting(String[] allLines)
         {
             return ParseISADInput(allLines);
         }
@@ -174,7 +176,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        public Tuple<int, int, List<Line>> ParseSVGInputFile(String fileName, int windowWidth, int windowHeight)
+        public Tuple<int, int, List<InternalLine>> ParseSVGInputFile(String fileName, int windowWidth, int windowHeight)
         {
             return ParseSVGInput(System.IO.File.ReadAllLines(fileName), windowWidth, windowHeight);
         }
@@ -184,7 +186,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-        private Tuple<int, int, List<Line>> ParseSVGInput(String[] allLines, double windowWidth, double windowHeight)
+        private Tuple<int, int, List<InternalLine>> ParseSVGInput(String[] allLines, double windowWidth, double windowHeight)
         {
             i = 0; //reset line pointer
             if (allLines.Length == 0) //check for empty file
@@ -195,24 +197,33 @@ namespace SketchAssistant
             i++;
             int width; //width of the resulting picture in pixels
             int height; //height of the resulting picture in pixels
-            if (windowWidth / windowHeight > sizedef.Item1 / sizedef.Item2) //height dominant, width has to be smaller than drawing window to preserve xy-scale
+            if(windowWidth != 0 && windowHeight != 0)
             {
-                scale = windowHeight / sizedef.Item2;
-                height = (int)Math.Round(windowHeight);
-                width = (int) Math.Round(scale * sizedef.Item1);
+                if (windowWidth / windowHeight > sizedef.Item1 / sizedef.Item2) //height dominant, width has to be smaller than drawing window to preserve xy-scale
+                {
+                    scale = windowHeight / sizedef.Item2;
+                    height = (int)Math.Round(windowHeight);
+                    width = (int) Math.Round(scale * sizedef.Item1);
+                }
+                else //width dominant, height has to be smaller than drawing window to preserve xy-scale
+                {
+                    scale = windowWidth / sizedef.Item1;
+                    width = (int)Math.Round(windowWidth);
+                    height = (int)Math.Round(scale * sizedef.Item2);
+                }
             }
-            else //width dominant, height has to be smaller than drawing window to preserve xy-scale
+            else
             {
-                scale = windowWidth / sizedef.Item1;
-                width = (int)Math.Round(windowWidth);
-                height = (int)Math.Round(scale * sizedef.Item2);
+                scale = 1;
+                width = sizedef.Item1;
+                height = sizedef.Item2;
             }
-            for(int j=0; j < allLines.Length; j++)
+            for (int j=0; j < allLines.Length; j++)
             {
                 allLines[j] = allLines[j].Trim(whitespaces);
             }
-            List<Line> picture = ParseSVGBody(allLines); //parse whole svg drawing into list of lines
-            return new Tuple<int, int, List<Line>>(width, height, picture);
+            List<InternalLine> picture = ParseSVGBody(allLines); //parse whole svg drawing into list of lines
+            return new Tuple<int, int, List<InternalLine>>(width, height, picture);
         }
 
         /// <summary>
@@ -256,12 +267,12 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the parsed picture as a list of lines</returns>
-        private List<Line> ParseSVGBody(String[] allLines)
+        private List<InternalLine> ParseSVGBody(String[] allLines)
         {
-            List<Line> picture = new List<Line>();
+            List<InternalLine> picture = new List<InternalLine>();
             while (!allLines[i].StartsWith("</svg"))
             {
-                List<Line> element = ParseSingleSVGElement(allLines);
+                List<InternalLine> element = ParseSingleSVGElement(allLines);
                 if (element != null)
                 {
                     picture.AddRange(element);
@@ -277,7 +288,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the parsed Element as a list of lines</returns>
-        private List<Line> ParseSingleSVGElement(string[] allLines)
+        private List<InternalLine> ParseSingleSVGElement(string[] allLines)
         {
             String[] currentElement = GetCurrentElement(allLines);
             return ParseSingleLineSVGElement(currentElement);
@@ -288,10 +299,10 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the parsed element as a Line object, or null if the element is not supported</returns>
-        private List<Line> ParseSingleLineSVGElement(string[] currentElement)
+        private List<InternalLine> ParseSingleLineSVGElement(string[] currentElement)
         {
             List<Point> points= null;
-            List<Line> element = null;
+            List<InternalLine> element = null;
             switch (currentElement[0])
             {
                 case "<rect":
@@ -320,8 +331,8 @@ namespace SketchAssistant
             }
             if (element == null)
             {
-                element = new List<Line>();
-                element.Add(new Line(points));
+                element = new List<InternalLine>();
+                element.Add(new InternalLine(points));
             }
             return element;
         }
@@ -542,7 +553,7 @@ namespace SketchAssistant
         /// </summary>
         /// <param name="currentElement">the definition of the element as whitespace seperated String[]</param>
         /// <returns>the parsed element as a List of Points</returns>
-        private List<Line> ParsePath(string[] currentElement)
+        private List<InternalLine> ParsePath(string[] currentElement)
         {
             List<String> pathElements = new List<string>();
             for (int j = 0; j < currentElement.Length; j++)
@@ -560,7 +571,7 @@ namespace SketchAssistant
                 }
             }
             NormalizePathDeclaration(pathElements); //expand path data to always explicitly have the command descriptor in front of the appropriate number of arguments and to seperate command descriptors, coordinates and other tokens always into seperate list elements (equivalent to seperation with spaces in the input file, but svg allows also for comma as a seperator, and for omitting seperators where possible without losing information (refer to svg grammer) to reduce file size
-            List<Line> element = new List<Line>();
+            List<InternalLine> element = new List<InternalLine>();
             List<Point> currentLine = new List<Point>();
             double lastBezierControlPointX= 0;
             double lastBezierControlPointY= 0;
@@ -587,7 +598,7 @@ namespace SketchAssistant
                 currentToken = pathElements.First();
                 if (currentToken.Equals("M"))
                 {
-                    element.Add(new Line(currentLine)); //save current line
+                    element.Add(new InternalLine(currentLine)); //save current line
                     valuesSinglePoint = Parse_M_L(pathElements);
                     currentLine = new List<Point>(); //create new empty line
                     currentLine.Add(valuesSinglePoint.Item1); //add point to new line
@@ -596,7 +607,7 @@ namespace SketchAssistant
                 }
                 else if (currentToken.Equals("m"))
                 {
-                    element.Add(new Line(currentLine)); //save current line
+                    element.Add(new InternalLine(currentLine)); //save current line
                     valuesSinglePoint = Parse_m_l(pathElements, lastPositionX, lastPositionY);
                     currentLine = new List<Point>(); //create new empty line
                     currentLine.Add(valuesSinglePoint.Item1); //add point to new line
@@ -608,7 +619,7 @@ namespace SketchAssistant
                     valuesSinglePoint = Parse_Z(pathElements, initialPositionX, initialPositionY); //method call only used for uniform program structure... only real effect of method is to consume one token
                     newSubpath = true;
                     currentLine.Add(valuesSinglePoint.Item1); //add point to old line
-                    element.Add(new Line(currentLine)); //save current line
+                    element.Add(new InternalLine(currentLine)); //save current line
                     currentLine = new List<Point>(); //create new empty line
                     currentLine.Add(valuesSinglePoint.Item1); //add point to new line
                     lastPositionX = valuesSinglePoint.Item2; //save last point coordinates
@@ -749,7 +760,7 @@ namespace SketchAssistant
             }
             if (currentLine.Count > 1)
             {
-                element.Add(new Line(currentLine)); //save current line
+                element.Add(new InternalLine(currentLine)); //save current line
             }
             return element;
         }
@@ -1581,7 +1592,7 @@ namespace SketchAssistant
         /// <param name="currentElement">the definition of the top level element as whitespace seperated String[]</param>
         /// <param name="allLines">an array holding all lines of the input file</param>
         /// <returns>the parsed element as a Line object, or null if the element is not supported</returns>
-        private List<Line> ParseMultiLineSVGElement(string[] currentElement, string[] allLines)
+        private List<InternalLine> ParseMultiLineSVGElement(string[] currentElement, string[] allLines)
         {
             throw new NotImplementedException();
         }
