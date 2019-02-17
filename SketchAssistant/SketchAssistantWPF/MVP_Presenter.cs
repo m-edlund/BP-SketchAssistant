@@ -97,18 +97,32 @@ namespace SketchAssistantWPF
                 if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
                 {
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
-                    programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                    try
+                    {
+                        Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                        programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
 
-                    programModel.ResetRightImage();
-                    programModel.CanvasActivated();
-                    programModel.ChangeState(true);
-                    programView.EnableTimer();
-                    ClearRightLines();
+                        programModel.ResetRightImage();
+                        programModel.CanvasActivated();
+                        programModel.ChangeState(true);
+                        programView.EnableTimer();
+                        ClearRightLines();
+                    }
+                    catch (FileImporterException ex)
+                    {
+                        programView.ShowInfoMessage(ex.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        programView.ShowInfoMessage("exception occured while trying to load interactive sketch-assistant drawing file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace);
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Display a new FileDialog to a svg drawing.
+        /// </summary>
         public void SVGToolStripMenuItemClick()
         {
             var okToContinue = true;
