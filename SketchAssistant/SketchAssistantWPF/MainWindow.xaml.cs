@@ -123,6 +123,7 @@ namespace SketchAssistantWPF
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.ChangeState(false);
+            RightCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
         }
 
         /// <summary>
@@ -131,6 +132,7 @@ namespace SketchAssistantWPF
         private void DrawButton_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.ChangeState(true);
+            RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
 
         /// <summary>
@@ -208,6 +210,7 @@ namespace SketchAssistantWPF
         private void CanvasButton_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.NewCanvas();
+            RightCanvas.Strokes.Clear();
         }
 
         /// <summary>
@@ -513,23 +516,33 @@ namespace SketchAssistantWPF
         public void SetCanvasState(string canvasName, bool active)
         {
             Canvas canvas;
-            switch (canvasName){
+            InkCanvas inkCanvas;
+            switch (canvasName)
+            {
                 case ("LeftCanvas"):
                     canvas = LeftCanvas;
+                    if (active)
+                    {
+                        canvas.Background = Brushes.White;
+                    }
+                    else
+                    {
+                        canvas.Background = Brushes.SlateGray;
+                    }
                     break;
                 case ("RightCanvas"):
-                    canvas = RightCanvas;
+                    inkCanvas = RightCanvas;
+                    if (active)
+                    {
+                        inkCanvas.Background = Brushes.White;
+                    }
+                    else
+                    {
+                        inkCanvas.Background = Brushes.SlateGray;
+                    }
                     break;
                 default:
                     throw new InvalidOperationException("Unknown canvas name, Check that the canvas passed is either LeftCanvas or RightCanvas");
-            }
-            if (active)
-            {
-                canvas.Background = Brushes.White;
-            }
-            else
-            {
-                canvas.Background = Brushes.SlateGray;
             }
         }
 
