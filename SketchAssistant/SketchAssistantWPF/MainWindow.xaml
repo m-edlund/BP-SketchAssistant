@@ -178,11 +178,11 @@
             </Button>
         </ToolBar>
         <local:CustomCanvas x:Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="3"/>
-        <Canvas Name="CanvasSeperator" Grid.Column="5" Grid.Row="1" Background="LightGray"/>
+        <Canvas Name="CanvasSeperator" Grid.Column="5" Grid.Row="1" Background="LightGray" />
         <InkCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="6" Grid.Row="1" Height="auto"
-            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" 
+            PreviewMouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" 
                    MouseLeave="RightCanvas_MouseLeave" MouseEnter="RightCanvas_MouseEnter" TouchEnter="RightCanvas_TouchEnter" 
-                   TouchLeave="RightCanvas_TouchLeave"/>
+                   TouchLeave="RightCanvas_TouchLeave" StrokeCollected="RightCanvas_StrokeCollection"/>
 
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="8">

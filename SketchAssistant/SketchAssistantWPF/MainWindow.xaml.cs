@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Windows.Ink;
 
 namespace SketchAssistantWPF
 {
@@ -87,6 +88,10 @@ namespace SketchAssistantWPF
         /// Point collections for debugging.
         /// </summary>
         DebugData debugDat = new DebugData();
+        /// <summary>
+        /// Stores Lines drawn on RightCanvas.
+        /// </summary>
+        StrokeCollection strokeCollection = new StrokeCollection();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -99,6 +104,15 @@ namespace SketchAssistantWPF
         {
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.ActualWidth, (int)LeftCanvas.ActualHeight),
                 new Tuple<int, int>((int)RightCanvas.ActualWidth, (int)RightCanvas.ActualHeight));
+        }
+
+        /// <summary>
+        /// Collects all Strokes on RightCanvas
+        /// </summary>
+        public void RightCanvas_StrokeCollection(object sender, InkCanvasStrokeCollectedEventArgs e)
+        {
+            strokeCollection.Add(e.Stroke);
+            System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
         }
 
         /// <summary>
@@ -150,6 +164,12 @@ namespace SketchAssistantWPF
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+            if (strokeCollection.Count >= 1)
+            {
+                RightCanvas.Strokes.RemoveAt(0);
+                strokeCollection.RemoveAt(0);
+                System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+            }
             //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);");
         }
 
