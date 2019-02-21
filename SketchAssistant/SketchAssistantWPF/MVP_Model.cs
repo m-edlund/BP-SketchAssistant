@@ -119,6 +119,11 @@ namespace SketchAssistantWPF
             rightImageSize = new ImageDimension(0, 0);
             leftImageSize = new ImageDimension(0, 0);
 			connector = new OptiTrackConnector();
+            if (connector.Init(@"C:\Users\videowall-pc-user\Documents\BP-SketchAssistant\SketchAssistant\optitrack_setup.ttp"))
+            {
+
+                connector.StartTracking(InnerMethod);
+            }
         }
 
         /**************************/
@@ -373,27 +378,25 @@ namespace SketchAssistantWPF
             UpdateUI();
         }
 
+        String returnString = null;
+
+        void InnerMethod(OptiTrack.Frame frame)
+        {
+            Console.WriteLine(frame.Trackables.Length);
+            float x = frame.Trackables[0].X;
+            float y = frame.Trackables[0].Y;
+            float z = frame.Trackables[0].Z;
+            returnString = ("X: " + x + "Y: " + y + "Z: " + z);
+        }
         /// <summary>
         /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
         /// </summary>
         public void Tick()
         {
-            String returnString = null;
-			if(inDrawingMode)
-			{
-				if (connector.Init(@"C:\Users\videowall-pc-user\Documents\BP-SketchAssistant\SketchAssistant\optitrack_setup.ttp"))
-				{
-					connector.StartTracking(InnerMethod);
-                    programPresenter.PassOptiTrackMessage(returnString);
-				}
-			}
-            void InnerMethod(OptiTrack.Frame frame)
-            {
-                float x = frame.Trackables[0].X;
-                float y = frame.Trackables[0].Y;
-                float z = frame.Trackables[0].Z;
-                returnString= ("X: " + x + "Y: " + y + "Z: " + z);
-            }
+			
+            
+            programPresenter.PassOptiTrackMessage(returnString);
+            
 
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }

@@ -1,4 +1,4 @@
-﻿namespace OptiTrack
+namespace OptiTrack
 {
     public class Frame
     {

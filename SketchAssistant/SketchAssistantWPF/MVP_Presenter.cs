@@ -356,7 +356,7 @@ namespace SketchAssistantWPF
 
 		public void PassOptiTrackMessage(String stringToPass)
 		{
-            MessageBox.Show(stringToPass);
+            programView.SetOptiTrackText(stringToPass);
             //programView.SetOptiTrackText("X: ");// + x + "Y: " + y + "Z: " + z);
         }
 

@@ -392,7 +392,7 @@ namespace SketchAssistantWPF
         /// <param name="message">The new contents</param>
         public void SetOptiTrackText(string message)
         {
-            OptiTrackBox.Text = "test";
+            OptiTrackBox.Text = message;
         }
 
         /// <summary>
