@@ -378,14 +378,23 @@ namespace SketchAssistantWPF
         /// </summary>
         public void Tick()
         {
+            String returnString = null;
 			if(inDrawingMode)
 			{
 				if (connector.Init(@"C:\Users\videowall-pc-user\Documents\BP-SketchAssistant\SketchAssistant\optitrack_setup.ttp"))
 				{
-					connector.StartTracking(programPresenter.PassOptiTrackMessage);
+					connector.StartTracking(InnerMethod);
+                    programPresenter.PassOptiTrackMessage(returnString);
 				}
 			}
-			
+            void InnerMethod(OptiTrack.Frame frame)
+            {
+                float x = frame.Trackables[0].X;
+                float y = frame.Trackables[0].Y;
+                float z = frame.Trackables[0].Z;
+                returnString= ("X: " + x + "Y: " + y + "Z: " + z);
+            }
+
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);

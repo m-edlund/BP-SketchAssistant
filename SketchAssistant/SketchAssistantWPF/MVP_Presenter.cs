@@ -354,12 +354,9 @@ namespace SketchAssistantWPF
             return programView.IsMousePressed();
         }
 
-		public void PassOptiTrackMessage(OptiTrack.Frame frame)
+		public void PassOptiTrackMessage(String stringToPass)
 		{
-			float x = frame.Trackables[0].X;
-			float y = frame.Trackables[0].Y;
-			float z = frame.Trackables[0].Z;
-            MessageBox.Show(x.ToString());
+            MessageBox.Show(stringToPass);
             //programView.SetOptiTrackText("X: ");// + x + "Y: " + y + "Z: " + z);
         }
 
