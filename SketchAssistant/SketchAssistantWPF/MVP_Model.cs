@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using OptiTrack;
+using System.Runtime.InteropServices;
 
 namespace SketchAssistantWPF
 {
@@ -26,7 +27,6 @@ namespace SketchAssistantWPF
 		/// </summary>
 		//RedrawAssistant redrawAss;
 		OptiTrackConnector connector;
-		OptiTrackConnector.OnFrameReady frameReady;
 
         /***********************/
         /*** CLASS VARIABLES ***/
@@ -36,6 +36,10 @@ namespace SketchAssistantWPF
         /// If the program is in drawing mode.
         /// </summary>
         bool inDrawingMode;
+        /// <summary>
+        /// if the program is using OptiTrack
+        /// </summary>
+        bool optiTrackInUse;
         /// <summary>
         /// Size of deletion area
         /// </summary>
@@ -49,6 +53,14 @@ namespace SketchAssistantWPF
         /// </summary>
         Point currentCursorPosition;
         /// <summary>
+        /// The Position of the finger in the right picture box
+        /// </summary>
+        Point currentFingerPosition;
+        /// <summary>
+        /// The Previous Cursor Position in the right picture box
+        /// </summary>
+        Point previousFingerPosition;
+        /// <summary>
         /// The Previous Cursor Position in the right picture box
         /// </summary>
         Point previousCursorPosition;
@@ -56,6 +68,10 @@ namespace SketchAssistantWPF
         /// Queue for the cursorPositions
         /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
+        /// <summary>
+        /// Queue for the cursorPositions
+        /// </summary>
+        Queue<Point> fingerPositions = new Queue<Point>();
         /// <summary>
         /// Lookup Matrix for checking postions of lines in the image
         /// </summary>
@@ -125,6 +141,21 @@ namespace SketchAssistantWPF
                 connector.StartTracking(InnerMethod);
             }
         }
+
+        [DllImport("user32.dll", EntryPoint = "SetCursorPos")]
+        private static extern bool SetCursorPos(int X, int Y);
+
+        [DllImport("user32.dll")]
+        public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+
+        public enum MouseEventType : int
+        {
+            LeftDown = 0x02,
+            LeftUp = 0x04,
+            RightDown = 0x08,
+            RightUp = 0x10
+        }
+
 
         /**************************/
         /*** INTERNAL FUNCTIONS ***/
@@ -337,7 +368,14 @@ namespace SketchAssistantWPF
             inDrawingMode = nowDrawing;
             UpdateUI();
         }
-        
+
+
+        public void ChangeOptiTrack(bool usingOptiTrack)
+        {
+            optiTrackInUse = usingOptiTrack;
+            UpdateUI();
+        }
+
         /// <summary>
         /// Updates the current cursor position of the model.
         /// </summary>
@@ -348,6 +386,15 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Updates the current cursor position of the model.
+        /// </summary>
+        /// <param name="p">The new cursor position</param>
+        public void SetCurrentFingerPosition(Point p)
+        {
+            currentFingerPosition = p;
+        }
+
+        /// <summary>
         /// Start a new Line, when the Mouse is pressed down.
         /// </summary>
         public void MouseDown()
@@ -355,7 +402,14 @@ namespace SketchAssistantWPF
             if (inDrawingMode)
             {
                 currentLine.Clear();
-                currentLine.Add(currentCursorPosition);
+                if (!optiTrackInUse)
+                {
+                    currentLine.Add(currentCursorPosition);
+                }
+                else
+                {
+                    currentLine.Add(currentFingerPosition);
+                }
             }
         }
 
@@ -379,7 +433,6 @@ namespace SketchAssistantWPF
         }
 
         String returnString = null;
-
         void InnerMethod(OptiTrack.Frame frame)
         {
             Console.WriteLine(frame.Trackables.Length);
@@ -393,24 +446,49 @@ namespace SketchAssistantWPF
         /// </summary>
         public void Tick()
         {
-			
-            
-            programPresenter.PassOptiTrackMessage(returnString);
-            
-
-            if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
-            else { previousCursorPosition = currentCursorPosition; }
-            cursorPositions.Enqueue(currentCursorPosition);
-            //Drawing
-            if (inDrawingMode && programPresenter.IsMousePressed())
+            if (optiTrackInUse) // update fingerPositinons
             {
-                currentLine.Add(currentCursorPosition);
-                programPresenter.UpdateCurrentLine(currentLine);
+                //SetCursorPos(100, 100);
+                //mouse_event((int)MouseEventType.LeftDown, RightCanvas.Cursor.Position.X, Cursor.Position.Y, 0, 0);
+                //mouse_event((int)MouseEventType.LeftUp, Cursor.Position.X, Cursor.Position.Y, 0, 0);
+                if (fingerPositions.Count > 0) { previousFingerPosition = fingerPositions.Dequeue(); }
+                else { previousFingerPosition = currentFingerPosition; }
+                fingerPositions.Enqueue(currentFingerPosition);
+            }
+            else // update cursorPositinons
+            {
+                if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
+                else { previousCursorPosition = currentCursorPosition; }
+                cursorPositions.Enqueue(currentCursorPosition);
+            }
+            //Drawing
+            if (inDrawingMode && programPresenter.IsMousePressed() && !optiTrackInUse)
+            {
+                if (!optiTrackInUse)
+                {
+                    currentLine.Add(currentCursorPosition);
+                    programPresenter.UpdateCurrentLine(currentLine);
+                }
+                else
+                {
+                    currentLine.Add(currentFingerPosition);
+                    programPresenter.UpdateCurrentLine(currentLine);
+                }
+
             }
             //Deleting
-            if (!inDrawingMode && programPresenter.IsMousePressed())
+            if (!inDrawingMode && programPresenter.IsMousePressed() && !optiTrackInUse)
             {
-                List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                List<Point> uncheckedPoints;
+                if (!optiTrackInUse)
+                {
+                    uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                }
+                else
+                {
+                    uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousFingerPosition, currentFingerPosition);
+                }
+
                 foreach (Point currPoint in uncheckedPoints)
                 {
                     HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionRadius);

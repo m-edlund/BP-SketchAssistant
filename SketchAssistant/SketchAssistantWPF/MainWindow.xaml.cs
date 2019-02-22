@@ -50,18 +50,9 @@ namespace SketchAssistantWPF
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
-            OptiTrackConnector connector = new OptiTrackConnector();
-            if (connector.Init(@"C:\Users\etri\Desktop\bppp2\optitrack_setup.ttp"))
-            {
-                connector.StartTracking(handleTrackingResult);
-            }
-
+            RightCanvas.Cursor = Cursors.AppStarting;
         }
-
-    private void handleTrackingResult(OptiTrack.Frame frame)
-    {
-            Console.WriteLine(frame.Markers.Length);
-    }
+        
 
     
 
@@ -145,6 +136,16 @@ namespace SketchAssistantWPF
         private void DrawButton_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.ChangeState(true);
+            ProgramPresenter.ChangeOptiTrack(false);
+        }
+
+        /// <summary>
+        /// Changes the state of the program to drawing with OptiTrack
+        /// </summary>
+        private void DrawWithOptiButton_Click(object sender, RoutedEventArgs e)
+        {
+            ProgramPresenter.ChangeState(true);
+            ProgramPresenter.ChangeOptiTrack(true);
         }
 
         /// <summary>

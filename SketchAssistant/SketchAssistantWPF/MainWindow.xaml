@@ -169,6 +169,25 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </Button>
+            <Button x:Name="DrawWithOptiButton" ToolTip="Enter Drawing Mode (OptiTrack)" Click="DrawWithOptiButton_Click">
+                <Canvas  Name="svg62" Width="30" Height="30">
+                    <Canvas.RenderTransform>
+                        <TranslateTransform X="0" Y="-277"/>
+                    </Canvas.RenderTransform>
+                    <Canvas.Resources/>
+                    <!--Unknown tag: sodipodi:namedview-->
+                    <!--Unknown tag: metadata-->
+                    <Canvas Name="layer1">
+                        <Canvas Name="imagebot_3">
+                            <Canvas.RenderTransform>
+                                <MatrixTransform Matrix="0.30985915 0 0 0.23913043 122.08141 350.11087"/>
+                            </Canvas.RenderTransform>
+                            <Path Name="imagebot_5" Fill="#FFFEFEFE" Data="m -368.99 -226.1 v -9 h -4 v -8 h -4 v -8 h -4 v -9 h -5 v -4 h -4 v -8 h 9 v 4 h 4 v 12 h 4 v -54 h 8 v 38 h 4 v -17 h 9 v 17 h 4 v -13 h 8 v 17 h 4 v -13 h 5 v 5 h 4 v 29 h -4 v 12 h -5 v 9 z"/>
+                            <Path Name="imagebot_4" Fill="#FF000000" Data="m -372.99 -222.1 v -13 h -4 v -8 h -4 v -8 h -5 v -9 h -4 v -4 h -4 v -12 h 13 v 4 h 4 v -38 h 4 v -4 h 8 v 4 h 4 v 17 h 9 v 4 h 12 v 4 h 9 v 4 h 4 v 5 h 4 v 29 h -4 v 12 h -4 v 13 z m 37 -4 v -9 h 5 v -12 h 4 v -29 h -4 v -5 h -5 v 13 h -4 v -17 h -8 v 13 h -4 v -17 h -9 v 17 h -4 v -38 h -8 v 54 h -4 v -12 h -4 v -4 h -9 v 8 h 4 v 4 h 5 v 9 h 4 v 8 h 4 v 8 h 4 v 9 z"/>
+                        </Canvas>
+                    </Canvas>
+                </Canvas>
+            </Button>
         </ToolBar>
         <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="2"/>
         <Canvas Name="CanvasSeperator" Grid.Column="4" Grid.Row="1" Background="LightGray"/>

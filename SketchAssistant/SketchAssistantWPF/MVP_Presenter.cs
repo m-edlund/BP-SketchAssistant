@@ -120,6 +120,14 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Pass-through function to change the OptiTrack-in-use state of the model
+        /// </summary>
+        public void ChangeOptiTrack(bool usingOptiTrack)
+        {
+            programModel.ChangeOptiTrack(usingOptiTrack);
+        }
+
+        /// <summary>
         /// Pass-trough function to undo an action.
         /// </summary>
         public void Undo()
