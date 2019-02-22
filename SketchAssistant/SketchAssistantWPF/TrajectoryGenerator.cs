@@ -11,30 +11,48 @@ namespace SketchAssistantWPF
     {
         static int constantA= 10;
 
+        /// <summary>
+        /// the template for the line currently being drawn
+        /// </summary>
         InternalLine currentLine;
+        /// <summary>
+        /// the points of the current line template, as an ordered list
+        /// </summary>
         List<Point> currentPoints;
 
-        Point lastCursorPosition;
+        //Point lastCursorPosition;
 
+        /// <summary>
+        /// pointer to the active section of the line template, indexing the ending point of the active section
+        /// </summary>
         int index;
 
+        /// <summary>
+        /// updates the pointer to the template for the line currently being drawn, and resets indices etc.
+        /// </summary>
+        /// <param name="newCurrentLine">the new template for the line currently being drawn</param>
         public void setCurrentLine(InternalLine newCurrentLine)
         {
             currentLine = newCurrentLine;
             currentPoints = currentLine.GetPoints();
-            lastCursorPosition = currentPoints.ElementAt(0);
+            //lastCursorPosition = currentPoints.ElementAt(0);
             index = 1;
         }
 
-        public int GenerateTrajectory(Point cursorPosition)
+        /// <summary>
+        /// generates the new trajectory back to the template based on the current cursor position
+        /// </summary>
+        /// <param name="cursorPosition">the current cursor position</param>
+        /// <returns>the direction in which to go, as an angle on the drawing plane, in degree format, with 0° being the positive X-Axis, increasing counterclockwise</returns>
+        public double GenerateTrajectory(Point cursorPosition)
         {
 
             //update index to point to current section if one or more section divideing lines have been passed since last call
-            while (index < (currentPoints.Count - 1) && SectionDividingLinePassed(lastCursorPosition, cursorPosition, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), currentPoints.ElementAt(index + 1)))
+            while (index < (currentPoints.Count - 1) && SectionDividingLinePassed(cursorPosition, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), currentPoints.ElementAt(index + 1)))
             {
                 index++;
             }
-            lastCursorPosition = cursorPosition;
+            //lastCursorPosition = cursorPosition;
 
             //project teh point onto the active line segment to be able to compute distances
             Point orthogonalProjection = ComputeOrthogonalProjection(cursorPosition, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index));
@@ -44,10 +62,10 @@ namespace SketchAssistantWPF
             List<Tuple<Point, Point>> strikeZones = new List<Tuple<Point, Point>>();
 
             //if "far" away from the next actual point of the line, generate an auxiliary point at a constant distance (constantA) on the current line segment
-            Point auxiliaryPoint = null;
+            Point auxiliaryPoint = new Point(-1, -1);
             if (ComputeDistance(orthogonalProjection, currentPoints.ElementAt(index)) <= constantA)
             {
-                auxiliaryPoint = moveAlongLine(orthogonalProjection, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), constantA);
+                auxiliaryPoint = MoveAlongLine(orthogonalProjection, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), constantA);
                 strikeZones.Add(computeStrikeZone(auxiliaryPoint, orthogonalProjection, cursorPosition));
                 targetIndex--;
             }
@@ -59,13 +77,13 @@ namespace SketchAssistantWPF
                 targetIndex++;
             }
 
-            Point furthestCrossingPoint = null;
+            Point furthestCrossingPoint = new Point(-1, -1); ;
             if (targetIndex < index) //auxiliary point created and next actual point not reachable
             {
                 furthestCrossingPoint = ComputeFurthestCrossingPoint(cursorPosition, strikeZones, auxiliaryPoint, currentPoints.ElementAt(targetIndex + 1));
 
                 //if such a point exists, use it as target for the new trajectory
-                if (furthestCrossingPoint != null)
+                if (furthestCrossingPoint.X != -1)
                 {
                     Debug_DrawStrikeZones(strikeZones);
                     Debug_DrawTrajectoryVector(cursorPosition, furthestCrossingPoint);
@@ -87,7 +105,7 @@ namespace SketchAssistantWPF
                     furthestCrossingPoint = ComputeFurthestCrossingPoint(cursorPosition, strikeZones, currentPoints.ElementAt(targetIndex), currentPoints.ElementAt(targetIndex + 1));
                 }
                 //if such a point exists, use it as target for the new trajectory
-                if (furthestCrossingPoint != null)
+                if (furthestCrossingPoint.X != -1)
                 {
                     Debug_DrawStrikeZones(strikeZones);
                     Debug_DrawTrajectoryVector(cursorPosition, furthestCrossingPoint);
@@ -128,9 +146,11 @@ namespace SketchAssistantWPF
         /// <param name="vectorStartPoint">origin point of the direction vector</param>
         /// <param name="vectorEndPoint">target point of the direction vector</param>
         /// <returns>the orientation angle, in degree format</returns>
-        private int computeOrientationOfVector(Point vectorStartPoint, Point vectorEndPoint)
+        private double computeOrientationOfVector(Point vectorStartPoint, Point vectorEndPoint)
         {
-            throw new NotImplementedException();
+            double x = vectorEndPoint.X - vectorStartPoint.X;
+            double y = vectorEndPoint.Y - vectorStartPoint.Y;
+            return Math.Atan( y / x );
         }
 
         /// <summary>
@@ -178,7 +198,7 @@ namespace SketchAssistantWPF
         /// <param name="lineEndPoint">target point of the direction vector</param>
         /// <param name="distance">distance by which to move the point</param>
         /// <returns>a new point that is located distance away from pointToBeMoved in the direction of the given vector</returns>
-        private Point moveAlongLine(Point pointToBeMoved, Point lineStartPoint, Point lineEndPoint, int distance)
+        private Point MoveAlongLine(Point pointToBeMoved, Point lineStartPoint, Point lineEndPoint, double distance)
         {
             throw new NotImplementedException();
         }
@@ -189,19 +209,37 @@ namespace SketchAssistantWPF
         /// <param name="point1">point 1</param>
         /// <param name="point2">point 2</param>
         /// <returns>euclidean distance between point1 and point2</returns>
-        private int ComputeDistance(Point point1, Point point2)
+        private double ComputeDistance(Point point1, Point point2)
         {
-            throw new NotImplementedException();
+            return Math.Sqrt( (double) ( Math.Pow((point2.X - point1.X), 2) + Math.Pow((point2.Y - point1.Y), 2) ) );
         }
 
+        /// <summary>
+        /// computes the orthogonal projection of a point onto the given line segment
+        /// </summary>
+        /// <param name="cursorPosition">the current cursor position</param>
+        /// <param name="lastPoint">beginning point of the current section</param>
+        /// <param name="currentPoint">ending point of current section</param>
+        /// <returns>the orthogonal projection of a point onto the given line segment, or the respective segment end point if the orthogonal projection lies outside the specified segment</returns>
         private Point ComputeOrthogonalProjection(Point cursorPosition, Point lastPoint, Point currentPoint)
         {
             throw new NotImplementedException();
         }
 
-        private bool SectionDividingLinePassed(Point lastCursorPosition, Point cursorPosition, Point lastPoint, Point currentPoint, Point nextPoint)
+        /// <summary>
+        /// checks if the angle dividing line between this section and the next one has been passed
+        /// </summary>
+        /// <param name="cursorPosition">the current cursor position</param>
+        /// <param name="lastPoint">beginning point of the current section</param>
+        /// <param name="currentPoint">ending point of current and beginning point of next section</param>
+        /// <param name="nextPoint">ending point of next section</param>
+        /// <returns>true iff cursorPosition is closer to the next section than to the current one</returns>
+        private bool SectionDividingLinePassed(Point cursorPosition, Point lastPoint, Point currentPoint, Point nextPoint)
         {
-            throw new NotImplementedException();
+            //compute a point at the same distance to the dividing line as nextPoint, but on the other side of the line
+            Point auxiliaryPoint = MoveAlongLine(currentPoint, currentPoint, lastPoint, ComputeDistance(currentPoint, nextPoint));
+            //line passed iff cursorPosition closer to nextPoint than to auxiliaryPoint
+            return ComputeDistance(cursorPosition, nextPoint) <= ComputeDistance(cursorPosition, auxiliaryPoint);
         }
     }
 }
