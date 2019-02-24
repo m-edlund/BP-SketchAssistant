@@ -81,6 +81,7 @@
     <Compile Include="GeometryCalculator.cs" />
     <Compile Include="ImageDimension.cs" />
     <Compile Include="SketchAction.cs" />
+    <Compile Include="TrajectoryGenerator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
