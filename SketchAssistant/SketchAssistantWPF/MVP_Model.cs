@@ -462,7 +462,7 @@ namespace SketchAssistantWPF
                 cursorPositions.Enqueue(currentCursorPosition);
             }
             //Drawing
-            if (inDrawingMode && programPresenter.IsMousePressed() && !optiTrackInUse)
+            if (inDrawingMode && programPresenter.IsMousePressed())
             {
                 if (!optiTrackInUse)
                 {
@@ -477,7 +477,7 @@ namespace SketchAssistantWPF
 
             }
             //Deleting
-            if (!inDrawingMode && programPresenter.IsMousePressed() && !optiTrackInUse)
+            if (!inDrawingMode && programPresenter.IsMousePressed())
             {
                 List<Point> uncheckedPoints;
                 if (!optiTrackInUse)
