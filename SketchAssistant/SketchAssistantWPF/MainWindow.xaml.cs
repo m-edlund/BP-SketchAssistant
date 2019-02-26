@@ -245,16 +245,7 @@ namespace SketchAssistantWPF
             ProgramPresenter.ExamplePictureToolStripMenuItemClick();
         }
 
-        /// <summary>
-        /// Button that opens new window for calibration the OptiTrack coordinates to the of the viewing device
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OpenOptiTrackCalibration_Click(object sender, EventArgs e)
-        {
-            CalibrationWindow calWin = new CalibrationWindow();
-            calWin.Show();
-        }
+        
 
         /*************************/
         /*** PRESENTER -> VIEW ***/

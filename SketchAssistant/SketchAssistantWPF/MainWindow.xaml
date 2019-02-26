@@ -32,7 +32,6 @@
                     <MenuItem Header="New Canvas" Click="CanvasButton_Click"/>
                     <MenuItem Header="Undo" Click="UndoButton_Click"/>
                     <MenuItem Header="Redo" Click="RedoButton_Click"/>
-                    <MenuItem Header="Calibrate OptiTrack" Click="OpenOptiTrackCalibration_Click"/>
                 </MenuItem>
             </Menu>
         </ToolBar>
