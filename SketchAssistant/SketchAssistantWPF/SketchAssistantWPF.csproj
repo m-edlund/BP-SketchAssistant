@@ -94,6 +94,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ActionHistory.cs" />
+    <Compile Include="Armband.cs" />
     <Compile Include="CustomCanvas.cs" />
     <Compile Include="DebugData.cs" />
     <Compile Include="FileImporter.cs" />
@@ -163,9 +164,17 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="BodyActuator.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="NPTrackingTools.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="TActionManager.dll" />
+    <Content Include="TactorInterface.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

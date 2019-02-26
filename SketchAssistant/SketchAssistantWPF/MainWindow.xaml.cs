@@ -135,8 +135,8 @@ namespace SketchAssistantWPF
         /// </summary>
         private void DrawButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.ChangeState(true);
             ProgramPresenter.ChangeOptiTrack(false);
+            ProgramPresenter.ChangeState(true);
         }
 
         /// <summary>
@@ -144,8 +144,8 @@ namespace SketchAssistantWPF
         /// </summary>
         private void DrawWithOptiButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.ChangeState(true);
             ProgramPresenter.ChangeOptiTrack(true);
+            ProgramPresenter.ChangeState(true);
         }
 
         /// <summary>
@@ -243,6 +243,17 @@ namespace SketchAssistantWPF
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.ExamplePictureToolStripMenuItemClick();
+        }
+
+        /// <summary>
+        /// Button that opens new window for calibration the OptiTrack coordinates to the of the viewing device
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OpenOptiTrackCalibration_Click(object sender, EventArgs e)
+        {
+            CalibrationWindow calWin = new CalibrationWindow();
+            calWin.Show();
         }
 
         /*************************/
@@ -423,6 +434,10 @@ namespace SketchAssistantWPF
                     break;
                 case "redoButton":
                     buttonToChange = RedoButton;
+                    break;
+                case "drawWithOptiButton":
+                    buttonToChange = DrawWithOptiButton;
+                    isToggleable = true;
                     break;
                 default:
                     Console.WriteLine("Invalid Button was given to SetToolStripButton. \nMaybe you forgot to add a case?");

@@ -196,22 +196,26 @@ namespace SketchAssistantWPF
         /// <param name="e">The Mouse event arguments.</param>
         public void MouseEvent(MouseAction mouseAction)
         {
-            switch (mouseAction)
+            if (!programModel.optiTrackInUse)
             {
-                case MouseAction.Click:
-                    programModel.MouseDown();
-                    programModel.Tick();
-                    programModel.MouseUp();
-                    break;
-                case MouseAction.Down:
-                    programModel.MouseDown();
-                    break;
-                case MouseAction.Up:
-                    programModel.MouseUp();
-                    break;
-                default:
-                    break;
+                switch (mouseAction)
+                {
+                    case MouseAction.Click:
+                        programModel.StartNewLine();
+                        programModel.Tick();
+                        programModel.FinishCurrentLine();
+                        break;
+                    case MouseAction.Down:
+                        programModel.StartNewLine();
+                        break;
+                    case MouseAction.Up:
+                        programModel.FinishCurrentLine();
+                        break;
+                    default:
+                        break;
+                }
             }
+           
         }
 
         /************************************/
@@ -305,22 +309,33 @@ namespace SketchAssistantWPF
         /// <param name="canRedo">If actions in the model can be redone</param>
         /// <param name="canvasActive">If the right canvas is active</param>
         /// <param name="graphicLoaded">If an image is loaded in the model</param>
-        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive, bool graphicLoaded)
+        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive, bool graphicLoaded, bool optiTrackInUse)
         {
             Dictionary<String, MainWindow.ButtonState> dict = new Dictionary<String, MainWindow.ButtonState> {
                 {"canvasButton", MainWindow.ButtonState.Enabled }, {"drawButton", MainWindow.ButtonState.Disabled}, {"deleteButton",MainWindow.ButtonState.Disabled },
-                {"undoButton", MainWindow.ButtonState.Disabled },{"redoButton",  MainWindow.ButtonState.Disabled}};
+                {"undoButton", MainWindow.ButtonState.Disabled },{"redoButton",  MainWindow.ButtonState.Disabled}, {"drawWithOptiButton", MainWindow.ButtonState.Disabled}};
 
             if (canvasActive)
             {
                 if (inDrawingMode)
                 {
-                    dict["drawButton"] = MainWindow.ButtonState.Active;
-                    dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                    if (!optiTrackInUse)
+                    { 
+                        dict["drawButton"] = MainWindow.ButtonState.Active;
+                        dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
+                        dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                    }
+                    else
+                    {
+                        dict["drawButton"] = MainWindow.ButtonState.Enabled;
+                        dict["drawWithOptiButton"] = MainWindow.ButtonState.Active;
+                        dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                    }
                 }
                 else
                 {
                     dict["drawButton"] = MainWindow.ButtonState.Enabled;
+                    dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
                     dict["deleteButton"] = MainWindow.ButtonState.Active;
                 }
                 if (canUndo) { dict["undoButton"] = MainWindow.ButtonState.Enabled; }

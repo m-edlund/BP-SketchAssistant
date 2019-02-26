@@ -39,7 +39,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// if the program is using OptiTrack
         /// </summary>
-        bool optiTrackInUse;
+        public bool optiTrackInUse{ get; private set; }
         /// <summary>
         /// Size of deletion area
         /// </summary>
@@ -53,14 +53,6 @@ namespace SketchAssistantWPF
         /// </summary>
         Point currentCursorPosition;
         /// <summary>
-        /// The Position of the finger in the right picture box
-        /// </summary>
-        Point currentFingerPosition;
-        /// <summary>
-        /// The Previous Cursor Position in the right picture box
-        /// </summary>
-        Point previousFingerPosition;
-        /// <summary>
         /// The Previous Cursor Position in the right picture box
         /// </summary>
         Point previousCursorPosition;
@@ -68,10 +60,6 @@ namespace SketchAssistantWPF
         /// Queue for the cursorPositions
         /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
-        /// <summary>
-        /// Queue for the cursorPositions
-        /// </summary>
-        Queue<Point> fingerPositions = new Queue<Point>();
         /// <summary>
         /// Lookup Matrix for checking postions of lines in the image
         /// </summary>
@@ -113,6 +101,12 @@ namespace SketchAssistantWPF
         /// </summary>
         public bool graphicLoaded { get; set; }
 
+        //TODO: calibrate
+        double OPTITRACK_X_OFFSET = -0.7878;
+        double OPTITRACK_Y_OFFSET = -2.0877;
+        double OPTITRACK_X_SCALE = -1 * ((1.816 / 0.0254 * 96) / (1.816));
+        double OPTITRACK_Y_SCALE = -1 * ((1.360 / 0.0254 * 96) / (1.360));
+
         Image rightImageWithoutOverlay;
 
         List<InternalLine> leftLineList;
@@ -120,8 +114,6 @@ namespace SketchAssistantWPF
         List<Tuple<bool, InternalLine>> rightLineList;
 
         List<Point> currentLine = new List<Point>();
-
-
 
         public MVP_Model(MVP_Presenter presenter)
         {
@@ -134,11 +126,13 @@ namespace SketchAssistantWPF
             UpdateUI();
             rightImageSize = new ImageDimension(0, 0);
             leftImageSize = new ImageDimension(0, 0);
-			connector = new OptiTrackConnector();
+            connector = new OptiTrackConnector();
+            armband = new Armband();
+
             if (connector.Init(@"C:\Users\videowall-pc-user\Documents\BP-SketchAssistant\SketchAssistant\optitrack_setup.ttp"))
             {
 
-                connector.StartTracking(InnerMethod);
+                connector.StartTracking(getOptiTrackPosition);
             }
         }
 
@@ -202,7 +196,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void UpdateUI()
         {
-            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), canvasActive, graphicLoaded);
+            programPresenter.UpdateUIState(inDrawingMode, historyOfActions.CanUndo(), historyOfActions.CanRedo(), canvasActive, graphicLoaded, optiTrackInUse);
         }
 
         /// <summary>
@@ -373,7 +367,6 @@ namespace SketchAssistantWPF
         public void ChangeOptiTrack(bool usingOptiTrack)
         {
             optiTrackInUse = usingOptiTrack;
-            UpdateUI();
         }
 
         /// <summary>
@@ -382,7 +375,7 @@ namespace SketchAssistantWPF
         /// <param name="p">The new cursor position</param>
         public void SetCurrentCursorPosition(Point p)
         {
-            currentCursorPosition = p;
+            if (!optiTrackInUse) currentCursorPosition = p;
         }
 
         /// <summary>
@@ -391,32 +384,34 @@ namespace SketchAssistantWPF
         /// <param name="p">The new cursor position</param>
         public void SetCurrentFingerPosition(Point p)
         {
-            currentFingerPosition = p;
+            Point correctedPoint = ConvertToPixels(p);
+            currentCursorPosition = p;
+        }
+
+        
+        private Point ConvertToPixels(Point p)
+        {
+            double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * OPTITRACK_X_SCALE;
+            double yCoordinate = (p.Y - OPTITRACK_Y_OFFSET) * OPTITRACK_Y_SCALE;
+            return new Point(xCoordinate, yCoordinate);
         }
 
         /// <summary>
         /// Start a new Line, when the Mouse is pressed down.
         /// </summary>
-        public void MouseDown()
+        public void StartNewLine()
         {
             if (inDrawingMode)
             {
                 currentLine.Clear();
-                if (!optiTrackInUse)
-                {
-                    currentLine.Add(currentCursorPosition);
-                }
-                else
-                {
-                    currentLine.Add(currentFingerPosition);
-                }
+                currentLine.Add(currentCursorPosition);
             }
         }
 
         /// <summary>
         /// Finish the current Line, when the pressed Mouse is released.
         /// </summary>
-        public void MouseUp()
+        public void FinishCurrentLine()
         {
             if (inDrawingMode && currentLine.Count > 0)
             {
@@ -432,62 +427,67 @@ namespace SketchAssistantWPF
             UpdateUI();
         }
 
-        String returnString = null;
-        void InnerMethod(OptiTrack.Frame frame)
+        public float optiTrackX;
+        public float optiTrackY;
+        public float optiTrackZ;
+        private bool optiTrackInsideDrawingZone;
+        private double WARNING_ZONE_BOUNDARY= 0.05; //5cm
+        private Armband armband;
+
+        void getOptiTrackPosition(OptiTrack.Frame frame)
         {
-            Console.WriteLine(frame.Trackables.Length);
-            float x = frame.Trackables[0].X;
-            float y = frame.Trackables[0].Y;
-            float z = frame.Trackables[0].Z;
-            returnString = ("X: " + x + "Y: " + y + "Z: " + z);
+            optiTrackX = frame.Trackables[0].X;
+            optiTrackY = frame.Trackables[0].Y;
+            optiTrackZ = frame.Trackables[0].Z;
         }
         /// <summary>
         /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
         /// </summary>
         public void Tick()
         {
-            if (optiTrackInUse) // update fingerPositinons
+            if (optiTrackInUse)
             {
-                //SetCursorPos(100, 100);
-                //mouse_event((int)MouseEventType.LeftDown, RightCanvas.Cursor.Position.X, Cursor.Position.Y, 0, 0);
-                //mouse_event((int)MouseEventType.LeftUp, Cursor.Position.X, Cursor.Position.Y, 0, 0);
-                if (fingerPositions.Count > 0) { previousFingerPosition = fingerPositions.Dequeue(); }
-                else { previousFingerPosition = currentFingerPosition; }
-                fingerPositions.Enqueue(currentFingerPosition);
-            }
-            else // update cursorPositinons
-            {
-                if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
-                else { previousCursorPosition = currentCursorPosition; }
-                cursorPositions.Enqueue(currentCursorPosition);
-            }
-            //Drawing
-            if (inDrawingMode && programPresenter.IsMousePressed())
-            {
-                if (!optiTrackInUse)
+
+                if (CheckInsideDrawingZone(optiTrackZ))
                 {
-                    currentLine.Add(currentCursorPosition);
-                    programPresenter.UpdateCurrentLine(currentLine);
+                    SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
+                    if (!optiTrackInsideDrawingZone)
+                    {
+                        optiTrackInsideDrawingZone = true;
+                        StartNewLine();
+                    }
+                    if(optiTrackZ > WARNING_ZONE_BOUNDARY)
+                    {
+                        armband.pushForward();
+                    }
+                    else if(optiTrackZ < -1 * WARNING_ZONE_BOUNDARY)
+                    {
+                        armband.pushBackward();
+                    }
                 }
                 else
                 {
-                    currentLine.Add(currentFingerPosition);
-                    programPresenter.UpdateCurrentLine(currentLine);
+                    if (optiTrackInsideDrawingZone)
+                    {
+                        optiTrackInsideDrawingZone = false;
+                        FinishCurrentLine();
+                    }
                 }
-
+            }
+            if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
+            else { previousCursorPosition = currentCursorPosition; }
+            cursorPositions.Enqueue(currentCursorPosition);
+            
+            //Drawing
+            if (inDrawingMode && programPresenter.IsMousePressed())
+            {
+                 currentLine.Add(currentCursorPosition);
+                programPresenter.UpdateCurrentLine(currentLine);
             }
             //Deleting
             if (!inDrawingMode && programPresenter.IsMousePressed())
             {
-                List<Point> uncheckedPoints;
-                if (!optiTrackInUse)
-                {
-                    uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
-                }
-                else
-                {
-                    uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousFingerPosition, currentFingerPosition);
-                }
+                List<Point> uncheckedPoints= GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
 
                 foreach (Point currPoint in uncheckedPoints)
                 {
@@ -505,6 +505,12 @@ namespace SketchAssistantWPF
                     }
                 }
             }
+        }
+
+        private bool CheckInsideDrawingZone(float optiTrackZ)
+        {
+            if (Math.Abs(optiTrackZ) > WARNING_ZONE_BOUNDARY * 2) return false;
+            return true;
         }
 
         /// <summary>
