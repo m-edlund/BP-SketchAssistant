@@ -50,7 +50,6 @@ namespace SketchAssistantWPF
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
-            RightCanvas.Cursor = Cursors.AppStarting;
         }
         
 
