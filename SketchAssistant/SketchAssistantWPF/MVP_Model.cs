@@ -139,8 +139,8 @@ namespace SketchAssistantWPF
         [DllImport("user32.dll", EntryPoint = "SetCursorPos")]
         private static extern bool SetCursorPos(int X, int Y);
 
-        [DllImport("user32.dll")]
-        public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+        //[DllImport("user32.dll")]
+        //public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
 
         public enum MouseEventType : int
         {
@@ -473,7 +473,9 @@ namespace SketchAssistantWPF
                         FinishCurrentLine();
                     }
                 }
+                //projectPointOntoScreen(optiTrackX, optiTrackY);
             }
+            SetCursorPos(800,800);
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
@@ -505,6 +507,12 @@ namespace SketchAssistantWPF
                     }
                 }
             }
+        }
+
+        private void projectPointOntoScreen(float optiTrackX, float optiTrackY)
+        {
+            Point auxiliaryPoint = ConvertToPixels(new Point(optiTrackX, optiTrackY));
+            SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
         }
 
         private bool CheckInsideDrawingZone(float optiTrackZ)
