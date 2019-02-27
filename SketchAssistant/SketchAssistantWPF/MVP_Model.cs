@@ -102,10 +102,11 @@ namespace SketchAssistantWPF
         public bool graphicLoaded { get; set; }
 
         //TODO: calibrate
-        double OPTITRACK_X_OFFSET = -0.7878;
-        double OPTITRACK_Y_OFFSET = -2.0877;
-        double OPTITRACK_X_SCALE = -1 * ((1.816 / 0.0254 * 96) / (1.816));
-        double OPTITRACK_Y_SCALE = -1 * ((1.360 / 0.0254 * 96) / (1.360));
+        double OPTITRACK_X_OFFSET = 0.7878 ;
+        double OPTITRACK_Y_OFFSET = 0.7977 ;
+        double OPTITRACK_CANVAS_HEIGHT = 1.29;
+        double OPTITRACK_X_SCALE = -0.254 * (((1.816 / 0.0254) * 96) / (1.816));
+        double OPTITRACK_Y_SCALE = 0.254 * (((1.360 / 0.0254) * 96) / (1.360));
 
         Image rightImageWithoutOverlay;
 
@@ -384,15 +385,17 @@ namespace SketchAssistantWPF
         /// <param name="p">The new cursor position</param>
         public void SetCurrentFingerPosition(Point p)
         {
+            Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
             Point correctedPoint = ConvertToPixels(p);
-            currentCursorPosition = p;
+            Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
+            currentCursorPosition = correctedPoint;
         }
 
         
         private Point ConvertToPixels(Point p)
         {
             double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * OPTITRACK_X_SCALE;
-            double yCoordinate = (p.Y - OPTITRACK_Y_OFFSET) * OPTITRACK_Y_SCALE;
+            double yCoordinate = (OPTITRACK_CANVAS_HEIGHT - (p.Y - OPTITRACK_Y_OFFSET)) * OPTITRACK_Y_SCALE;
             return new Point(xCoordinate, yCoordinate);
         }
 
@@ -413,6 +416,10 @@ namespace SketchAssistantWPF
         /// </summary>
         public void FinishCurrentLine()
         {
+            foreach (Point p in currentLine)
+            {
+                Console.WriteLine(p.X + ";" + p.Y);
+            }
             if (inDrawingMode && currentLine.Count > 0)
             {
                 InternalLine newLine = new InternalLine(currentLine, rightLineList.Count);
@@ -430,8 +437,8 @@ namespace SketchAssistantWPF
         public float optiTrackX;
         public float optiTrackY;
         public float optiTrackZ;
-        private bool optiTrackInsideDrawingZone;
-        private double WARNING_ZONE_BOUNDARY= 0.05; //5cm
+        private bool optiTrackInsideDrawingZone = false;
+        private double WARNING_ZONE_BOUNDARY= 0.10; //5cm
         private Armband armband;
 
         void getOptiTrackPosition(OptiTrack.Frame frame)
@@ -455,6 +462,7 @@ namespace SketchAssistantWPF
                     {
                         optiTrackInsideDrawingZone = true;
                         StartNewLine();
+                        Console.WriteLine("new line begun");
                     }
                     if(optiTrackZ > WARNING_ZONE_BOUNDARY)
                     {
@@ -471,6 +479,7 @@ namespace SketchAssistantWPF
                     {
                         optiTrackInsideDrawingZone = false;
                         FinishCurrentLine();
+                        Console.WriteLine("line finished");
                     }
                 }
                 //projectPointOntoScreen(optiTrackX, optiTrackY);
@@ -479,11 +488,20 @@ namespace SketchAssistantWPF
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
-            
+
             //Drawing
-            if (inDrawingMode && programPresenter.IsMousePressed())
+            if (optiTrackInUse)
             {
-                 currentLine.Add(currentCursorPosition);
+                if (CheckInsideDrawingZone(optiTrackZ))
+                {
+                    Console.WriteLine("point added");
+                    currentLine.Add(currentCursorPosition);
+                    programPresenter.UpdateCurrentLine(currentLine);
+                }
+            }
+            else if (inDrawingMode && programPresenter.IsMousePressed())
+            {
+                currentLine.Add(currentCursorPosition);
                 programPresenter.UpdateCurrentLine(currentLine);
             }
             //Deleting
