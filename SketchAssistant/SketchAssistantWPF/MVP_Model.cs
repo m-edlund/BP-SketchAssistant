@@ -386,16 +386,23 @@ namespace SketchAssistantWPF
         public void SetCurrentFingerPosition(Point p)
         {
             Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
-            Point correctedPoint = ConvertToPixels(p);
+            Point correctedPoint = ConvertTo96thsOfInch(p);
             Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             currentCursorPosition = correctedPoint;
         }
 
         
-        private Point ConvertToPixels(Point p)
+        private Point ConvertTo96thsOfInch(Point p)
         {
             double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * OPTITRACK_X_SCALE;
             double yCoordinate = (OPTITRACK_CANVAS_HEIGHT - (p.Y - OPTITRACK_Y_OFFSET)) * OPTITRACK_Y_SCALE;
+            return new Point(xCoordinate, yCoordinate);
+        }
+
+        private Point ConvertToPixel(Point p)
+        {
+            double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * -1 * (/*Anzahl Pixel X-Richtung*/0 / (1.816)) + 0/*1/2 * x-richtung pixel*/); //TODO
+            double yCoordinate = (((OPTITRACK_CANVAS_HEIGHT + 0/*meter von oberer Rand Leinwand zu oberer Rand Bildschirm*/) - (p.Y - OPTITRACK_Y_OFFSET))) * (/*Anzahl Pixel Y-Richtung*/0 / (1.360));
             return new Point(xCoordinate, yCoordinate);
         }
 
@@ -482,9 +489,8 @@ namespace SketchAssistantWPF
                         Console.WriteLine("line finished");
                     }
                 }
-                //projectPointOntoScreen(optiTrackX, optiTrackY);
+                projectPointOntoScreen(optiTrackX, optiTrackY);
             }
-            SetCursorPos(800,800);
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
             cursorPositions.Enqueue(currentCursorPosition);
@@ -529,7 +535,7 @@ namespace SketchAssistantWPF
 
         private void projectPointOntoScreen(float optiTrackX, float optiTrackY)
         {
-            Point auxiliaryPoint = ConvertToPixels(new Point(optiTrackX, optiTrackY));
+            Point auxiliaryPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
             SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
         }
 
