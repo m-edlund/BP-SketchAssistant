@@ -32,6 +32,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("bla")]
         public void CreateCanvasTest()
         {
             Window mainWindow = setupapp();
@@ -44,6 +45,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("bla")]
         public void DrawLineTest()
         {
             Window mainWindow = setupapp();
@@ -92,6 +94,7 @@ namespace WhiteTests
          }*/
 
         [TestMethod]
+        [TestCategory("bla")]
         public void UndoTest()
         {
             Window mainWindow = setupapp();
@@ -115,6 +118,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("bla")]
         public void RedoTest()
         {
             Window mainWindow = setupapp();
@@ -173,6 +177,7 @@ namespace WhiteTests
         /// <param name="xCoordinates">an array containing the x coordinates of the points that will be created (length divisible by 3)</param>
         /// <param name="yCoordinates">an array containing the y coordinates of the points that will be created (length divisible by 3)</param>
         [DataTestMethod]
+        [TestCategory("bla")]
         [DataRow(new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 })]
         [DataRow(new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 })]
         [DataRow(new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 })]
@@ -213,6 +218,7 @@ namespace WhiteTests
         /// </summary>
         /// <param name="file">the input file represented as an array of lines</param>
         [DataTestMethod]
+        [TestCategory("bla")]
         [DataRow(new String[] {})]
         [DataRow(new String[] { "begindrawing", "300x300", "line", "50;50", "100;50", "endline", "enddrawing" })]
         [DataRow(new String[] { "drawing", "300;300", "line", "50;50", "100;50", "endline", "enddrawing" })]
