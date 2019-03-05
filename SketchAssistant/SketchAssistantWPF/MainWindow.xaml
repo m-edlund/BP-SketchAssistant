@@ -38,6 +38,7 @@
                         <MenuItem x:Name="DebugOne" Header="Debug 1" Click="DebugOne_Click"/>
                         <MenuItem x:Name="DebugTwo" Header="Debug 2" Click="DebugTwo_Click"/>
                         <MenuItem x:Name="DebugThree" Header="Debug 3" Click="DebugThree_Click"/>
+                        <MenuItem x:Name="DebugFour" Header="Debug 4" Click="DebugFour_Click"/>
                     </MenuItem>
                 </MenuItem>
             </Menu>
@@ -181,8 +182,7 @@
         <Canvas Name="CanvasSeperator" Grid.Column="5" Grid.Row="1" Background="LightGray" />
         <InkCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="6" Grid.Row="1" Height="auto"
             PreviewMouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" 
-                   MouseLeave="RightCanvas_MouseLeave" MouseEnter="RightCanvas_MouseEnter" TouchEnter="RightCanvas_TouchEnter" 
-                   TouchLeave="RightCanvas_TouchLeave" StrokeCollected="RightCanvas_StrokeCollection"/>
+                    StrokeCollected="RightCanvas_StrokeCollection" EditingMode="None"/>
 
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="8">

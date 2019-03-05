@@ -106,7 +106,8 @@ namespace SketchAssistantWPF
         /// Adds a point to the right canvas
         /// </summary>
         /// <param name="newPoint">The point</param>
-        void AddNewPointRight(Ellipse newPoint);
+        /// <param name="line">The original line object</param>
+        void AddNewPointRight(Ellipse newPoint, InternalLine line);
 
         /// <summary>
         /// Adds a point to the left canvas

@@ -43,6 +43,7 @@ namespace SketchAssistantWPF
             Click,
             Down,
             Up,
+            Up_Invalid,
             Move
         }
 
@@ -77,7 +78,7 @@ namespace SketchAssistantWPF
         {
             CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
             CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
-            programModel.UpdateSizes(CanvasSizeRight);
+            //programModel.UpdateSizes(CanvasSizeRight);
             programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
         }
 
@@ -97,18 +98,32 @@ namespace SketchAssistantWPF
                 if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
                 {
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
-                    programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                    try
+                    {
+                        Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                        programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
 
-                    programModel.ResetRightImage();
-                    programModel.CanvasActivated();
-                    programModel.ChangeState(true);
-                    programView.EnableTimer();
-                    ClearRightLines();
+                        programModel.ResetRightImage();
+                        programModel.CanvasActivated();
+                        programModel.ChangeState(true);
+                        programView.EnableTimer();
+                        ClearRightLines();
+                    }
+                    catch (FileImporterException ex)
+                    {
+                        programView.ShowInfoMessage(ex.ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        programView.ShowInfoMessage("exception occured while trying to load interactive sketch-assistant drawing file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace);
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Display a new FileDialog to a svg drawing.
+        /// </summary>
         public void SVGToolStripMenuItemClick()
         {
             var okToContinue = true;
@@ -227,13 +242,16 @@ namespace SketchAssistantWPF
                 case MouseAction.Click:
                     programModel.MouseDown();
                     programModel.Tick();
-                    programModel.MouseUp();
+                    programModel.MouseUp(true);
                     break;
                 case MouseAction.Down:
                     programModel.MouseDown();
                     break;
                 case MouseAction.Up:
-                    programModel.MouseUp();
+                    programModel.MouseUp(true);
+                    break;
+                case MouseAction.Up_Invalid:
+                    programModel.MouseUp(false);
                     break;
                 default:
                     break;
@@ -251,18 +269,6 @@ namespace SketchAssistantWPF
         public Point GetCursorPosition()
         {
             return programView.GetCursorPosition();
-        }
-
-        /// <summary>
-        /// Updates the currentline
-        /// </summary>
-        /// <param name="linepoints">The points of the current line.</param>
-        public void UpdateCurrentLine(List<Point> linepoints)
-        {
-            Polyline currentLine = new Polyline();
-            currentLine.Stroke = Brushes.Black;
-            currentLine.Points = new PointCollection(linepoints);
-            programView.DisplayCurrLine(currentLine);
         }
 
         /// <summary>
@@ -295,16 +301,27 @@ namespace SketchAssistantWPF
                     else
                     {
                         Ellipse newPoint = new Ellipse();
-                        newPoint.SetValue(Canvas.LeftProperty, line.point.X);
-                        newPoint.SetValue(Canvas.TopProperty, line.point.Y);
                         rightPolyLines.Add(line.GetID(), newPoint);
-                        programView.AddNewPointRight(newPoint);
+                        programView.AddNewPointRight(newPoint, line);
                     }
                 }
                 SetVisibility(rightPolyLines[line.GetID()], status);
             }
         }
 
+        /*
+        /// <summary>
+        /// Updates the currentline
+        /// </summary>
+        /// <param name="linepoints">The points of the current line.</param>
+        public void UpdateCurrentLine(List<Point> linepoints)
+        {
+            Polyline currentLine = new Polyline();
+            currentLine.Stroke = Brushes.Black;
+            currentLine.Points = new PointCollection(linepoints);
+            programView.DisplayCurrLine(currentLine);
+        }
+        */
         /// <summary>
         /// A function to update the displayed lines in the left canvas.
         /// </summary>
@@ -407,52 +424,6 @@ namespace SketchAssistantWPF
             {
                 line.Opacity = 1;
             }
-        }
-
-        /// <summary>
-        /// A function that calculates the coordinates of a point on a zoomed in image.
-        /// </summary>
-        /// <param name="">The position of the mouse cursor</param>
-        /// <returns>The real coordinates of the mouse cursor on the image</returns>
-        private Point ConvertCoordinates(Point cursorPosition)
-        {
-            if (!programModel.canvasActive) { return cursorPosition; }
-            if (programModel.canvasActive && !programModel.graphicLoaded) { return cursorPosition; }
-            ImageDimension rightImageDimensions = programModel.rightImageSize;
-            Point realCoordinates = new Point(0, 0);
-
-            int widthImage = rightImageDimensions.Width;
-            int heightImage = rightImageDimensions.Height;
-            int widthBox = programModel.rightImageBoxWidth;
-            int heightBox = programModel.rightImageBoxHeight;
-
-            if (heightImage == 0 && widthImage == 0)
-            {
-                return cursorPosition;
-            }
-
-            float imageRatio = (float)widthImage / (float)heightImage;
-            float containerRatio = (float)widthBox / (float)heightBox;
-
-            if (imageRatio >= containerRatio)
-            {
-                //Image is wider than it is high
-                float zoomFactor = (float)widthImage / (float)widthBox;
-                float scaledHeight = heightImage / zoomFactor;
-                float filler = (heightBox - scaledHeight) / 2;
-                realCoordinates.X = (int)(cursorPosition.X * zoomFactor);
-                realCoordinates.Y = (int)((cursorPosition.Y - filler) * zoomFactor);
-            }
-            else
-            {
-                //Image is higher than it is wide
-                float zoomFactor = (float)heightImage / (float)heightBox;
-                float scaledWidth = widthImage / zoomFactor;
-                float filler = (widthBox - scaledWidth) / 2;
-                realCoordinates.X = (int)((cursorPosition.X - filler) * zoomFactor);
-                realCoordinates.Y = (int)(cursorPosition.Y * zoomFactor);
-            }
-            return realCoordinates;
         }
     }
 }
