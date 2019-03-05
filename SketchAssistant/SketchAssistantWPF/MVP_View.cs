@@ -106,7 +106,8 @@ namespace SketchAssistantWPF
         /// Adds a point to the right canvas
         /// </summary>
         /// <param name="newPoint">The point</param>
-        void AddNewPointRight(Ellipse newPoint);
+        /// <param name="line">The original line object</param>
+        void AddNewPointRight(Ellipse newPoint, InternalLine line);
 
         /// <summary>
         /// Adds a point to the left canvas
@@ -120,10 +121,10 @@ namespace SketchAssistantWPF
         /// <returns>The cursor Position</returns>
         Point GetCursorPosition();
 
-		/// <summary>
-		/// Sets the contents of the last action taken indicator label.
-		/// </summary>
-		/// <param name="message">The new contents</param>
-		void SetOptiTrackText(String message);
-	}
+        /// <summary>
+        /// Sets the contents of the last action taken indicator label.
+        /// </summary>
+        /// <param name="message">The new contents</param>
+        void SetOptiTrackText(String message);
+    }
 }

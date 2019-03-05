@@ -101,12 +101,12 @@ namespace SketchAssistantWPF
                     if (currPoint.X >= 0 && currPoint.Y >= 0 &&
                         currPoint.X < boolMatrix.GetLength(0) && currPoint.Y < boolMatrix.GetLength(1))
                     {
-                        boolMatrix[(int) currPoint.X, (int) currPoint.Y] = true;
-                        if (listMatrix[(int) currPoint.X, (int) currPoint.Y] == null)
+                        boolMatrix[(int)currPoint.X, (int)currPoint.Y] = true;
+                        if (listMatrix[(int)currPoint.X, (int)currPoint.Y] == null)
                         {
-                            listMatrix[(int) currPoint.X, (int) currPoint.Y] = new HashSet<int>();
+                            listMatrix[(int)currPoint.X, (int)currPoint.Y] = new HashSet<int>();
                         }
-                        listMatrix[(int) currPoint.X, (int) currPoint.Y].Add(identifier);
+                        listMatrix[(int)currPoint.X, (int)currPoint.Y].Add(identifier);
                     }
                 }
             }
@@ -117,26 +117,21 @@ namespace SketchAssistantWPF
         /// </summary>
         private void CleanPoints()
         {
-            if (linePoints.Count > 1)
+            if (linePoints.Any())
             {
-                //if this is a point or not
-                var localIsPoint = true;
                 //check if its a point
-                foreach(Point p in linePoints)
+                var localIsPoint = linePoints.All(o => o.X == linePoints.First().X && o.Y == linePoints.First().Y);
+                if (!localIsPoint)
                 {
-                    if (p.X != linePoints[0].X || p.Y != linePoints[0].Y)
-                        localIsPoint = false;
-                }
-                if (!localIsPoint) {
                     List<Point> newList = new List<Point>();
                     List<Point> tempList = new List<Point>();
                     //Since Point is non-nullable, we must ensure the nullPoints, 
                     //which we remove can not possibly be points of the original given line.
-                    int nullValue = (int) linePoints[0].X + 1;
+                    int nullValue = (int)linePoints[0].X + 1;
                     //Fill the gaps between points
                     for (int i = 0; i < linePoints.Count - 1; i++)
                     {
-                        nullValue += (int) linePoints[i + 1].X;
+                        nullValue += (int)linePoints[i + 1].X;
                         List<Point> partialList = GeometryCalculator.BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
                         tempList.AddRange(partialList);
                     }
@@ -162,8 +157,8 @@ namespace SketchAssistantWPF
                 else
                 {
                     isPoint = true;
-                    point = linePoints[0];
-                    linePoints = new List<Point>();
+                    point = linePoints.First();
+                    linePoints.Clear();
                     linePoints.Add(point);
                 }
             }

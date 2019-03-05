@@ -1,17 +1,15 @@
-﻿<Window x:Class="SketchAssistantWPF.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SketchAssistantWPF"
-        mc:Ignorable="d"
-        Title="Sketch Assistant" Height="612" Width="914" SizeChanged="Window_SizeChanged">
+﻿<Window x:Class="SketchAssistantWPF.MainWindow" 
+    xmlns:local="clr-namespace:SketchAssistantWPF" 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" Title="Sketch Assistant" Height="612" Width="914" SizeChanged="Window_SizeChanged">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="55*"/>
             <ColumnDefinition Width="170*"/>
+            <ColumnDefinition Width="55*"/>
             <ColumnDefinition Width="225*"/>
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="226*"/>
@@ -27,16 +25,18 @@
         <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="0" Background="LightGray">
             <Menu Background="LightGray">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
-                    <MenuItem Header="Load SVG File" Click="MenuItem_Click"/>
+                    <MenuItem x:Name="ISADMenuButton" Header="Load .isad Drawing" Click="ISADMenuItem_Click"/>
+                    <MenuItem x:Name="SVGMenuButton" Header="Import SVG File" Click="SVGMenuItem_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="EditMenuButton" Header="Edit">
-                    <MenuItem Header="New Canvas" Click="CanvasButton_Click"/>
-                    <MenuItem Header="Undo" Click="UndoButton_Click"/>
-                    <MenuItem Header="Redo" Click="RedoButton_Click"/>
+                    <MenuItem x:Name="CanvasMenuButton" Header="New Canvas" Click="CanvasButton_Click"/>
+                    <MenuItem x:Name="UndoMenuButton" Header="Undo" Click="UndoButton_Click"/>
+                    <MenuItem x:Name="RedoMenuButton" Header="Redo" Click="RedoButton_Click"/>
                     <MenuItem x:Name="DebugMode" Header="Debug Input">
                         <MenuItem x:Name="DebugOne" Header="Debug 1" Click="DebugOne_Click"/>
                         <MenuItem x:Name="DebugTwo" Header="Debug 2" Click="DebugTwo_Click"/>
                         <MenuItem x:Name="DebugThree" Header="Debug 3" Click="DebugThree_Click"/>
+                        <MenuItem x:Name="DebugFour" Header="Debug 4" Click="DebugFour_Click"/>
                     </MenuItem>
                 </MenuItem>
             </Menu>
@@ -87,7 +87,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click" >
+            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -129,7 +129,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click" >
+            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -176,32 +176,54 @@
                 </Rectangle>
             </Button>
             <ToggleButton x:Name="DrawWithOptiButton" ToolTip="Enter Drawing Mode (OptiTrack)" Click="DrawWithOptiButton_Click">
-                <Canvas  Name="svg62" Width="30" Height="30">
-                    <Canvas.RenderTransform>
-                        <TranslateTransform X="4" Y="-270"/>
-                    </Canvas.RenderTransform>
-                    <Canvas.Resources/>
-                    <!--Unknown tag: sodipodi:namedview-->
-                    <!--Unknown tag: metadata-->
-                    <Canvas Name="layer1">
-                        <Canvas Name="imagebot_3">
-                            <Canvas.RenderTransform>
-                                <MatrixTransform Matrix="0.30985915 0 0 0.23913043 122.08141 350.11087"/>
-                            </Canvas.RenderTransform>
-                            <Path Name="imagebot_5" Fill="#FFFEFEFE" Data="m -368.99 -226.1 v -9 h -4 v -8 h -4 v -8 h -4 v -9 h -5 v -4 h -4 v -8 h 9 v 4 h 4 v 12 h 4 v -54 h 8 v 38 h 4 v -17 h 9 v 17 h 4 v -13 h 8 v 17 h 4 v -13 h 5 v 5 h 4 v 29 h -4 v 12 h -5 v 9 z"/>
-                            <Path Name="imagebot_4" Fill="#FF000000" Data="m -372.99 -222.1 v -13 h -4 v -8 h -4 v -8 h -5 v -9 h -4 v -4 h -4 v -12 h 13 v 4 h 4 v -38 h 4 v -4 h 8 v 4 h 4 v 17 h 9 v 4 h 12 v 4 h 9 v 4 h 4 v 5 h 4 v 29 h -4 v 12 h -4 v 13 z m 37 -4 v -9 h 5 v -12 h 4 v -29 h -4 v -5 h -5 v 13 h -4 v -17 h -8 v 13 h -4 v -17 h -9 v 17 h -4 v -38 h -8 v 54 h -4 v -12 h -4 v -4 h -9 v 8 h 4 v 4 h 5 v 9 h 4 v 8 h 4 v 8 h 4 v 9 z"/>
-                        </Canvas>
-                    </Canvas>
-                </Canvas>
+                <Rectangle Width="30" Height="30">
+                    <Rectangle.Fill>
+                        <DrawingBrush>
+                            <DrawingBrush.Drawing>
+                                <DrawingGroup Transform="1,0,0,1,-30.972436,-202.26931">
+                                    <GeometryDrawing Brush="#FF000000">
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FF000000" Thickness="1.01090431" StartLineCap="Flat" EndLineCap="Flat" LineJoin="Miter" />
+                                        </GeometryDrawing.Pen>
+                                        <GeometryDrawing.Geometry>
+                                            <RectangleGeometry RadiusX="11.1847" RadiusY="11.1847" Rect="92.1615,202.7748,95.2826,53.7929" />
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                    <GeometryDrawing Brush="#FF000000">
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FF000000" Thickness="2.57952762" StartLineCap="Flat" EndLineCap="Flat" LineJoin="Miter" />
+                                        </GeometryDrawing.Pen>
+                                        <GeometryDrawing.Geometry>
+                                            <RectangleGeometry RadiusX="32.2622" RadiusY="32.2622" Rect="32.2622,219.6902,215.0813,155.1658" />
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                    <GeometryDrawing>
+                                        <GeometryDrawing.Pen>
+                                            <Pen Brush="#FFFFFFFF" Thickness="10.62992096" StartLineCap="Flat" EndLineCap="Flat" LineJoin="Miter" />
+                                        </GeometryDrawing.Pen>
+                                        <GeometryDrawing.Geometry>
+                                            <EllipseGeometry RadiusX="48.8035" RadiusY="48.8035" Center="139.8029,297.2731" />
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                    <GeometryDrawing Brush="#FFFFFFFF">
+                                        <GeometryDrawing.Geometry>
+                                            <EllipseGeometry RadiusX="11.2372" RadiusY="11.2372" Center="66.1719,256.4501" />
+                                        </GeometryDrawing.Geometry>
+                                    </GeometryDrawing>
+                                </DrawingGroup>
+                            </DrawingBrush.Drawing>
+                        </DrawingBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
             </ToggleButton>
         </ToolBar>
-        <Canvas Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="3"/>
-        <Canvas Name="CanvasSeperator" Grid.Column="5" Grid.Row="1" Background="LightGray"/>
-        <Canvas Name="RightCanvas" Background="SlateGray" Grid.Column="6" Grid.Row="1" Height="auto"
-            MouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" MouseLeave="RightCanvas_MouseLeave"/>
+        <local:CustomCanvas x:Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="3"/>
+        <Canvas Name="CanvasSeperator" Grid.Column="5" Grid.Row="1" Background="LightGray" />
+        <InkCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="6" Grid.Row="1" Height="auto" PreviewMouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" StrokeCollected="RightCanvas_StrokeCollection" EditingMode="None"/>
+
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="8">
-            <StatusBar DockPanel.Dock="Bottom" Name="StatusBar"  Background="LightGray">
+            <StatusBar DockPanel.Dock="Bottom" Name="StatusBar" Background="LightGray">
                 <TextBox Name="LoadStatusBox" Text="nothing loaded" Background="LightGray"/>
                 <Separator/>
                 <TextBox Name="LastActionBox" Text="none" Background="LightGray"/>
