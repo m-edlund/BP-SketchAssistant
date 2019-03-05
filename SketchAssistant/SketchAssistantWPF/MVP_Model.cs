@@ -361,19 +361,27 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Finish the current Line, when the pressed Mouse is released.
         /// </summary>
-        public void MouseUp()
+        /// <param name="valid">Whether the up event is valid or not</param>
+        public void MouseUp(bool valid)
         {
             mouseDown = false;
-            if (inDrawingMode && currentLine.Count > 0)
+            if (valid)
             {
-                InternalLine newLine = new InternalLine(currentLine, rightLineList.Count);
-                rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
-                newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
-                programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
-                //TODO: For the person implementing overlay: Add check if overlay needs to be added
-                programPresenter.UpdateRightLines(rightLineList);
+                if (inDrawingMode && currentLine.Count > 0)
+                {
+                    InternalLine newLine = new InternalLine(currentLine, rightLineList.Count);
+                    rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
+                    newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                    programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
+                    //TODO: For the person implementing overlay: Add check if overlay needs to be added
+                    programPresenter.UpdateRightLines(rightLineList);
+                    currentLine.Clear();
+                    //programPresenter.UpdateCurrentLine(currentLine);
+                }
+            }
+            else
+            {
                 currentLine.Clear();
-                programPresenter.UpdateCurrentLine(currentLine);
             }
             UpdateUI();
         }
@@ -390,7 +398,7 @@ namespace SketchAssistantWPF
             if (inDrawingMode && programPresenter.IsMousePressed())
             {
                 currentLine.Add(currentCursorPosition);
-                programPresenter.UpdateCurrentLine(currentLine);
+                //programPresenter.UpdateCurrentLine(currentLine);
             }
             //Deleting
             if (!inDrawingMode && programPresenter.IsMousePressed())
@@ -413,7 +421,7 @@ namespace SketchAssistantWPF
                 }
             }
         }
-
+        /*
         /// <summary>
         /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
         /// </summary>
@@ -444,6 +452,7 @@ namespace SketchAssistantWPF
                 deletionRadius = (int)(5 * zoomFactor);
             }
         }
+        */
 
         /// <summary>
         /// If there is unsaved progress.

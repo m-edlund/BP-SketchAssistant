@@ -13,54 +13,6 @@ namespace SketchAssistantWPF
     public static class GeometryCalculator
     {
         /// <summary>
-        /// An implementation of the Bresenham Line Algorithm,
-        /// which calculates the points of a circle in a radius around a center point.
-        /// Implemented with the help of code examples on Wikipedia.
-        /// </summary>
-        /// <param name="center">The center of the circle.</param>
-        /// <param name="radius">The radius of the circle, 
-        /// when it is zero or less, only the midpoint is returned</param>
-        /// <returns>The HashSet containing all Points on the circle.</returns>
-        public static HashSet<Point> BresenhamCircleAlgorithm(Point center, int radius)
-        {
-            if (radius <= 0) { return new HashSet<Point> { center }; }
-
-            int x = radius - 1;
-            int y = 0;
-            int dx = 1;
-            int dy = 1;
-            int err = dx - (radius * 2);
-            HashSet<Point> returnSet = new HashSet<Point>();
-
-            while (x >= y)
-            {
-                returnSet.Add(new Point(center.X + x, center.Y + y));
-                returnSet.Add(new Point(center.X + y, center.Y + x));
-                returnSet.Add(new Point(center.X - y, center.Y + x));
-                returnSet.Add(new Point(center.X - x, center.Y + y));
-                returnSet.Add(new Point(center.X - x, center.Y - y));
-                returnSet.Add(new Point(center.X - y, center.Y - x));
-                returnSet.Add(new Point(center.X + y, center.Y - x));
-                returnSet.Add(new Point(center.X + x, center.Y - y));
-
-                if (err <= 0)
-                {
-                    y++;
-                    err += dy;
-                    dy += 2;
-                }
-
-                if (err > 0)
-                {
-                    x--;
-                    dx += 2;
-                    err += dx - (radius * 2);
-                }
-            }
-            return returnSet;
-        }
-
-        /// <summary>
         /// A simple algorithm that returns a filled circle with a radius and a center point.
         /// </summary>
         /// <param name="center">The center point of the alorithm </param>

@@ -7,11 +7,18 @@ install:
  - "nuget install MSTest.TestFramework"
  - "nuget restore SketchAssistant/SketchAssistant.sln"
  
-#artifacts:
+before_build:
+ - ps: .\screenres.ps1
+ 
+artifacts:
+ - path: \SketchAssistant\GeneratedReports\
 #  - path: SketchAssistant/WhiteTests/test_input_files/whitelisted/*.svg
 #    name: whitelisted svg files for testing
 #  - path: SketchAssistant/WhiteTests/test_input_files/blacklisted/*.svg
 #    name: blacklisted svg files for testing
+
+before_test:
+ - ps: "SketchAssistant/GenerateCoverageReport.bat"
 
 test:
     #don't run tests depending on [DeploymentItem] and filesystem access

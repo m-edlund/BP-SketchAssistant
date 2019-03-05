@@ -7,6 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistantWPF", "Sketc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhiteTests", "WhiteTests\WhiteTests.csproj", "{EB09C624-91F2-465F-825B-559BF7A7D5CB}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CoverageTools", "CoverageTools", "{A179F8A5-FBEB-4DBB-8AF4-DD1B5C714A8F}"
+	ProjectSection(SolutionItems) = preProject
+		GenerateCoverageReport.bat = GenerateCoverageReport.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
