@@ -27,7 +27,7 @@ namespace SketchAssistantWPF
         /// </summary>
         Dictionary<int, Shape> rightPolyLines;
 
-        ImageDimension CanvasSizeLeft = new ImageDimension(0,0);
+        ImageDimension CanvasSizeLeft = new ImageDimension(0, 0);
 
         ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
 
@@ -44,6 +44,7 @@ namespace SketchAssistantWPF
             Click,
             Down,
             Up,
+            Up_Invalid,
             Move
         }
 
@@ -78,7 +79,7 @@ namespace SketchAssistantWPF
         {
             CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
             CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
-            programModel.UpdateSizes(CanvasSizeRight);
+            //programModel.UpdateSizes(CanvasSizeRight);
             programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
         }
 
@@ -98,14 +99,63 @@ namespace SketchAssistantWPF
                 if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
                 {
                     programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
-                    programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                    try
+                    {
+                        Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                        programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
 
-                    programModel.ResetRightImage();
-                    programModel.CanvasActivated();
-                    programModel.ChangeState(true);
-                    programView.EnableTimer();
-                    ClearRightLines();
+                        programModel.ResetRightImage();
+                        programModel.CanvasActivated();
+                        programModel.ChangeState(true);
+                        programView.EnableTimer();
+                        ClearRightLines();
+                    }
+                    catch (FileImporterException ex)
+                    {
+                        programView.ShowInfoMessage(ex.ToString(),"");
+                    }
+                    catch (Exception ex)
+                    {
+                        programView.ShowInfoMessage("exception occured while trying to load interactive sketch-assistant drawing file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace, "");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Display a new FileDialog to a svg drawing.
+        /// </summary>
+        public void SVGToolStripMenuItemClick()
+        {
+            var okToContinue = true;
+            if (programModel.HasUnsavedProgress())
+            {
+                okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
+            }
+            if (okToContinue)
+            {
+                var fileNameTup = programView.openNewDialog("Scalable Vector Graphics|*.svg");
+                if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
+                {
+                    programView.SetToolStripLoadStatus(fileNameTup.Item2);
+                    try
+                    {
+                        Tuple<int, int, List<InternalLine>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
+                        programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                        programModel.ResetRightImage();
+                        programModel.CanvasActivated();
+                        programModel.ChangeState(true);
+                        programView.EnableTimer();
+                        ClearRightLines();
+                    }
+                    catch (FileImporterException ex)
+                    {
+                        programView.ShowInfoMessage(ex.ToString(), "");
+                    }
+                    catch (Exception ex)
+                    {
+                        programView.ShowInfoMessage("exception occured while trying to parse svg file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace, "");
+                    }
                 }
             }
         }
@@ -124,7 +174,10 @@ namespace SketchAssistantWPF
         /// </summary>
         public void ChangeOptiTrack(bool usingOptiTrack)
         {
-            programModel.SetOptiTrack(usingOptiTrack);
+            if (programModel.optitrackAvailable)
+            {
+                programModel.SetOptiTrack(usingOptiTrack);
+            }
         }
 
         /// <summary>
@@ -176,7 +229,7 @@ namespace SketchAssistantWPF
         /// Pass-trough when the mouse is moved.
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
-        /// <param name="e">The Mouse event arguments.</param>
+        /// <param name="position">The position of the mouse.</param>
         public void MouseEvent(MouseAction mouseAction, Point position)
         {
             switch (mouseAction)
@@ -193,7 +246,6 @@ namespace SketchAssistantWPF
         /// Pass-trough function that calls the correct Mouse event of the model, when the mouse is clicked.
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
-        /// <param name="e">The Mouse event arguments.</param>
         public void MouseEvent(MouseAction mouseAction)
         {
             if (!programModel.optiTrackInUse)
@@ -203,19 +255,21 @@ namespace SketchAssistantWPF
                     case MouseAction.Click:
                         programModel.StartNewLine();
                         programModel.Tick();
-                        programModel.FinishCurrentLine();
+                        programModel.FinishCurrentLine(true);
                         break;
                     case MouseAction.Down:
                         programModel.StartNewLine();
                         break;
                     case MouseAction.Up:
-                        programModel.FinishCurrentLine();
+                        programModel.FinishCurrentLine(true);
+                        break;
+                    case MouseAction.Up_Invalid:
+                        programModel.FinishCurrentLine(false);
                         break;
                     default:
                         break;
                 }
             }
-           
         }
 
         /************************************/
@@ -257,7 +311,7 @@ namespace SketchAssistantWPF
         /// </summary>
         public void UpdateRightLines(List<Tuple<bool, InternalLine>> lines)
         {
-            foreach(Tuple<bool, InternalLine> tup in lines)
+            foreach (Tuple<bool, InternalLine> tup in lines)
             {
                 var status = tup.Item1;
                 var line = tup.Item2;
@@ -273,10 +327,8 @@ namespace SketchAssistantWPF
                     else
                     {
                         Ellipse newPoint = new Ellipse();
-                        newPoint.SetValue(Canvas.LeftProperty, line.point.X);
-                        newPoint.SetValue(Canvas.TopProperty, line.point.Y);
                         rightPolyLines.Add(line.GetID(), newPoint);
-                        programView.AddNewPointRight(newPoint);
+                        programView.AddNewPointRight(newPoint, line);
                     }
                 }
                 SetVisibility(rightPolyLines[line.GetID()], status);
@@ -309,7 +361,10 @@ namespace SketchAssistantWPF
         /// <param name="canRedo">If actions in the model can be redone</param>
         /// <param name="canvasActive">If the right canvas is active</param>
         /// <param name="graphicLoaded">If an image is loaded in the model</param>
-        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive, bool graphicLoaded, bool optiTrackInUse)
+        /// <param name="optiTrackAvailable">If there is an optitrack system available</param>
+        /// <param name="optiTrackInUse">If the optitrack system is active</param>
+        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive,
+                bool graphicLoaded, bool optiTrackAvailable, bool optiTrackInUse)
         {
             Dictionary<String, MainWindow.ButtonState> dict = new Dictionary<String, MainWindow.ButtonState> {
                 {"canvasButton", MainWindow.ButtonState.Enabled }, {"drawButton", MainWindow.ButtonState.Disabled}, {"deleteButton",MainWindow.ButtonState.Disabled },
@@ -319,24 +374,36 @@ namespace SketchAssistantWPF
             {
                 if (inDrawingMode)
                 {
-                    if (!optiTrackInUse)
-                    { 
-                        dict["drawButton"] = MainWindow.ButtonState.Active;
-                        dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
-                        dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                    if (optiTrackAvailable)
+                    {
+                        if (optiTrackInUse)
+                        {
+                            dict["drawButton"] = MainWindow.ButtonState.Enabled;
+                            dict["drawWithOptiButton"] = MainWindow.ButtonState.Active;
+                            dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                        }
+                        else
+                        {
+                            dict["drawButton"] = MainWindow.ButtonState.Active;
+                            dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
+                            dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                        }
                     }
                     else
                     {
-                        dict["drawButton"] = MainWindow.ButtonState.Enabled;
-                        dict["drawWithOptiButton"] = MainWindow.ButtonState.Active;
+                        dict["drawButton"] = MainWindow.ButtonState.Active;
                         dict["deleteButton"] = MainWindow.ButtonState.Enabled;
                     }
+
                 }
                 else
                 {
                     dict["drawButton"] = MainWindow.ButtonState.Enabled;
-                    dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
                     dict["deleteButton"] = MainWindow.ButtonState.Active;
+                    if (optiTrackAvailable)
+                    {
+                        dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
+                    }
                 }
                 if (canUndo) { dict["undoButton"] = MainWindow.ButtonState.Enabled; }
                 if (canRedo) { dict["redoButton"] = MainWindow.ButtonState.Enabled; }
@@ -387,22 +454,22 @@ namespace SketchAssistantWPF
             return programView.IsMousePressed();
         }
 
-		public void PassOptiTrackMessage(String stringToPass)
-		{
+        public void PassOptiTrackMessage(String stringToPass)
+        {
             programView.SetOptiTrackText(stringToPass);
             //programView.SetOptiTrackText("X: ");// + x + "Y: " + y + "Z: " + z);
         }
 
-		/*************************/
-		/*** HELPING FUNCTIONS ***/
-		/*************************/
+        /*************************/
+        /*** HELPING FUNCTIONS ***/
+        /*************************/
 
-		/// <summary>
-		/// Sets the visibility of a polyline.
-		/// </summary>
-		/// <param name="line">The polyline</param>
-		/// <param name="visible">Whether or not it should be visible.</param>
-		private void SetVisibility(Shape line, bool visible)
+        /// <summary>
+        /// Sets the visibility of a polyline.
+        /// </summary>
+        /// <param name="line">The polyline</param>
+        /// <param name="visible">Whether or not it should be visible.</param>
+        private void SetVisibility(Shape line, bool visible)
         {
             if (!visible)
             {
@@ -413,53 +480,5 @@ namespace SketchAssistantWPF
                 line.Opacity = 1;
             }
         }
-
-        /// <summary>
-        /// A function that calculates the coordinates of a point on a zoomed in image.
-        /// </summary>
-        /// <param name="">The position of the mouse cursor</param>
-        /// <returns>The real coordinates of the mouse cursor on the image</returns>
-        private Point ConvertCoordinates(Point cursorPosition)
-        {
-            if (!programModel.canvasActive) { return cursorPosition; }
-            if (programModel.canvasActive && !programModel.graphicLoaded) { return cursorPosition; }
-            ImageDimension rightImageDimensions = programModel.rightImageSize;
-            Point realCoordinates = new Point(0, 0);
-
-            int widthImage = rightImageDimensions.Width;
-            int heightImage = rightImageDimensions.Height;
-            int widthBox = programModel.rightImageBoxWidth;
-            int heightBox = programModel.rightImageBoxHeight;
-
-            if (heightImage == 0 && widthImage == 0)
-            {
-                return cursorPosition;
-            }
-
-            float imageRatio = (float)widthImage / (float)heightImage;
-            float containerRatio = (float)widthBox / (float)heightBox;
-
-            if (imageRatio >= containerRatio)
-            {
-                //Image is wider than it is high
-                float zoomFactor = (float)widthImage / (float)widthBox;
-                float scaledHeight = heightImage / zoomFactor;
-                float filler = (heightBox - scaledHeight) / 2;
-                realCoordinates.X = (int)(cursorPosition.X * zoomFactor);
-                realCoordinates.Y = (int)((cursorPosition.Y - filler) * zoomFactor);
-            }
-            else
-            {
-                //Image is higher than it is wide
-                float zoomFactor = (float)heightImage / (float)heightBox;
-                float scaledWidth = widthImage / zoomFactor;
-                float filler = (widthBox - scaledWidth) / 2;
-                realCoordinates.X = (int)((cursorPosition.X - filler) * zoomFactor);
-                realCoordinates.Y = (int)(cursorPosition.Y * zoomFactor);
-            }
-            return realCoordinates;
-        }
-
-		
-	}
+    }
 }

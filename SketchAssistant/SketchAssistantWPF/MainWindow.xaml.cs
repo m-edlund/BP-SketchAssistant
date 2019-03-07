@@ -19,6 +19,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Windows.Ink;
 
 namespace SketchAssistantWPF
 {
@@ -39,9 +40,9 @@ namespace SketchAssistantWPF
                     InDebugMode = true;
                 }
             }
-            if(!InDebugMode)
+            if (!InDebugMode)
             {
-//DebugMode.Visibility = Visibility.Collapsed;
+                DebugMode.Visibility = Visibility.Collapsed;
             }
             ProgramPresenter = new MVP_Presenter(this);
             //  DispatcherTimer setup
@@ -51,11 +52,8 @@ namespace SketchAssistantWPF
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
         }
-        
 
-    
-
-    public enum ButtonState
+        public enum ButtonState
         {
             Enabled,
             Disabled,
@@ -91,6 +89,10 @@ namespace SketchAssistantWPF
         /// Point collections for debugging.
         /// </summary>
         DebugData debugDat = new DebugData();
+        /// <summary>
+        /// Stores Lines drawn on RightCanvas.
+        /// </summary>
+        StrokeCollection strokeCollection = new StrokeCollection();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -103,6 +105,15 @@ namespace SketchAssistantWPF
         {
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.ActualWidth, (int)LeftCanvas.ActualHeight),
                 new Tuple<int, int>((int)RightCanvas.ActualWidth, (int)RightCanvas.ActualHeight));
+        }
+
+        /// <summary>
+        /// Collects all Strokes on RightCanvas
+        /// </summary>
+        public void RightCanvas_StrokeCollection(object sender, InkCanvasStrokeCollectedEventArgs e)
+        {
+            strokeCollection.Add(e.Stroke);
+            System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
         }
 
         /// <summary>
@@ -127,6 +138,7 @@ namespace SketchAssistantWPF
         private void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.ChangeState(false);
+            RightCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
         }
 
         /// <summary>
@@ -136,6 +148,7 @@ namespace SketchAssistantWPF
         {
             ProgramPresenter.ChangeOptiTrack(false);
             ProgramPresenter.ChangeState(true);
+            RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
 
         /// <summary>
@@ -145,6 +158,7 @@ namespace SketchAssistantWPF
         {
             ProgramPresenter.ChangeOptiTrack(true);
             ProgramPresenter.ChangeState(true);
+            RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
 
         /// <summary>
@@ -161,24 +175,18 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+            if (strokeCollection.Count == 0)
+            {
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid);
+            }
+            else
+            {
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+                RightCanvas.Strokes.RemoveAt(0);
+                strokeCollection.RemoveAt(0);
+                System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+            }
             //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);");
-        }
-
-        /// <summary>
-        /// If the mouse leaves the canvas, it is treated as if the mouse was released.
-        /// </summary>
-        private void RightCanvas_MouseLeave(object sender, MouseEventArgs e)
-        {
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
-        }
-        
-        /// <summary>
-        /// If the finger leaves the canvas, it is treated as if the finger was released.
-        /// </summary>
-        private void RightCanvas_TouchLeave(object sender, TouchEventArgs e)
-        {
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
         }
 
         /// <summary>
@@ -198,33 +206,8 @@ namespace SketchAssistantWPF
         private void CanvasButton_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.NewCanvas();
-        }
-
-        /// <summary>
-        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
-        /// Takes 7000ms
-        /// </summary>
-        private void DebugOne_Click(object sender, RoutedEventArgs e)
-        {
-            Debug(1);
-        }
-
-        /// <summary>
-        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
-        /// Takes 24000ms
-        /// </summary>
-        private void DebugTwo_Click(object sender, RoutedEventArgs e)
-        {
-            Debug(2);
-        }
-
-        /// <summary>
-        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
-        /// Takes 7000ms
-        /// </summary>
-        private void DebugThree_Click(object sender, RoutedEventArgs e)
-        {
-            Debug(3);
+            RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+            RightCanvas.Strokes.Clear();
         }
 
         /// <summary>
@@ -237,15 +220,21 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// Import button, will open an OpenFileDialog
+        /// Import button for .isad drawing, will open an OpenFileDialog
         /// </summary>
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        private void ISADMenuItem_Click(object sender, RoutedEventArgs e)
         {
             ProgramPresenter.ExamplePictureToolStripMenuItemClick();
         }
 
-        
 
+        /// <summary>
+        /// Import button for .svg file, will open an OpenFileDialog
+        /// </summary>
+        private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            ProgramPresenter.SVGToolStripMenuItemClick();
+        }
         /*************************/
         /*** PRESENTER -> VIEW ***/
         /*************************/
@@ -265,8 +254,10 @@ namespace SketchAssistantWPF
         /// <returns>Whether or not the mouse is pressed.</returns>
         public bool IsMousePressed()
         {
-            if (!debugRunning) {
-                return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed)); }
+            if (!debugRunning)
+            {
+                return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed));
+            }
             else return true;
         }
 
@@ -334,11 +325,12 @@ namespace SketchAssistantWPF
         /// Adds a point to the right canvas
         /// </summary>
         /// <param name="newPoint">The point</param>
-        public void AddNewPointRight(Ellipse newPoint)
+        public void AddNewPointRight(Ellipse newPoint, InternalLine line)
         {
             newPoint.Height = 3; newPoint.Width = 3;
             newPoint.Fill = Brushes.Black;
             RightCanvas.Children.Add(newPoint);
+            newPoint.Margin = new Thickness(line.point.X - 1.5, line.point.Y - 1.5, 0, 0);
         }
 
         /// <summary>
@@ -514,30 +506,74 @@ namespace SketchAssistantWPF
         /// <param name="active">Whether or not the canvas is active.</param>
         public void SetCanvasState(string canvasName, bool active)
         {
-            Canvas canvas;
-            switch (canvasName){
+            switch (canvasName)
+            {
                 case ("LeftCanvas"):
-                    canvas = LeftCanvas;
+                    if (active)
+                    {
+                        LeftCanvas.Background = Brushes.White;
+                    }
+                    else
+                    {
+                        LeftCanvas.Background = Brushes.SlateGray;
+                    }
                     break;
                 case ("RightCanvas"):
-                    canvas = RightCanvas;
+                    if (active)
+                    {
+                        RightCanvas.Background = Brushes.White;
+                    }
+                    else
+                    {
+                        RightCanvas.Background = Brushes.SlateGray;
+                    }
                     break;
                 default:
                     throw new InvalidOperationException("Unknown canvas name, Check that the canvas passed is either LeftCanvas or RightCanvas");
-            }
-            if (active)
-            {
-                canvas.Background = Brushes.White;
-            }
-            else
-            {
-                canvas.Background = Brushes.SlateGray;
             }
         }
 
         /************************/
         /*** HELPING FUNCTION ***/
         /************************/
+
+
+
+        /// <summary>
+        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// Takes 7000ms
+        /// </summary>
+        private void DebugOne_Click(object sender, RoutedEventArgs e)
+        {
+            Debug(1);
+        }
+
+        /// <summary>
+        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// Takes 24000ms
+        /// </summary>
+        private void DebugTwo_Click(object sender, RoutedEventArgs e)
+        {
+            Debug(2);
+        }
+
+        /// <summary>
+        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// Takes 4000ms
+        /// </summary>
+        private void DebugThree_Click(object sender, RoutedEventArgs e)
+        {
+            Debug(3);
+        }
+
+        /// <summary>
+        /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
+        /// Takes 
+        /// </summary>
+        private void DebugFour_Click(object sender, RoutedEventArgs e)
+        {
+            Debug(4);
+        }
 
         /// <summary>
         /// A function which simulates canvas input for debugging.
@@ -546,6 +582,7 @@ namespace SketchAssistantWPF
         private async void Debug(int option)
         {
             Point[] points;
+            Point start = new Point(50, 50);
             switch (option)
             {
                 case 1:
@@ -554,13 +591,20 @@ namespace SketchAssistantWPF
                 case 2:
                     points = debugDat.debugPoints2;
                     break;
+                case 3:
+                    points = debugDat.debugPoints3;
+                    break;
+                case 4:
+                    points = debugDat.debugPoints4;
+                    start = new Point(284, 148);
+                    break;
                 default:
                     return;
             }
             dispatcherTimer.Stop();
             debugRunning = true;
             ProgramPresenter.Tick(); await Task.Delay(10);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, new Point(50, 50));
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, start);
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down); await Task.Delay(10);
             for (int x = 0; x < points.Length; x++)
             {
