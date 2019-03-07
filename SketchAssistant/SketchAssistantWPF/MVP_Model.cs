@@ -107,7 +107,7 @@ namespace SketchAssistantWPF
 
         List<Point> currentLine = new List<Point>();
 
-
+        RedrawManager redrawMan;
 
         public MVP_Model(MVP_Presenter presenter)
         {
@@ -231,7 +231,7 @@ namespace SketchAssistantWPF
         {
             leftImageSize = new ImageDimension(width, height);
             rightImageSize = new ImageDimension(width, height);
-            new RedrawManager(listOfLines);
+            redrawMan = new RedrawManager(listOfLines);
             leftLineList = listOfLines;
             graphicLoaded = true;
             programPresenter.UpdateLeftLines(leftLineList);
@@ -400,6 +400,10 @@ namespace SketchAssistantWPF
             {
                 currentLine.Add(currentCursorPosition);
                 //programPresenter.UpdateCurrentLine(currentLine);
+                if (redrawMan != null)
+                {
+                    Console.WriteLine("ANGLE {0}", redrawMan.GetDirection(currentCursorPosition));
+                }
             }
             //Deleting
             if (!inDrawingMode && programPresenter.IsMousePressed())

@@ -18,6 +18,8 @@ namespace SketchAssistantWPF
 
         private HashSet<Point>[] detectionZones;
 
+        private int finishedIndex;
+
         /// <summary>
         /// Constructor of the RedrawLine.
         /// </summary>
@@ -50,7 +52,7 @@ namespace SketchAssistantWPF
                 dZones.Add(newZone);
             }
             detectionZones = dZones.ToArray();
-
+            finishedIndex = 0;
             Console.WriteLine("This line has {0} points ", line.GetPoints().Count());
             return false;
         }
@@ -60,12 +62,31 @@ namespace SketchAssistantWPF
             return points[0];
         }
 
-        public Angle GetDirection(Point p)
+        public double GetDirection(Point p)
         {
+            if(finishedIndex > points.Length - 1)
+            {
+                return -1;
+            }
+
+            if(detectionZones[finishedIndex + 1].Contains(p))
+            {
+                finishedIndex++;
+            }
+
+            double angle = 0;
+            var np = points[finishedIndex + 1];
+            Vector vector0 = new Vector(1,0);
+            Vector vector1 = new Vector(np.X-p.X, np.Y - p.Y);
+            angle = Math.Acos((vector0.X* vector1.X + vector0.Y * vector1.Y) / (vector0.Length * vector1.Length)) / Math.PI * 180;
+            /*double cross_prod = np.Y - p.Y;
+            double acute_angle = Math.Atan2(Math.Abs(cross_prod), np.X - p.Y)* 180 /Math.PI;
+            if (cross_prod < 0) { angle = 360 - acute_angle; }
+            else { angle = acute_angle; }
+            */
             //TODO: Calculate angles between p and the next n points of the line
             // Take average and return it.
-            return null;
+            return angle;
         }
-
     }
 }

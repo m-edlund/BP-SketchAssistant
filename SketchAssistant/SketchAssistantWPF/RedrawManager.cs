@@ -16,9 +16,11 @@ namespace SketchAssistantWPF
 
         public int currentLine { get; private set; }
 
+        public bool finished { get; private set; }
+
         public RedrawManager(List<InternalLine> linesToRedraw)
         {
-            radius = 5;
+            radius = 20;
             redrawLines = new RedrawLine[linesToRedraw.Count];
             Task[] taskPool = new Task[linesToRedraw.Count];
             Console.WriteLine("STARTED THREAD CREATION");
@@ -39,6 +41,7 @@ namespace SketchAssistantWPF
             Task.WaitAll(taskPool);
             Console.WriteLine("FINISHED ALL THREADS");
 
+            finished = false;
             currentLine = 0;
         }
 
@@ -54,9 +57,16 @@ namespace SketchAssistantWPF
             }
         }
 
-        public Angle GetDirection(Point p)
+        public double GetDirection(Point p)
         {
-            return redrawLines[currentLine].GetDirection(p);
+            if (finished) return -1;
+            double dir = redrawLines[currentLine].GetDirection(p);
+            if(dir < 0)
+            {
+                currentLine++;
+                finished = true;
+            }
+            return dir;
         }
     }
 }
