@@ -231,6 +231,7 @@ namespace SketchAssistantWPF
         {
             leftImageSize = new ImageDimension(width, height);
             rightImageSize = new ImageDimension(width, height);
+            new RedrawManager(listOfLines);
             leftLineList = listOfLines;
             graphicLoaded = true;
             programPresenter.UpdateLeftLines(leftLineList);
