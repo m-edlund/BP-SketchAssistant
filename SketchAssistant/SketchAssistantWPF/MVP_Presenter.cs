@@ -124,7 +124,7 @@ namespace SketchAssistantWPF
         /// </summary>
         public void ChangeOptiTrack(bool usingOptiTrack)
         {
-            programModel.ChangeOptiTrack(usingOptiTrack);
+            programModel.SetOptiTrack(usingOptiTrack);
         }
 
         /// <summary>
@@ -354,9 +354,19 @@ namespace SketchAssistantWPF
         /// Pass-trough function to display an info message in the view.
         /// </summary>
         /// <param name="msg">The message.</param>
-        public void PassMessageToView(String msg)
+        /// <param name="caption">The caption.</param>
+        public void PassMessageToView(String msg, String caption)
         {
-            programView.ShowInfoMessage(msg);
+            programView.ShowInfoMessage(msg, caption);
+        }
+
+        /// <summary>
+        /// Pass-through function to desplay an Warning message in the view
+        /// </summary>
+        /// <param name="msg"></param>
+        public void PassWarning(String msg)
+        {
+            programView.ShowWarning(msg);
         }
 
         /// <summary>

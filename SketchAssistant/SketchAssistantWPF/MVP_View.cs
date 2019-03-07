@@ -87,7 +87,7 @@ namespace SketchAssistantWPF
         /// shows the given info message in a popup and asks the user to aknowledge it
         /// </summary>
         /// <param name="message">the message to show</param>
-        void ShowInfoMessage(String message);
+        void ShowInfoMessage(String message, String caption);
 
         /// <summary>
         /// Shows a warning box with the given message (Yes/No Buttons)and returns true if the user aknowledges it.

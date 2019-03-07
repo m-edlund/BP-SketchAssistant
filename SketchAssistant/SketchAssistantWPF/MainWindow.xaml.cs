@@ -484,11 +484,16 @@ namespace SketchAssistantWPF
 
         /// <summary>
         /// shows the given info message in a popup and asks the user to aknowledge it
+        /// if caption is "Warning" add MessageBoxImage.Warning to the pop up window
         /// </summary>
         /// <param name="message">the message to show</param>
-        public void ShowInfoMessage(string message)
-        {
-            MessageBox.Show(message);
+        public void ShowInfoMessage(string message, string caption)
+        {   
+            if(caption == "Warning")
+            {
+                MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            else MessageBox.Show(message, caption);
         }
 
         /// <summary>

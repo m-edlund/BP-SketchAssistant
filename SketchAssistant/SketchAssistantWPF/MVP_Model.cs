@@ -364,10 +364,17 @@ namespace SketchAssistantWPF
             UpdateUI();
         }
 
-
-        public void ChangeOptiTrack(bool usingOptiTrack)
+        /// <summary>
+        /// The function called by the Presenter to set a variable which describes if OptiTrack is in use
+        /// </summary>
+        /// <param name="usingOptiTrack"></param>
+        public void SetOptiTrack(bool usingOptiTrack)
         {
             optiTrackInUse = usingOptiTrack;
+            if (usingOptiTrack && optiTrackX == 0 && optiTrackY == 0 && optiTrackZ == 0)
+            {
+                programPresenter.PassMessageToView("Trackable not detected, please check if OptiTrack is activated and Trackable is recognized", "Warning");
+            }
         }
 
         /// <summary>
@@ -489,7 +496,9 @@ namespace SketchAssistantWPF
                         Console.WriteLine("line finished");
                     }
                 }
-                projectPointOntoScreen(optiTrackX, optiTrackY);
+                if(optiTrackX != 0 && optiTrackY != 0 && optiTrackZ != 0) {
+                    projectPointOntoScreen(optiTrackX, optiTrackY);
+                }
             }
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }

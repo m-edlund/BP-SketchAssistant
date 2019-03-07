@@ -27,7 +27,7 @@
         <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="0" Background="LightGray">
             <Menu Background="LightGray">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
-                    <MenuItem Header="Load SVG File" Click="MenuItem_Click"/>
+                    <MenuItem Header="Load Template (.svg)" Click="MenuItem_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="EditMenuButton" Header="Edit">
                     <MenuItem Header="New Canvas" Click="CanvasButton_Click"/>
