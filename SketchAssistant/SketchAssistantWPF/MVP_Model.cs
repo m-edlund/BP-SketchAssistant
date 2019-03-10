@@ -207,7 +207,6 @@ namespace SketchAssistantWPF
         {
             if(LeftCanvas.Height >= 0 && LeftCanvas.Width>= 0) { leftImageSize = LeftCanvas; }
             if(RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
-          
             RepopulateDeletionMatrixes();
         }
 
@@ -377,6 +376,10 @@ namespace SketchAssistantWPF
                     programPresenter.UpdateRightLines(rightLineList);
                     currentLine.Clear();
                     //programPresenter.UpdateCurrentLine(currentLine);
+                    if(rightLineList.Count >= 2)
+                    {
+                        Console.WriteLine(GeometryCalculator.CalculateSimilarity(rightLineList[rightLineList.Count -1].Item2, rightLineList[rightLineList.Count -2].Item2));
+                    }
                 }
             }
             else

@@ -12,6 +12,101 @@ namespace SketchAssistantWPF
     /// </summary>
     public static class GeometryCalculator
     {
+        public static double CalculateAverageCosineSimilarity(InternalLine l0, InternalLine l1)
+        {
+            List<Point> points0 = l0.GetPoints();
+            List<Point> points1 = l1.GetPoints();
+
+            if (points0.Count == points1.Count)
+            {
+                double sum = 0; int i = 0;
+                List<Point> shortL = points0; List<Point> longL = points1;
+                for (; i < shortL.Count - 1; i++)
+                {
+                    if (i + 1 == shortL.Count || i + 1 == longL.Count) break;
+                    Vector v0 = new Vector(shortL[i + 1].X - shortL[i].X, shortL[i + 1].Y - shortL[i].Y);
+                    Vector v1 = new Vector(longL[i + 1].X - longL[i].X, longL[i + 1].Y - longL[i].Y);
+                    sum += CosineSimilarity(v0, v1);
+                }
+                return sum / i;
+            }
+            else
+            {
+                List<Point> shortL = points0; List<Point> longL = points0;
+                if (points0.Count < points1.Count) { longL = points1; }
+                if (points0.Count > points1.Count) { shortL = points1;}
+                double dif = (longL.Count - 1) / (shortL.Count - 1);
+                if(dif > 1)
+                {
+                    double sum = 0; int adds = 0;
+
+                    for (int i = 0; i < shortL.Count - 1; i++)
+                    {
+                        if (i + 1 == shortL.Count || i + dif == longL.Count) break;
+                        for (int j = 0; j <= dif; j++)
+                        {
+                            var k = i + j;
+                            Vector v0 = new Vector(shortL[i + 1].X - shortL[i].X, shortL[i + 1].Y - shortL[i].Y);
+                            Vector v1 = new Vector(longL[k + 1].X - longL[k].X, longL[k + 1].Y - longL[k].Y);
+                            sum += CosineSimilarity(v0, v1); adds++;
+                        }
+                    }
+                    return sum / adds;
+                }
+                else
+                {
+                    double sum = 0; int i = 0;
+                    for (; i < shortL.Count - 1; i++)
+                    {
+                        if (i + 1 == shortL.Count || i + 1 == longL.Count) break;
+                        Vector v0 = new Vector(shortL[i + 1].X - shortL[i].X, shortL[i + 1].Y - shortL[i].Y);
+                        Vector v1 = new Vector(longL[i + 1].X - longL[i].X, longL[i + 1].Y - longL[i].Y);
+                        sum += CosineSimilarity(v0, v1);
+                    }
+                    return sum / i;
+                }
+            }
+        }
+
+        public static double CalculateSimilarity(InternalLine l0, InternalLine l1)
+        {
+            double CosSim = Math.Abs(CalculateAverageCosineSimilarity(l0, l1));
+            double LenSim = CalculateLengthSimilarity(l0, l1);
+            double AvDist = CalculateAverageDistance(l0, l1);
+            double DistSim = (50 - AvDist)/ 50;
+            if (DistSim < 0) DistSim = 0;
+
+            return (CosSim + LenSim + DistSim)/3;
+        }
+
+        private static double CalculateLengthSimilarity(InternalLine l0, InternalLine l1)
+        {
+            double len0 = l0.GetLength(); double len1 = l1.GetLength();
+            var dif = Math.Abs(len1 - len0);
+            double shorter;
+            if (len1 > len0) shorter = len0;
+            else shorter = len1;
+            if (dif >= shorter) return 0;
+            return (shorter - dif )/shorter;
+        }
+
+        private static double CalculateAverageDistance(InternalLine l0, InternalLine l1)
+        {
+            List<Point> points0 = l0.GetPoints();
+            List<Point> points1 = l1.GetPoints();
+            double distfirstfirst = Math.Sqrt(Math.Pow((points0[0].X - points1[0].X) , 2) + Math.Pow((points0[0].Y - points1[0].Y) , 2));
+            double distlastlast = Math.Sqrt(Math.Pow((points0.Last().X - points1.Last().X), 2) + Math.Pow((points0.Last().Y - points1.Last().Y), 2));
+            double distfirstlast = Math.Sqrt(Math.Pow((points0[0].X - points1.Last().X), 2) + Math.Pow((points0[0].Y - points1.Last().Y), 2));
+            double distlastfirst = Math.Sqrt(Math.Pow((points0.Last().X - points1[0].X), 2) + Math.Pow((points0.Last().Y - points1[0].Y), 2));
+            if ((distfirstfirst + distlastlast) / 2 < (distfirstlast + distlastfirst) / 2) return (distfirstfirst + distlastlast) / 2;
+            else return (distfirstlast + distlastfirst) / 2;
+        }
+
+        public static double CosineSimilarity(Vector v0, Vector v1)
+        {
+            return (v0.X * v1.X + v0.Y * v1.Y) / (Math.Sqrt(v0.X * v0.X + v0.Y * v0.Y) * Math.Sqrt(v1.X * v1.X + v1.Y * v1.Y));
+        }
+
         /// <summary>
         /// A simple algorithm that returns a filled circle with a radius and a center point.
         /// </summary>
