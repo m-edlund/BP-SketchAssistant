@@ -488,11 +488,15 @@ namespace SketchAssistantWPF
         /// </summary>
         public void Tick()
         {
+            if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
+            else { previousCursorPosition = currentCursorPosition; }
             if (optiTrackInUse)
             {
                 if (CheckInsideDrawingZone(optiTrackZ))
                 {
                     SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
+                    currentLine.Add(currentCursorPosition);
+                    programPresenter.UpdateCurrentLine(currentLine);
                     if (!optiTrackInsideDrawingZone)
                     {
                         optiTrackInsideDrawingZone = true;
@@ -510,35 +514,26 @@ namespace SketchAssistantWPF
                 }
                 else
                 {
-                    if (optiTrackInsideDrawingZone)
+                    if (optiTrackInsideDrawingZone) //trackable was in drawing zone last tick -> finish line
                     {
                         optiTrackInsideDrawingZone = false;
                         FinishCurrentLine(true);
                         Console.WriteLine("line finished");
                     }
                 }
-                if(optiTrackX != 0 && optiTrackY != 0 && optiTrackZ != 0) {
-                    projectPointOntoScreen(optiTrackX, optiTrackY);
-                }
+                //if (optitrackAvailable) { TODO test and remove
+                projectPointOntoScreen(optiTrackX, optiTrackY);
+                //}
+                cursorPositions.Enqueue(currentCursorPosition);
             }
-            if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
-            else { previousCursorPosition = currentCursorPosition; }
-            cursorPositions.Enqueue(currentCursorPosition);
-
-            //Drawing
-            if (optiTrackInUse)
+            else
             {
-                if (CheckInsideDrawingZone(optiTrackZ))
+                cursorPositions.Enqueue(currentCursorPosition);
+                if (inDrawingMode && programPresenter.IsMousePressed())
                 {
-                    Console.WriteLine("point added");
                     currentLine.Add(currentCursorPosition);
-                    programPresenter.UpdateCurrentLine(currentLine);
+                    //programPresenter.UpdateCurrentLine(currentLine);
                 }
-            }
-            else if (inDrawingMode && programPresenter.IsMousePressed())
-            {
-                currentLine.Add(currentCursorPosition);
-                //programPresenter.UpdateCurrentLine(currentLine);
             }
             //Deleting
             if (!inDrawingMode && programPresenter.IsMousePressed())

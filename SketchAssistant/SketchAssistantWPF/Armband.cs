@@ -30,7 +30,7 @@ namespace SketchAssistantWPF
         //{
         //    bool valid;
         //    pthread_mutex_t mutex; //TODO fix this
-        //    Thread thread;
+        //    pthread_t thread;
         //    Actuator* actuators; //TODO
         //    uint tactorType;
         //    uint modulation;
@@ -41,19 +41,19 @@ namespace SketchAssistantWPF
         //public class ArduinoHub
         //{
         //    enum ArduinoHub_Type
-        //    { 
+        //    {
         //        ARDUINOHUB_TYPE_PIEZO = 'P',
         //        ARDUINOHUB_TYPE_ERM = 'E',
         //        ARDUINOHUB_TYPE_EMS = 'M'
         //    }
         //    bool valid;
         //    pthread_mutex_t mutex; //TODO fix this
-        //    Thread thread;
+        //    pthread_t thread;
         //    ArduinoHub_Type arduinoType;
         //    Serial* serial;
         //    Actuator* actuators;
         //}
-        
+
         //[DllImport("BodyActuator.dll", EntryPoint = "BodyActuator_actuate")]
         //static extern void pushForward(ref BodyActuator self, byte tactor, double intensity, ulong duration);
 
