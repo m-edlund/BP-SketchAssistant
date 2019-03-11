@@ -112,7 +112,7 @@ namespace SketchAssistantWPF
         public void RightCanvas_StrokeCollection(object sender, InkCanvasStrokeCollectedEventArgs e)
         {
             strokeCollection.Add(e.Stroke);
-            System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+            //System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace SketchAssistantWPF
                 ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
                 RightCanvas.Strokes.RemoveAt(0);
                 strokeCollection.RemoveAt(0);
-                System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+                //System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
             }
             //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);");
         }

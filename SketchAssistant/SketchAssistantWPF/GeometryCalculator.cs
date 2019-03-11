@@ -12,13 +12,58 @@ namespace SketchAssistantWPF
     /// </summary>
     public static class GeometryCalculator
     {
+        /// <summary>
+        /// Calculate the approximate similarity of two lines. 
+        /// Using three weighted parameters to calculate a value between 0 and 1 to indicate the similarity of the lines.
+        /// </summary>
+        /// <param name="l0">The first line.</param>
+        /// <param name="l1">The second line.</param>
+        /// <returns>The similarity of the two lines.</returns>
+        public static double CalculateSimilarity(InternalLine l0, InternalLine l1)
+        {
+            double CosSim = Math.Abs(CalculateAverageCosineSimilarity(l0, l1));
+            double LenSim = CalculateLengthSimilarity(l0, l1);
+            double AvDist = CalculateAverageDistance(l0, l1);
+            double DistSim = (50 - AvDist) / 50;
+            if (DistSim < 0) DistSim = 0;
+            if (CosSim < 0.5) CosSim = 0;
+            double output = (2 * CosSim + LenSim + DistSim) / 4;
+            System.Diagnostics.Debug.WriteLine("Results: CosSim: {0}, LenSim: {1}, AvDist {2}, DistSim: {3}. Total: {4}", 
+                CosSim, LenSim, AvDist, DistSim, output);
+            return output;
+        }
+
+        /// <summary>
+        /// The cosine similarity of two vectors.
+        /// </summary>
+        /// <param name="v0">The first vector</param>
+        /// <param name="v1">The second vector</param>
+        /// <returns>The cosine similarity</returns>
+        private static double CosineSimilarity(Vector v0, Vector v1)
+        {
+            return (v0.X * v1.X + v0.Y * v1.Y) / (Math.Sqrt(v0.X * v0.X + v0.Y * v0.Y) * Math.Sqrt(v1.X * v1.X + v1.Y * v1.Y));
+        }
+
+        /// <summary>
+        /// An approximate calculation of the average cosine similarity 
+        /// of two lines, achieved by calculating the cosine similarity of subvectors.
+        /// </summary>
+        /// <param name="l0">The first line</param>
+        /// <param name="l1">The second line</param>
+        /// <returns>The approximate average cosine similarity of all subvectors</returns>
         public static double CalculateAverageCosineSimilarity(InternalLine l0, InternalLine l1)
         {
+            //check if one of the lines is a point, or both lines are points
+            if ((l0.isPoint && !l1.isPoint) || (l1.isPoint && !l0.isPoint)) return 0;
+            else if (l0.isPoint && l1.isPoint) return 1;
+
             List<Point> points0 = l0.GetPoints();
             List<Point> points1 = l1.GetPoints();
 
             if (points0.Count == points1.Count)
             {
+                //If the two lists have an equal amount of subvectors, 
+                //compare the nth subvectors from each list and average the value.
                 double sum = 0; int i = 0;
                 List<Point> shortL = points0; List<Point> longL = points1;
                 for (; i < shortL.Count - 1; i++)
@@ -32,12 +77,16 @@ namespace SketchAssistantWPF
             }
             else
             {
+                //Determine if the longer list is of similar length or contains significatly more items
                 List<Point> shortL = points0; List<Point> longL = points0;
                 if (points0.Count < points1.Count) { longL = points1; }
                 if (points0.Count > points1.Count) { shortL = points1;}
                 double dif = (longL.Count - 1) / (shortL.Count - 1);
                 if(dif > 1)
                 {
+                    //The longer list is significantly longer
+                    //Each element in the shorter list is compared to multiple 
+                    // elements in the longer list to make up the difference
                     double sum = 0; int adds = 0;
 
                     for (int i = 0; i < shortL.Count - 1; i++)
@@ -55,6 +104,8 @@ namespace SketchAssistantWPF
                 }
                 else
                 {
+                    //The longer list is almost the same length as the shorter list
+                    //The remaining items are simply skipped
                     double sum = 0; int i = 0;
                     for (; i < shortL.Count - 1; i++)
                     {
@@ -68,21 +119,17 @@ namespace SketchAssistantWPF
             }
         }
 
-        public static double CalculateSimilarity(InternalLine l0, InternalLine l1)
-        {
-            double CosSim = Math.Abs(CalculateAverageCosineSimilarity(l0, l1));
-            double LenSim = CalculateLengthSimilarity(l0, l1);
-            double AvDist = CalculateAverageDistance(l0, l1);
-            double DistSim = (50 - AvDist)/ 50;
-            if (DistSim < 0) DistSim = 0;
-
-            return (CosSim + LenSim + DistSim)/3;
-        }
-
+        /// <summary>
+        /// Calculate the similarity in length of two Lines.
+        /// </summary>
+        /// <param name="l0">The first line.</param>
+        /// <param name="l1">The second line.</param>
+        /// <returns>How similar the lines are in length.</returns>
         private static double CalculateLengthSimilarity(InternalLine l0, InternalLine l1)
         {
             double len0 = l0.GetLength(); double len1 = l1.GetLength();
             var dif = Math.Abs(len1 - len0);
+            if (dif == 0) return 1;
             double shorter;
             if (len1 > len0) shorter = len0;
             else shorter = len1;
@@ -90,6 +137,12 @@ namespace SketchAssistantWPF
             return (shorter - dif )/shorter;
         }
 
+        /// <summary>
+        /// Calculate the average distance between the ends of two lines.
+        /// </summary>
+        /// <param name="l0">The first line.</param>
+        /// <param name="l1">The second line.</param>
+        /// <returns>The shortest average distance between the ends of the lines.</returns>
         private static double CalculateAverageDistance(InternalLine l0, InternalLine l1)
         {
             List<Point> points0 = l0.GetPoints();
@@ -100,11 +153,6 @@ namespace SketchAssistantWPF
             double distlastfirst = Math.Sqrt(Math.Pow((points0.Last().X - points1[0].X), 2) + Math.Pow((points0.Last().Y - points1[0].Y), 2));
             if ((distfirstfirst + distlastlast) / 2 < (distfirstlast + distlastfirst) / 2) return (distfirstfirst + distlastlast) / 2;
             else return (distfirstlast + distlastfirst) / 2;
-        }
-
-        public static double CosineSimilarity(Vector v0, Vector v1)
-        {
-            return (v0.X * v1.X + v0.Y * v1.Y) / (Math.Sqrt(v0.X * v0.X + v0.Y * v0.Y) * Math.Sqrt(v1.X * v1.X + v1.Y * v1.Y));
         }
 
         /// <summary>
