@@ -207,7 +207,6 @@ namespace SketchAssistantWPF
         {
             if(LeftCanvas.Height >= 0 && LeftCanvas.Width>= 0) { leftImageSize = LeftCanvas; }
             if(RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
-          
             RepopulateDeletionMatrixes();
         }
 
@@ -376,7 +375,7 @@ namespace SketchAssistantWPF
                     //TODO: For the person implementing overlay: Add check if overlay needs to be added
                     programPresenter.UpdateRightLines(rightLineList);
                     currentLine.Clear();
-                    //programPresenter.UpdateCurrentLine(currentLine);
+                    //programPresenter.UpdateCurrentLine(currentLine)
                 }
             }
             else

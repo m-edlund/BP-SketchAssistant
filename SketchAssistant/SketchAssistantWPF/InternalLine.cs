@@ -34,6 +34,10 @@ namespace SketchAssistantWPF
         /// The location of the point, if this is a point
         /// </summary>
         public Point point { get; private set; }
+        /// <summary>
+        /// The length of the line
+        /// </summary>
+        private double length = -1;
 
         /// <summary>
         /// The constructor for lines which are only temporary.
@@ -62,6 +66,20 @@ namespace SketchAssistantWPF
             isTemporary = false;
         }
 
+        /// <summary>
+        /// A function to make temporary lines non-temporary.
+        /// </summary>
+        /// <param name="id">The id of the line.</param>
+        public void MakePermanent(int id)
+        {
+            if (isTemporary)
+            {
+                identifier = id;
+                CleanPoints();
+                isTemporary = false;
+            }
+        }
+
         public Point GetStartPoint()
         {
             return linePoints.First();
@@ -85,6 +103,26 @@ namespace SketchAssistantWPF
         public PointCollection GetPointCollection()
         {
             return pointColl;
+        }
+
+
+        /// <summary>
+        /// Get the length of the line.
+        /// </summary>
+        /// <returns>The length of the line.</returns>
+        public double GetLength()
+        {
+            if(length < 0)
+            {
+                length = 0;
+                for(int i = 0; i < linePoints.Count - 1; i++)
+                {
+                    var a = linePoints[i]; var b = linePoints[i + 1];
+
+                    length += Math.Sqrt(Math.Pow((a.X - b.X),2) + Math.Pow((a.Y - b.Y), 2));
+                }
+            }
+            return length;
         }
 
         /// <summary>

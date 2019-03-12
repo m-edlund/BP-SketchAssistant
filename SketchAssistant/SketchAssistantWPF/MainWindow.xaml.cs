@@ -112,7 +112,7 @@ namespace SketchAssistantWPF
         public void RightCanvas_StrokeCollection(object sender, InkCanvasStrokeCollectedEventArgs e)
         {
             strokeCollection.Add(e.Stroke);
-            System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+            //System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace SketchAssistantWPF
                 ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
                 RightCanvas.Strokes.RemoveAt(0);
                 strokeCollection.RemoveAt(0);
-                System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+                //System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
             }
             //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);");
         }
@@ -212,7 +212,8 @@ namespace SketchAssistantWPF
         /// </summary>
         private void ISADMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.ExamplePictureToolStripMenuItemClick();
+            if(ProgramPresenter.ExamplePictureToolStripMenuItemClick())
+                RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
 
         /// <summary>
@@ -220,7 +221,8 @@ namespace SketchAssistantWPF
         /// </summary>
         private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.SVGToolStripMenuItemClick();
+            if(ProgramPresenter.SVGToolStripMenuItemClick())
+                RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
 
         /*************************/
@@ -364,6 +366,18 @@ namespace SketchAssistantWPF
         public void SetLastActionTakenText(string message)
         {
             LastActionBox.Text = message;
+        }
+
+        /// <summary>
+        /// Sets the contents of the status bar label containing
+        /// the similarity score of the left and right image.
+        /// </summary>
+        /// <param name="message">The message to be set, 
+        /// will be set to the default value if left empty.</param>
+        public void SetImageSimilarityText(string message)
+        {
+            if (message.Count() > 0) LineSimilarityBox.Text = message;
+            else LineSimilarityBox.Text = "-";
         }
 
         /// <summary>

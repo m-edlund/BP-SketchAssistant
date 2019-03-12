@@ -16,10 +16,11 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using WindowsInput;
 using WindowsInput.Native;
+using System.Threading.Tasks;
 
 namespace WhiteTests
 {
-
+    
     [TestClass]
     public class UITest
     {
@@ -478,7 +479,7 @@ namespace WhiteTests
     }
 
     [TestClass]
-    [DeploymentItem(@"WhiteTests\test_input_files\")]
+    //[DeploymentItem(@"WhiteTests\test_input_files\")]
     public class FileImporterTests
     {
         /// <summary>
@@ -615,7 +616,7 @@ namespace WhiteTests
                 //save the occurence of an exception
                 correctExceptionThrown = true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //don't set success flag
             }
@@ -643,7 +644,7 @@ namespace WhiteTests
                 {
                     uut.ParseSVGInputFile(s, 10000, 10000);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     noExceptionThrown = false;
                 }
@@ -669,15 +670,56 @@ namespace WhiteTests
                 {
                     uut.ParseSVGInputFile(s, 10000, 10000);
                 }
-                catch (FileImporterException e)
+                catch (FileImporterException)
                 {
                     correctExceptionThrown = true;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                 }
                 Assert.IsTrue(correctExceptionThrown);
             }
         }
+    }
+
+    [TestClass]
+    public class SimilarityCalculationTests
+    {
+        /// <summary>
+        /// The debug data element used to generate random lines.
+        /// </summary>
+        private DebugData DebugData = new DebugData();
+        
+        /// <summary>
+        /// Generates random lines and tests how similar they are. 
+        /// To test the similarity score always stays between 0 and 1.
+        /// </summary>
+        [TestMethod]
+        public void StaysWithinParameters()
+        {
+            Parallel.For(1,100,
+                i =>
+                {
+                    InternalLine l0 = DebugData.GetRandomLine(1, (uint) i);
+                    InternalLine l1 = DebugData.GetRandomLine(1, (uint)i);
+                    var sim = GeometryCalculator.CalculateSimilarity(l0, l1);
+                    Assert.IsTrue((sim >= 0));
+                    Assert.IsTrue((sim <= 1));
+                } );
+        }
+
+        [TestMethod]
+        public void CorrectSimilarity()
+        {
+            Parallel.ForEach(DebugData.GetSimilarityTestData(),
+                tup =>
+                {
+                    InternalLine l0 = tup.Item1;
+                    InternalLine l1 = tup.Item2;
+                    var sim = GeometryCalculator.CalculateSimilarity(l0, l1);
+                    Assert.AreEqual(tup.Item3, sim, 0.00000001);
+                });
+        }
+        
     }
 }
