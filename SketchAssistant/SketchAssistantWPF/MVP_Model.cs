@@ -102,16 +102,38 @@ namespace SketchAssistantWPF
         /// Whether or not an optitrack system is avaiable.
         /// </summary>
         public bool optitrackAvailable { get; private set; }
-
-        //TODO: calibrate
-        double OPTITRACK_X_OFFSET = 0.7878;
-        double OPTITRACK_Y_OFFSET = 0.7977;
-        double OPTITRACK_CANVAS_HEIGHT = 1.29;
-        double OPTITRACK_X_SCALE = -0.254 * (((1.816 / 0.0254) * 96) / (1.816));
-        double OPTITRACK_Y_SCALE = 0.254 * (((1.360 / 0.0254) * 96) / (1.360));
+        /// <summary>
+        /// x koordinate in real world. one unit is one meter. If standing in front of video wall facing it, moving left results in incrementation of x.
+        /// </summary>
+        public float optiTrackX;
+        /// <summary>
+        /// y koordinate in real world. one unit is one meter. If standing in front of video wall, moving up results in incrementation of y.
+        /// </summary>
+        public float optiTrackY;
+        /// <summary>
+        /// z koordinate in real world. one unit is one meter. If standing in front of video wall, moving back results in incrementation of y.
+        /// </summary>
+        public float optiTrackZ;
+        /// <summary>
+        /// keeps track of whether last tick the trackable was inside drawing zone or not.
+        /// </summary>
+        private bool optiTrackInsideDrawingZone = false;
+        /// <summary>
+        /// this is a variable used for detecting whether the tracker is in the warning zone (0 +- variable), no drawing zone (0 +- 2 * variable) or normal drawing zone
+        /// </summary>
+        private double WARNING_ZONE_BOUNDARY = 0.10; //10cm
+        /// <summary>
+        /// object of class Armband used for controlling the vibrotactil armband
+        /// </summary>
+        private Armband armband;
+        /// <summary>
+        /// deactivates all Console.WriteLine() when set to false
+        /// </summary>
+        bool testing = false;//TODO: remove after finishing userstory
 
 
         Image rightImageWithoutOverlay;
+        /// <summary>
         /// Whether or not the mouse is pressed.
         /// </summary>
         private bool mouseDown;
@@ -232,6 +254,51 @@ namespace SketchAssistantWPF
                 }
             }
             return returnSet;
+        }
+
+        //TODO: calibrate
+        double OPTITRACK_X_OFFSET = 0.7878;
+        double OPTITRACK_Y_OFFSET = 0.7977;
+        double OPTITRACK_CANVAS_HEIGHT = 1.29;
+        double OPTITRACK_X_SCALE = -0.254 * (((1.816/*size of canvis*/ / 0.0254) * 96) / (1.816));
+        double OPTITRACK_Y_SCALE = 0.254 * (((1.360 / 0.0254) * 96) / (1.360));
+        /// <summary>
+        /// converts given point to device-independent pixel
+        /// </summary>
+        /// <param name="p">real world coordinate</param>
+        /// <returns>The given Point converted to device-independent pixel </returns>
+        private Point ConvertTo96thsOfInch(Point p)
+        {
+            double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * OPTITRACK_X_SCALE;
+            double yCoordinate = (OPTITRACK_CANVAS_HEIGHT - (p.Y - OPTITRACK_Y_OFFSET)) * OPTITRACK_Y_SCALE;
+            return new Point(xCoordinate, yCoordinate);
+        }
+
+        /// <summary>
+        /// converts given point to pixel, calibrated for video wall in a08
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        private Point ConvertToPixel(Point p)
+        {//TODO: realize comments
+            double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * -1 * (/*Anzahl Pixel X-Richtung*/0 / (1.816)) + 0/*1/2 * x-richtung pixel*/; //TODO
+            double yCoordinate = (((OPTITRACK_CANVAS_HEIGHT + 0/*meter von oberer Rand Leinwand zu oberer Rand Bildschirm*/) - (p.Y - OPTITRACK_Y_OFFSET))) * (/*Anzahl Pixel Y-Richtung*/0 / (1.360));
+            return new Point(xCoordinate, yCoordinate);
+        }
+
+        /// <summary>
+        /// Updates the current cursor position of the model.
+        /// </summary>
+        /// <param name="p">The new cursor position</param>
+        public void SetCurrentFingerPosition(Point p)
+        {
+            Point correctedPoint = ConvertTo96thsOfInch(p);
+            if (testing)
+            {
+                Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
+                Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
+            }
+            currentCursorPosition = correctedPoint;
         }
 
         /********************************************/
@@ -398,33 +465,6 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// Updates the current cursor position of the model.
-        /// </summary>
-        /// <param name="p">The new cursor position</param>
-        public void SetCurrentFingerPosition(Point p)
-        {
-            Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
-            Point correctedPoint = ConvertTo96thsOfInch(p);
-            Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
-            currentCursorPosition = correctedPoint;
-        }
-
-
-        private Point ConvertTo96thsOfInch(Point p)
-        {
-            double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * OPTITRACK_X_SCALE;
-            double yCoordinate = (OPTITRACK_CANVAS_HEIGHT - (p.Y - OPTITRACK_Y_OFFSET)) * OPTITRACK_Y_SCALE;
-            return new Point(xCoordinate, yCoordinate);
-        }
-
-        private Point ConvertToPixel(Point p)
-        {
-            double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * -1 * (/*Anzahl Pixel X-Richtung*/0 / (1.816)) + 0/*1/2 * x-richtung pixel*/; //TODO
-            double yCoordinate = (((OPTITRACK_CANVAS_HEIGHT + 0/*meter von oberer Rand Leinwand zu oberer Rand Bildschirm*/) - (p.Y - OPTITRACK_Y_OFFSET))) * (/*Anzahl Pixel Y-Richtung*/0 / (1.360));
-            return new Point(xCoordinate, yCoordinate);
-        }
-
-        /// <summary>
         /// Start a new Line, when the Mouse is pressed down.
         /// </summary>
         public void StartNewLine()
@@ -447,7 +487,10 @@ namespace SketchAssistantWPF
         {
             foreach (Point p in currentLine)
             {
-                Console.WriteLine(p.X + ";" + p.Y);
+                if (testing)
+                {
+                    Console.WriteLine(p.X + ";" + p.Y);
+                }
             }
             if (valid)
             {
@@ -470,12 +513,6 @@ namespace SketchAssistantWPF
             UpdateUI();
         }
 
-        public float optiTrackX;
-        public float optiTrackY;
-        public float optiTrackZ;
-        private bool optiTrackInsideDrawingZone = false;
-        private double WARNING_ZONE_BOUNDARY = 0.10; //5cm
-        private Armband armband;
 
         void getOptiTrackPosition(OptiTrack.Frame frame)
         {
@@ -483,6 +520,7 @@ namespace SketchAssistantWPF
             optiTrackY = frame.Trackables[0].Y;
             optiTrackZ = frame.Trackables[0].Z;
         }
+
         /// <summary>
         /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
         /// </summary>
@@ -501,7 +539,10 @@ namespace SketchAssistantWPF
                     {
                         optiTrackInsideDrawingZone = true;
                         StartNewLine();
-                        Console.WriteLine("new line begun");
+                        if (testing)
+                        {
+                            Console.WriteLine("new line begun");
+                        }
                     }
                     if (optiTrackZ > WARNING_ZONE_BOUNDARY)
                     {
@@ -518,7 +559,10 @@ namespace SketchAssistantWPF
                     {
                         optiTrackInsideDrawingZone = false;
                         FinishCurrentLine(true);
-                        Console.WriteLine("line finished");
+                        if (testing)
+                        {
+                            Console.WriteLine("line finished");
+                        }
                     }
                 }
                 //if (optitrackAvailable) { TODO test and remove
