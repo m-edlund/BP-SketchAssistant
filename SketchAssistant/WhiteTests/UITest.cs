@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace WhiteTests
 {
-
+    
     [TestClass]
     public class UITest
     {
@@ -479,7 +479,7 @@ namespace WhiteTests
     }
 
     [TestClass]
-    [DeploymentItem(@"WhiteTests\test_input_files\")]
+    //[DeploymentItem(@"WhiteTests\test_input_files\")]
     public class FileImporterTests
     {
         /// <summary>
@@ -697,7 +697,7 @@ namespace WhiteTests
         [TestMethod]
         public void StaysWithinParameters()
         {
-            Parallel.For(1,2500,
+            Parallel.For(1,100,
                 i =>
                 {
                     InternalLine l0 = DebugData.GetRandomLine(1, (uint) i);
@@ -707,7 +707,7 @@ namespace WhiteTests
                     Assert.IsTrue((sim <= 1));
                 } );
         }
-        
+
         [TestMethod]
         public void CorrectSimilarity()
         {
@@ -720,6 +720,6 @@ namespace WhiteTests
                     Assert.AreEqual(tup.Item3, sim, 0.00000001);
                 });
         }
-
+        
     }
 }
