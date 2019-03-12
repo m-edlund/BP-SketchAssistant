@@ -375,11 +375,7 @@ namespace SketchAssistantWPF
                     //TODO: For the person implementing overlay: Add check if overlay needs to be added
                     programPresenter.UpdateRightLines(rightLineList);
                     currentLine.Clear();
-                    //programPresenter.UpdateCurrentLine(currentLine);
-                    if(rightLineList.Count >= 2)
-                    {
-                        Console.WriteLine(GeometryCalculator.CalculateSimilarity(rightLineList[rightLineList.Count -1].Item2, rightLineList[rightLineList.Count -2].Item2));
-                    }
+                    //programPresenter.UpdateCurrentLine(currentLine)
                 }
             }
             else

@@ -34,6 +34,10 @@ namespace SketchAssistantWPF
 
         ImageDimension ImageSizeRight = new ImageDimension(0, 0);
 
+        List<double> ImageSimilarity = new List<double>();
+
+        List<InternalLine> LeftLines = new List<InternalLine>();
+
         /*******************/
         /*** ENUMERATORS ***/
         /*******************/
@@ -85,9 +89,10 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Display a new FileDialog to load a collection of lines.
         /// </summary>
-        public void ExamplePictureToolStripMenuItemClick()
+        /// <returns>True if loading was a success</returns>
+        public bool ExamplePictureToolStripMenuItemClick()
         {
-            var okToContinue = true;
+            var okToContinue = true; bool returnval = false;
             if (programModel.HasUnsavedProgress())
             {
                 okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
@@ -101,6 +106,7 @@ namespace SketchAssistantWPF
                     try
                     {
                         Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
+                        values.Item3.ForEach(line => line.MakePermanent(0)); //Make all lines permanent
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
 
                         programModel.ResetRightImage();
@@ -108,6 +114,7 @@ namespace SketchAssistantWPF
                         programModel.ChangeState(true);
                         programView.EnableTimer();
                         ClearRightLines();
+                        returnval = true;
                     }
                     catch (FileImporterException ex)
                     {
@@ -119,14 +126,16 @@ namespace SketchAssistantWPF
                     }
                 }
             }
+            return returnval;
         }
 
         /// <summary>
         /// Display a new FileDialog to a svg drawing.
         /// </summary>
-        public void SVGToolStripMenuItemClick()
+        /// <returns>True if loading was a success</returns>
+        public bool SVGToolStripMenuItemClick()
         {
-            var okToContinue = true;
+            var okToContinue = true; bool returnval = false;
             if (programModel.HasUnsavedProgress())
             {
                 okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
@@ -140,12 +149,14 @@ namespace SketchAssistantWPF
                     try
                     {
                         Tuple<int, int, List<InternalLine>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
+                        values.Item3.ForEach(line => line.MakePermanent(0)); //Make all lines permanent
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
                         programModel.ResetRightImage();
                         programModel.CanvasActivated();
                         programModel.ChangeState(true);
                         programView.EnableTimer();
                         ClearRightLines();
+                        returnval = true;
                     }
                     catch (FileImporterException ex)
                     {
@@ -157,6 +168,7 @@ namespace SketchAssistantWPF
                     }
                 }
             }
+            return returnval;
         }
 
         /// <summary>
@@ -278,6 +290,8 @@ namespace SketchAssistantWPF
         {
             programView.RemoveAllRightLines();
             rightPolyLines = new Dictionary<int, Shape>();
+            //Reset the similarity display
+            UpdateSimilarityScore(Double.NaN);
         }
 
         /// <summary>
@@ -306,6 +320,21 @@ namespace SketchAssistantWPF
                     }
                 }
                 SetVisibility(rightPolyLines[line.GetID()], status);
+            }
+            //Calculate similarity scores, maybe change later to compare to the 
+            UpdateSimilarityScore(Double.NaN); var templist = lines.Where(tup => tup.Item1).ToList();
+            if(LeftLines.Count > 0)
+            {
+                for(int i = 0; i < LeftLines.Count; i++)
+                {
+                    if (templist.Count == i) break;
+                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, LeftLines[i]));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < templist.Count - 1; i++)
+                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, templist[i + 1].Item2));
             }
         }
 
@@ -337,6 +366,8 @@ namespace SketchAssistantWPF
             }
             programView.SetCanvasState("LeftCanvas", true);
             programView.SetCanvasState("RightCanvas", true);
+
+            LeftLines = lines;
         }
 
         /// <summary>
@@ -403,6 +434,25 @@ namespace SketchAssistantWPF
         public bool IsMousePressed()
         {
             return programView.IsMousePressed();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="score">Score will be reset if NaN is passed, 
+        /// will be ignored if the score is not between 0 and 1</param>
+        public void UpdateSimilarityScore(double score)
+        {
+            if (Double.IsNaN(score))
+            {
+                ImageSimilarity.Clear();
+                programView.SetImageSimilarityText("");
+            }
+            else
+            {
+                if (score >= 0 && score <= 1) ImageSimilarity.Add(score);
+                programView.SetImageSimilarityText((ImageSimilarity.Sum() / ImageSimilarity.Count).ToString());
+            }
         }
 
         /*************************/

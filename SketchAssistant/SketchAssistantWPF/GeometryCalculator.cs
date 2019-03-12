@@ -91,10 +91,11 @@ namespace SketchAssistantWPF
 
                     for (int i = 0; i < shortL.Count - 1; i++)
                     {
-                        if (i + 1 == shortL.Count || i + dif == longL.Count) break;
+                        if (i + 1 == shortL.Count) break;
                         for (int j = 0; j <= dif; j++)
                         {
                             var k = i + j;
+                            if (k + 1 == longL.Count) break;
                             Vector v0 = new Vector(shortL[i + 1].X - shortL[i].X, shortL[i + 1].Y - shortL[i].Y);
                             Vector v1 = new Vector(longL[k + 1].X - longL[k].X, longL[k + 1].Y - longL[k].Y);
                             sum += CosineSimilarity(v0, v1); adds++;

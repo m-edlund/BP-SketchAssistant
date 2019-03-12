@@ -43,7 +43,7 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
+        public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
         {
             return ParseISADInput(System.IO.File.ReadAllLines(fileName));
         }

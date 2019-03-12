@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace WhiteTests
 {
-    
+
     [TestClass]
     public class UITest
     {

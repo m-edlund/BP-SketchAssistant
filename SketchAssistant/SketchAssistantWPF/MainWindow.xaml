@@ -190,6 +190,8 @@
                 <TextBox Name="LoadStatusBox" Text="nothing loaded" Background="LightGray"/>
                 <Separator/>
                 <TextBox Name="LastActionBox" Text="none" Background="LightGray"/>
+                <Separator/>
+                <TextBox Name="LineSimilarityBox" Text="-" Background="LightGray"/>
             </StatusBar>
         </DockPanel>
     </Grid>

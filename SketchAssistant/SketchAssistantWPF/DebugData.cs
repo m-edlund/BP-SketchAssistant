@@ -75,7 +75,7 @@ namespace SketchAssistantWPF
 
             for (int i = 0; i < len; i++)
             {
-                int opX = rnd.Next(0, 1); int opY = rnd.Next(0, 1);
+                int opX = rnd.Next(0, 2); int opY = rnd.Next(0, 1);
                 int changeX = rnd.Next(0, 50); int changeY = rnd.Next(0, 50);
                 if (opX == 0) prevX = prevX - changeX;
                 else prevX = prevX + changeX;

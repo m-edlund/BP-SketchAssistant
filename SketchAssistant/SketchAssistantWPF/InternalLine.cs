@@ -66,6 +66,20 @@ namespace SketchAssistantWPF
             isTemporary = false;
         }
 
+        /// <summary>
+        /// A function to make temporary lines non-temporary.
+        /// </summary>
+        /// <param name="id">The id of the line.</param>
+        public void MakePermanent(int id)
+        {
+            if (isTemporary)
+            {
+                identifier = id;
+                CleanPoints();
+                isTemporary = false;
+            }
+        }
+
         public Point GetStartPoint()
         {
             return linePoints.First();
