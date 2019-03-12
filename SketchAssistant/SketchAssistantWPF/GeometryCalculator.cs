@@ -26,7 +26,7 @@ namespace SketchAssistantWPF
             double AvDist = CalculateAverageDistance(l0, l1);
             double DistSim = (50 - AvDist) / 50;
             if (DistSim < 0) DistSim = 0;
-            if (CosSim < 0.5) CosSim = 0;
+            if (CosSim < 0.5 || Double.IsNaN(CosSim)) CosSim = 0;
             double output = (2 * CosSim + LenSim + DistSim) / 4;
             System.Diagnostics.Debug.WriteLine("Results: CosSim: {0}, LenSim: {1}, AvDist {2}, DistSim: {3}. Total: {4}", 
                 CosSim, LenSim, AvDist, DistSim, output);

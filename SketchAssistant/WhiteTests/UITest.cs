@@ -616,7 +616,7 @@ namespace WhiteTests
                 //save the occurence of an exception
                 correctExceptionThrown = true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //don't set success flag
             }
@@ -644,7 +644,7 @@ namespace WhiteTests
                 {
                     uut.ParseSVGInputFile(s, 10000, 10000);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     noExceptionThrown = false;
                 }
@@ -670,11 +670,11 @@ namespace WhiteTests
                 {
                     uut.ParseSVGInputFile(s, 10000, 10000);
                 }
-                catch (FileImporterException e)
+                catch (FileImporterException)
                 {
                     correctExceptionThrown = true;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                 }
                 Assert.IsTrue(correctExceptionThrown);
@@ -697,7 +697,7 @@ namespace WhiteTests
         [TestMethod]
         public void StaysWithinParameters()
         {
-            Parallel.For(1,500,
+            Parallel.For(1,2500,
                 i =>
                 {
                     InternalLine l0 = DebugData.GetRandomLine(1, (uint) i);
