@@ -105,6 +105,11 @@ namespace SketchAssistantWPF
             return pointColl;
         }
 
+
+        /// <summary>
+        /// Get the length of the line.
+        /// </summary>
+        /// <returns>The length of the line.</returns>
         public double GetLength()
         {
             if(length < 0)

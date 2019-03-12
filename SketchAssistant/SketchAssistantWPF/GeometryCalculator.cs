@@ -16,20 +16,18 @@ namespace SketchAssistantWPF
         /// Calculate the approximate similarity of two lines. 
         /// Using three weighted parameters to calculate a value between 0 and 1 to indicate the similarity of the lines.
         /// </summary>
-        /// <param name="l0">The first line.</param>
-        /// <param name="l1">The second line.</param>
+        /// <param name="line0">The first line.</param>
+        /// <param name="line1">The second line.</param>
         /// <returns>The similarity of the two lines.</returns>
-        public static double CalculateSimilarity(InternalLine l0, InternalLine l1)
+        public static double CalculateSimilarity(InternalLine line0, InternalLine line1)
         {
-            double CosSim = Math.Abs(CalculateAverageCosineSimilarity(l0, l1));
-            double LenSim = CalculateLengthSimilarity(l0, l1);
-            double AvDist = CalculateAverageDistance(l0, l1);
+            double CosSim = Math.Abs(CalculateAverageCosineSimilarity(line0, line1));
+            double LenSim = CalculateLengthSimilarity(line0, line1);
+            double AvDist = CalculateAverageDistance(line0, line1);
             double DistSim = (50 - AvDist) / 50;
             if (DistSim < 0) DistSim = 0;
             if (CosSim < 0.5 || Double.IsNaN(CosSim)) CosSim = 0;
             double output = (2 * CosSim + LenSim + DistSim) / 4;
-            System.Diagnostics.Debug.WriteLine(l0.GetLength());
-            System.Diagnostics.Debug.WriteLine(l1.GetLength());
             System.Diagnostics.Debug.WriteLine("Results: CosSim: {0}, LenSim: {1}, AvDist {2}, DistSim: {3}. Total: {4}", 
                 CosSim, LenSim, AvDist, DistSim, output);
             return output;
@@ -50,17 +48,17 @@ namespace SketchAssistantWPF
         /// An approximate calculation of the average cosine similarity 
         /// of two lines, achieved by calculating the cosine similarity of subvectors.
         /// </summary>
-        /// <param name="l0">The first line</param>
-        /// <param name="l1">The second line</param>
+        /// <param name="line0">The first line</param>
+        /// <param name="line1">The second line</param>
         /// <returns>The approximate average cosine similarity of all subvectors</returns>
-        public static double CalculateAverageCosineSimilarity(InternalLine l0, InternalLine l1)
+        public static double CalculateAverageCosineSimilarity(InternalLine line0, InternalLine line1)
         {
             //check if one of the lines is a point, or both lines are points
-            if ((l0.isPoint && !l1.isPoint) || (l1.isPoint && !l0.isPoint)) return 0;
-            else if (l0.isPoint && l1.isPoint) return 1;
+            if ((line0.isPoint && !line1.isPoint) || (line1.isPoint && !line0.isPoint)) return 0;
+            else if (line0.isPoint && line1.isPoint) return 1;
 
-            List<Point> points0 = l0.GetPoints();
-            List<Point> points1 = l1.GetPoints();
+            List<Point> points0 = line0.GetPoints();
+            List<Point> points1 = line1.GetPoints();
 
             if (points0.Count == points1.Count)
             {
@@ -125,12 +123,12 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Calculate the similarity in length of two Lines.
         /// </summary>
-        /// <param name="l0">The first line.</param>
-        /// <param name="l1">The second line.</param>
+        /// <param name="line0">The first line.</param>
+        /// <param name="line1">The second line.</param>
         /// <returns>How similar the lines are in length.</returns>
-        private static double CalculateLengthSimilarity(InternalLine l0, InternalLine l1)
+        private static double CalculateLengthSimilarity(InternalLine line0, InternalLine line1)
         {
-            double len0 = l0.GetLength(); double len1 = l1.GetLength();
+            double len0 = line0.GetLength(); double len1 = line1.GetLength();
             var dif = Math.Abs(len1 - len0);
             if (dif == 0) return 1;
             double shorter;
@@ -143,13 +141,13 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Calculate the average distance between the ends of two lines.
         /// </summary>
-        /// <param name="l0">The first line.</param>
-        /// <param name="l1">The second line.</param>
+        /// <param name="line0">The first line.</param>
+        /// <param name="line1">The second line.</param>
         /// <returns>The shortest average distance between the ends of the lines.</returns>
-        private static double CalculateAverageDistance(InternalLine l0, InternalLine l1)
+        private static double CalculateAverageDistance(InternalLine line0, InternalLine line1)
         {
-            List<Point> points0 = l0.GetPoints();
-            List<Point> points1 = l1.GetPoints();
+            List<Point> points0 = line0.GetPoints();
+            List<Point> points1 = line1.GetPoints();
             double distfirstfirst = Math.Sqrt(Math.Pow((points0[0].X - points1[0].X) , 2) + Math.Pow((points0[0].Y - points1[0].Y) , 2));
             double distlastlast = Math.Sqrt(Math.Pow((points0.Last().X - points1.Last().X), 2) + Math.Pow((points0.Last().Y - points1.Last().Y), 2));
             double distfirstlast = Math.Sqrt(Math.Pow((points0[0].X - points1.Last().X), 2) + Math.Pow((points0[0].Y - points1.Last().Y), 2));

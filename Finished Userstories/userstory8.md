@@ -8,6 +8,6 @@
 |Geschätzter Aufwand (Story Points)|10|
 |Entwickler|Martin Edlund|
 |Umgesetzt in Iteration|14|
-|Tatsächlicher Aufwand (Std.)|keine|
-|Velocity (Std./Story Point)|keine|
+|Tatsächlicher Aufwand (Std.)|12.5|
+|Velocity (Std./Story Point)|1.25|
 |Bemerkungen|Keine|

@@ -321,7 +321,7 @@ namespace SketchAssistantWPF
                 }
                 SetVisibility(rightPolyLines[line.GetID()], status);
             }
-            //Calculate similarity scores, maybe change later to compare to the 
+            //Calculate similarity scores 
             UpdateSimilarityScore(Double.NaN); var templist = lines.Where(tup => tup.Item1).ToList();
             if(LeftLines.Count > 0)
             {
@@ -331,10 +331,9 @@ namespace SketchAssistantWPF
                     UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, LeftLines[i]));
                 }
             }
-            else
+            else if(templist.Count > 1)
             {
-                for (int i = 0; i < templist.Count - 1; i++)
-                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, templist[i + 1].Item2));
+                UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[templist.Count-2].Item2, templist[templist.Count-1].Item2));
             }
         }
 
