@@ -16,8 +16,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <time.h>
-#include <windows.h>
+#include <ctime>
+//#include <windows.h>
 #include "Serial.h"
 #include "Actuator.h"
 

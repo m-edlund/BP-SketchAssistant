@@ -14,13 +14,14 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-#include <time.h>
+#include <ctime>
+//#include <time.h>
 
 typedef struct Actuator
 {
     bool active;
     bool continuous;
-    clock_t endTime;
+	clock_t endTime;
     float intensity;
     float minIntensity; // Cut off values under threshold (default: 0)
     float maxIntensity; // Cut off values over threshold  (default: 1)

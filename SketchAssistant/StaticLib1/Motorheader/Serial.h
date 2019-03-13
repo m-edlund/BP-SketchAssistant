@@ -15,7 +15,7 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-#include <windows.h>
+//#include <windows.h>
 
 typedef struct Serial
 {

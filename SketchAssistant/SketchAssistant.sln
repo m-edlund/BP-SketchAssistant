@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2050
+# Blend for Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistantWPF", "SketchAssistantWPF\SketchAssistantWPF.csproj", "{EE53AE79-2AA0-4F43-9638-1789B189D5C3}"
 EndProject
@@ -15,9 +15,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StaticLibMotors", "StaticLib1\StaticLib1.vcxproj", "{9ED853D5-40BD-40EB-9F8F-228EE11319A1}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E6A97527-65BD-4D20-BA9C-19F2F84B2D13}"
-	ProjectSection(SolutionItems) = preProject
-		..\..\BPMotoren\out\BodyActuator.dll = ..\..\BPMotoren\out\BodyActuator.dll
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

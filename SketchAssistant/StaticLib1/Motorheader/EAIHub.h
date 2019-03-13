@@ -15,7 +15,7 @@
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>
-#include <time.h>
+#include <ctime>
 #include <pthread.h>
 #include "Actuator.h"
 
