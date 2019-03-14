@@ -179,7 +179,7 @@
         <Canvas Name="CanvasSeperator" Grid.Column="2" Grid.Row="1" Background="LightGray" />
         <InkCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="3" Grid.Row="1" Height="auto"
             PreviewMouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" 
-                    StrokeCollected="RightCanvas_StrokeCollection" EditingMode="None" IsStylusCapturedChanged="RightCanvas_IsStylusCapturedChanged" LostTouchCapture="RightCanvas_LostTouchCapture" TouchUp="RightCanvas_TouchUp"/>
+                    StrokeCollected="RightCanvas_StrokeCollection" EditingMode="None" IsStylusCapturedChanged="RightCanvas_IsStylusCapturedChanged" TouchUp="RightCanvas_TouchUp"/>
 
         <Canvas Name="CanvasRightEdge" Grid.Column="4" Grid.Row="1" Background="LightGray" />
 

@@ -386,6 +386,26 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Finish the current Line, when the pressed Mouse is released.
+        /// Overload that is used to pass a list of points to be used when one is available.
+        /// </summary>
+        /// <param name="p">The list of points</param>
+        public void MouseUp(List<Point> p)
+        {
+            mouseDown = false;
+            if (inDrawingMode && currentLine.Count > 0)
+            {
+                InternalLine newLine = new InternalLine(p, rightLineList.Count);
+                rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
+                newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
+                programPresenter.UpdateRightLines(rightLineList);
+                currentLine.Clear();
+            }
+            UpdateUI();
+        }
+
+        /// <summary>
         /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
         /// </summary>
         public void Tick()

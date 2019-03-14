@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -246,9 +247,10 @@ namespace SketchAssistantWPF
         /// Pass-trough function that calls the correct Mouse event of the model, when the mouse is clicked.
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
-        /// <param name="e">The Mouse event arguments.</param>
-        public void MouseEvent(MouseAction mouseAction)
+        /// <param name="strokes">The Strokes.</param>
+        public void MouseEvent(MouseAction mouseAction, StrokeCollection strokes)
         {
+
             switch (mouseAction)
             {
                 case MouseAction.Click:
@@ -260,7 +262,18 @@ namespace SketchAssistantWPF
                     programModel.MouseDown();
                     break;
                 case MouseAction.Up:
-                    programModel.MouseUp(true);
+                    if(strokes.Count > 0)
+                    {
+                        StylusPointCollection sPoints = strokes.First().StylusPoints;
+                        List<Point> points = new List<Point>();
+                        foreach(StylusPoint p in sPoints)
+                            points.Add(new Point(p.X, p.Y));
+                        programModel.MouseUp(points);
+                    }
+                    else
+                    {
+                        programModel.MouseUp(true);
+                    }
                     break;
                 case MouseAction.Up_Invalid:
                     programModel.MouseUp(false);
