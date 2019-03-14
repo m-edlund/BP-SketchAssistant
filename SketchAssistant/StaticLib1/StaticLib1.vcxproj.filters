@@ -38,7 +38,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UnitTest1.cpp">
+    <ClCompile Include="ArmbandInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
