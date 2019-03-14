@@ -120,7 +120,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RedoButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.Redo();
+            if (!IsMousePressed()) ProgramPresenter.Redo();
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.Undo();
+            if(!IsMousePressed()) ProgramPresenter.Undo();
         }
 
         /// <summary>
@@ -601,6 +601,46 @@ namespace SketchAssistantWPF
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up); await Task.Delay(1);
             debugRunning = false;
             dispatcherTimer.Start();
+        }
+
+        private void RightCanvas_IsStylusCapturedChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Stylus Capture is now: {0}", RightCanvas.IsStylusCaptured);
+            if (!RightCanvas.IsStylusCaptured)
+            {
+                if (strokeCollection.Count == 0)
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid);
+                }
+                else
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+                    RightCanvas.Strokes.RemoveAt(0);
+                    strokeCollection.RemoveAt(0);
+                    //System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+                }
+            }
+        }
+
+        private void RightCanvas_LostTouchCapture(object sender, TouchEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Lost Touch Capture event");
+            if (strokeCollection.Count == 0)
+            {
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid);
+            }
+            else
+            {
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+                RightCanvas.Strokes.RemoveAt(0);
+                strokeCollection.RemoveAt(0);
+                //System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+            }
+        }
+
+        private void RightCanvas_TouchUp(object sender, TouchEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Touch up event");
         }
     }
 }
