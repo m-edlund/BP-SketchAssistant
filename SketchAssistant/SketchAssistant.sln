@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Blend for Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Blend for Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SketchAssistantWPF", "SketchAssistantWPF\SketchAssistantWPF.csproj", "{EE53AE79-2AA0-4F43-9638-1789B189D5C3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9ED853D5-40BD-40EB-9F8F-228EE11319A1} = {9ED853D5-40BD-40EB-9F8F-228EE11319A1}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WhiteTests", "WhiteTests\WhiteTests.csproj", "{EB09C624-91F2-465F-825B-559BF7A7D5CB}"
 EndProject
