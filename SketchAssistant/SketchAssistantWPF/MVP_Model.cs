@@ -111,6 +111,9 @@ namespace SketchAssistantWPF
 
         public MVP_Model(MVP_Presenter presenter)
         {
+            //TODO remove
+            LocalArmbandInterface.setupArmband();
+
             programPresenter = presenter;
             historyOfActions = new ActionHistory();
             //redrawAss = new RedrawAssistant();
@@ -356,6 +359,8 @@ namespace SketchAssistantWPF
                 currentLine.Clear();
                 currentLine.Add(currentCursorPosition);
             }
+            //TODO remove
+            LocalArmbandInterface.startVibrate(0, 1);
         }
 
         /// <summary>
@@ -384,6 +389,8 @@ namespace SketchAssistantWPF
                 currentLine.Clear();
             }
             UpdateUI();
+            //TODO remove
+            LocalArmbandInterface.stopVibration(0);
         }
 
         /// <summary>
