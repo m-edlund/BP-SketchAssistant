@@ -107,7 +107,8 @@ namespace SketchAssistantWPF
 
         List<Point> currentLine = new List<Point>();
 
-
+        TrajectoryGenerator trajectoryGenerator;
+        int currentLineIndex;
 
         public MVP_Model(MVP_Presenter presenter)
         {
@@ -120,6 +121,8 @@ namespace SketchAssistantWPF
             UpdateUI();
             rightImageSize = new ImageDimension(0, 0);
             leftImageSize = new ImageDimension(0, 0);
+            trajectoryGenerator = new TrajectoryGenerator(programPresenter.getView());
+            currentLineIndex = 0;
         }
 
         /**************************/
@@ -253,6 +256,8 @@ namespace SketchAssistantWPF
             DrawEmptyCanvasRight();
             rightLineList = new List<Tuple<bool, InternalLine>>();
             */
+            currentLineIndex = 0;
+            trajectoryGenerator.setCurrentLine(leftLineList.ElementAt(currentLineIndex), leftLineList);
         }
 
         /// <summary>
@@ -375,6 +380,23 @@ namespace SketchAssistantWPF
                 currentLine.Clear();
                 programPresenter.UpdateCurrentLine(currentLine);
             }
+            //TODO
+            currentLineIndex++;
+            if (leftLineList != null && currentLineIndex < leftLineList.Count)
+            {
+                while (currentLineIndex < leftLineList.Count && leftLineList.ElementAt(currentLineIndex).GetPoints().Count < 2)
+                {
+                    currentLineIndex++;
+                }
+                if(currentLineIndex < leftLineList.Count)
+                {
+                    trajectoryGenerator.setCurrentLine(leftLineList.ElementAt(currentLineIndex), null);
+                }
+            }
+            else
+            {
+                trajectoryGenerator.setCurrentLine(null, null);
+            }
             UpdateUI();
         }
 
@@ -391,6 +413,7 @@ namespace SketchAssistantWPF
             {
                 currentLine.Add(currentCursorPosition);
                 programPresenter.UpdateCurrentLine(currentLine);
+                trajectoryGenerator.GenerateTrajectory(currentCursorPosition);
             }
             //Deleting
             if (!inDrawingMode && programPresenter.IsMousePressed())

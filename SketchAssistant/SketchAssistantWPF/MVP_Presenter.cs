@@ -468,5 +468,10 @@ namespace SketchAssistantWPF
             }
             return realCoordinates;
         }
+
+        public MVP_View getView()
+        {
+            return programView;
+        }
     }
 }

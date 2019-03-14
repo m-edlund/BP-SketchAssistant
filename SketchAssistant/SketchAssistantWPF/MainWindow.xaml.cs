@@ -574,5 +574,10 @@ namespace SketchAssistantWPF
             debugRunning = false;
             dispatcherTimer.Start();
         }
+
+        public void RemoveSpecificLine(Polyline specificLine)
+        {
+            RightCanvas.Children.Remove(specificLine);
+        }
     }
 }

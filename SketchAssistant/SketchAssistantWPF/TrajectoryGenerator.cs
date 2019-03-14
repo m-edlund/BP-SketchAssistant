@@ -4,13 +4,19 @@ using System.Windows;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Shapes;
+using System.Windows.Media;
 
 namespace SketchAssistantWPF
 {
     class TrajectoryGenerator
     {
-        static readonly int CONSTANT_A = 10;
+        static readonly int CONSTANT_A = 50;
         static readonly double DEADZONE = 3;
+
+        MVP_View programView_debug;
+
+        List<Polyline> previousLines;
 
         /// <summary>
         /// the template for the line currently being drawn
@@ -28,16 +34,47 @@ namespace SketchAssistantWPF
         /// </summary>
         int index;
 
+        public TrajectoryGenerator(MVP_View viewForDebug)
+        {
+            programView_debug = viewForDebug;
+            previousLines = new List<Polyline>();
+        }
+
         /// <summary>
         /// updates the pointer to the template for the line currently being drawn, and resets indices etc.
         /// </summary>
         /// <param name="newCurrentLine">the new template for the line currently being drawn</param>
-        public void setCurrentLine(InternalLine newCurrentLine)
+        public void setCurrentLine(InternalLine newCurrentLine, List<InternalLine> leftLineList)
         {
             currentLine = newCurrentLine;
-            currentPoints = currentLine.GetPoints();
+            if (currentLine != null)
+            {
+                currentPoints = currentLine.GetPoints();
+            }
+            else
+            {
+                currentPoints = null;
+            }
             //lastCursorPosition = currentPoints.ElementAt(0);
             index = 1;
+
+            if (leftLineList != null)
+            {
+                foreach (InternalLine l in leftLineList)
+                {
+                    Polyline temp = new Polyline();
+                    PointCollection pointCollection = new PointCollection();
+                    foreach (Point p in l.GetPoints())
+                    {
+                        pointCollection.Add(p);
+                    }
+                    temp.Points = pointCollection;
+                    temp.Stroke = System.Windows.Media.Brushes.Red;
+                    temp.StrokeThickness = 1;
+                    programView_debug.AddNewLineRight(temp);
+                    previousLines.Add(temp);
+                }
+            }
         }
 
         /// <summary>
@@ -47,79 +84,102 @@ namespace SketchAssistantWPF
         /// <returns>the direction in which to go, as an angle on the drawing plane, in degree format, with 0° being the positive X-Axis, increasing counterclockwise</returns>
         public double GenerateTrajectory(Point cursorPosition)
         {
-
-            //update index to point to current section if one or more section divideing lines have been passed since last call
-            while (index < (currentPoints.Count - 1) && SectionDividingLinePassed(cursorPosition, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), currentPoints.ElementAt(index + 1)))
+            if (currentLine != null && currentPoints.Count > 1)
             {
-                index++;
-            }
-            //lastCursorPosition = cursorPosition;
+                Console.WriteLine(cursorPosition);
+                Console.WriteLine(index + ":" + currentPoints.Count);
+                Console.WriteLine(currentPoints.ElementAt(index));
 
-            //project teh point onto the active line segment to be able to compute distances
-            Point orthogonalProjection = ComputeOrthogonalProjection(cursorPosition, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index));
-
-            //index of the last reachable actual point
-            int targetIndex = index;
-            List<Tuple<Point, Point>> strikeZones = new List<Tuple<Point, Point>>();
-
-            //if "far" away from the next actual point of the line, generate an auxiliary point at a constant distance (constantA) on the current line segment
-            Point auxiliaryPoint = new Point(-1, -1);
-            if (ComputeDistance(orthogonalProjection, currentPoints.ElementAt(index)) <= CONSTANT_A)
-            {
-                auxiliaryPoint = MoveAlongLine(orthogonalProjection, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), CONSTANT_A);
-                strikeZones.Add(computeStrikeZone(auxiliaryPoint, orthogonalProjection, cursorPosition));
-                targetIndex--;
-            }
-
-            //aim for the furthest actual point of the line reachable by the descent rate constraints (lower bounds) given by the various strike zones
-            while (targetIndex < (currentPoints.Count - 1) && allStrikeZonesPassed(strikeZones, cursorPosition, currentPoints.ElementAt(targetIndex + 1)))
-            {
-                strikeZones.Add(computeStrikeZone(currentPoints.ElementAt(targetIndex + 1), orthogonalProjection, cursorPosition));
-                targetIndex++;
-            }
-
-            Point furthestCrossingPoint = new Point(-1, -1); ;
-            if (targetIndex < index) //auxiliary point created and next actual point not reachable
-            {
-                furthestCrossingPoint = ComputeFurthestCrossingPoint(cursorPosition, orthogonalProjection, strikeZones, auxiliaryPoint, currentPoints.ElementAt(targetIndex + 1));
-
-                //if such a point exists, use it as target for the new trajectory
-                if (furthestCrossingPoint.X != -1)
+                //update index to point to current section if one or more section divideing lines have been passed since last call
+                 while (index < (currentPoints.Count - 1) && (SectionDividingLinePassed(cursorPosition, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), currentPoints.ElementAt(index + 1)) || ComputeDistance(cursorPosition, currentPoints.ElementAt(index)) < 3))
+                 {
+                     index++;
+                 }
+                /*if (ComputeDistance(cursorPosition, currentPoints.ElementAt(index)) < 5 && index < (currentPoints.Count - 1))
                 {
-                    Debug_DrawStrikeZones(strikeZones);
-                    Debug_DrawTrajectoryVector(cursorPosition, furthestCrossingPoint);
-                    return computeOrientationOfVector(cursorPosition, furthestCrossingPoint);
+                    index++;
+                    Console.WriteLine(index);
+                }*/
+                //lastCursorPosition = cursorPosition;
+
+                //project teh point onto the active line segment to be able to compute distances
+                Point orthogonalProjection = ComputeOrthogonalProjection(cursorPosition, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index));
+
+
+                //index of the last reachable actual point
+                int targetIndex = index - 1;
+                List<Tuple<Point, Point>> strikeZones = new List<Tuple<Point, Point>>();
+
+                //if "far" away from the next actual point of the line, generate an auxiliary point at a constant distance (constantA) on the current line segment
+                Point auxiliaryPoint = new Point(-1, -1);
+                if (ComputeDistance(orthogonalProjection, currentPoints.ElementAt(index)) > CONSTANT_A)
+                {
+                    auxiliaryPoint = MoveAlongLine(orthogonalProjection, currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index), CONSTANT_A);
+                    strikeZones.Add(computeStrikeZone(currentPoints.ElementAt(index - 1), auxiliaryPoint, currentPoints.ElementAt(index), orthogonalProjection, cursorPosition));
+                    //targetIndex--;
                 }
-                //else use the last reachable actual point
+
+                //aim for the furthest actual point of the line reachable by the descent rate constraints (lower bounds) given by the various strike zones
+                while (targetIndex < (currentPoints.Count - 1) && allStrikeZonesPassed(strikeZones, cursorPosition, orthogonalProjection, currentPoints.ElementAt(targetIndex + 1)))
+                {
+                    strikeZones.Add(computeStrikeZone((targetIndex >= 0 ? currentPoints.ElementAt(targetIndex) : new Point(-1, -1)), currentPoints.ElementAt(targetIndex + 1), (targetIndex < currentPoints.Count - 1 ? currentPoints.ElementAt(targetIndex + 1) : new Point(-1, -1)), orthogonalProjection, cursorPosition));
+                    targetIndex++;
+                }
+
+
+                Console.WriteLine(index + "," + targetIndex);
+                Point furthestCrossingPoint = new Point(-1, -1); ;
+                if (targetIndex < index) //auxiliary point created and next actual point not reachable
+                {
+                    furthestCrossingPoint = ComputeFurthestCrossingPoint(cursorPosition, orthogonalProjection, strikeZones, auxiliaryPoint, currentPoints.ElementAt(targetIndex + 1));
+
+                    //if such a point exists, use it as target for the new trajectory
+                    if (furthestCrossingPoint.X != -1)
+                    {
+                        Debug_DrawStrikeZones(strikeZones);
+                        Debug_DrawTrajectoryVector(cursorPosition, furthestCrossingPoint);
+                        Debug_DrawOrthogonalProjection(cursorPosition, orthogonalProjection);
+                        Debug_DrawCurrentSection(currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index));
+                        return computeOrientationOfVector(cursorPosition, furthestCrossingPoint);
+                    }
+                    //else use the last reachable actual point
+                    else
+                    {
+                        Debug_DrawStrikeZones(strikeZones);
+                        Debug_DrawTrajectoryVector(cursorPosition, auxiliaryPoint);
+                        Debug_DrawOrthogonalProjection(cursorPosition, orthogonalProjection);
+                        Debug_DrawCurrentSection(currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index));
+                        return computeOrientationOfVector(cursorPosition, auxiliaryPoint);
+                    }
+                }
                 else
                 {
-                    Debug_DrawStrikeZones(strikeZones);
-                    Debug_DrawTrajectoryVector(cursorPosition, auxiliaryPoint);
-                    return computeOrientationOfVector(cursorPosition, auxiliaryPoint);
+                    //aim for the furthest (auxiliary) point on the line segment after the last reachable actual point (only if there is such a segment: not if that last reachable point is the last point of the line)
+                    if (targetIndex < (currentPoints.Count - 1))
+                    {
+                        furthestCrossingPoint = ComputeFurthestCrossingPoint(cursorPosition, orthogonalProjection, strikeZones, currentPoints.ElementAt(targetIndex), currentPoints.ElementAt(targetIndex + 1));
+                    }
+                    //if such a point exists, use it as target for the new trajectory
+                    if (furthestCrossingPoint.X != -1)
+                    {
+                        Debug_DrawStrikeZones(strikeZones);
+                        Debug_DrawTrajectoryVector(cursorPosition, furthestCrossingPoint);
+                        Debug_DrawOrthogonalProjection(cursorPosition, orthogonalProjection);
+                        Debug_DrawCurrentSection(currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index));
+                        return computeOrientationOfVector(cursorPosition, furthestCrossingPoint);
+                    }
+                    //else use the last reachable actual point
+                    else
+                    {
+                        Debug_DrawStrikeZones(strikeZones);
+                        Debug_DrawTrajectoryVector(cursorPosition, currentPoints.ElementAt(targetIndex));
+                        Debug_DrawOrthogonalProjection(cursorPosition, orthogonalProjection);
+                        Debug_DrawCurrentSection(currentPoints.ElementAt(index - 1), currentPoints.ElementAt(index));
+                        return computeOrientationOfVector(cursorPosition, currentPoints.ElementAt(targetIndex));
+                    }
                 }
             }
-            else 
-            {
-                //aim for the furthest (auxiliary) point on the line segment after the last reachable actual point (only if there is such a segment: not if that last reachable point is the last point of the line)
-                if (targetIndex < (currentPoints.Count - 1))
-                {
-                    furthestCrossingPoint = ComputeFurthestCrossingPoint(cursorPosition, orthogonalProjection, strikeZones, currentPoints.ElementAt(targetIndex), currentPoints.ElementAt(targetIndex + 1));
-                }
-                //if such a point exists, use it as target for the new trajectory
-                if (furthestCrossingPoint.X != -1)
-                {
-                    Debug_DrawStrikeZones(strikeZones);
-                    Debug_DrawTrajectoryVector(cursorPosition, furthestCrossingPoint);
-                    return computeOrientationOfVector(cursorPosition, furthestCrossingPoint);
-                }
-                //else use the last reachable actual point
-                else
-                {
-                    Debug_DrawStrikeZones(strikeZones);
-                    Debug_DrawTrajectoryVector(cursorPosition, currentPoints.ElementAt(targetIndex));
-                    return computeOrientationOfVector(cursorPosition, currentPoints.ElementAt(targetIndex));
-                }
-            }
+            else return -1;
         }
 
         /// <summary>
@@ -129,16 +189,79 @@ namespace SketchAssistantWPF
         /// <param name="vectorEndPoint">target point of the trajectory vector</param>
         private void Debug_DrawTrajectoryVector(Point vectorStartPoint, Point vectorEndPoint)
         {
-            throw new NotImplementedException();
+            Polyline temp = new Polyline();
+            PointCollection pointCollection = new PointCollection();
+            pointCollection.Add(vectorStartPoint);
+            pointCollection.Add(vectorEndPoint);
+            temp.Points = pointCollection;
+            temp.Stroke = System.Windows.Media.Brushes.Red;
+            temp.StrokeDashArray = new DoubleCollection { 2, 2 }; //TODO
+            temp.StrokeThickness = 1;
+            programView_debug.AddNewLineRight(temp);
+            previousLines.Add(temp);
         }
 
         /// <summary>
-        /// prints all strike zones on the drawing pane for debugging and calibration purposes
+        /// prints the trajectory vector on the drawing pane for debugging and calibration purposes
+        /// </summary>
+        /// <param name="vectorStartPoint">origin point of the trajectory vector</param>
+        /// <param name="vectorEndPoint">target point of the trajectory vector</param>
+        private void Debug_DrawOrthogonalProjection(Point cursorPosition, Point orthogonalProjection)
+        {
+            Polyline temp = new Polyline();
+            PointCollection pointCollection = new PointCollection();
+            pointCollection.Add(cursorPosition);
+            pointCollection.Add(orthogonalProjection);
+            temp.Points = pointCollection;
+            temp.Stroke = System.Windows.Media.Brushes.Red;
+            temp.StrokeDashArray = new DoubleCollection { 1, 2 }; //TODO
+            temp.StrokeThickness = 1;
+            programView_debug.AddNewLineRight(temp);
+            previousLines.Add(temp);
+        }
+
+        /// <summary>
+        /// prints the trajectory vector on the drawing pane for debugging and calibration purposes
+        /// </summary>
+        /// <param name="vectorStartPoint">origin point of the trajectory vector</param>
+        /// <param name="vectorEndPoint">target point of the trajectory vector</param>
+        private void Debug_DrawCurrentSection(Point sectionStartPoint, Point sectionEndPoint)
+        {
+            Polyline temp = new Polyline();
+            PointCollection pointCollection = new PointCollection();
+            pointCollection.Add(sectionStartPoint);
+            pointCollection.Add(sectionEndPoint);
+            temp.Points = pointCollection;
+            temp.Stroke = System.Windows.Media.Brushes.Red;
+            temp.StrokeThickness = 2;
+            programView_debug.AddNewLineRight(temp);
+            previousLines.Add(temp);
+        }
+
+        /// <summary>
+        /// first deletes all debug lines from thte last interaction and then prints all strike zones on the drawing pane for debugging and calibration purposes
         /// </summary>
         /// <param name="strikeZones">list of all strike zones to be drawn</param>
         private void Debug_DrawStrikeZones(List<Tuple<Point, Point>> strikeZones)
         {
-            throw new NotImplementedException();
+            foreach(Polyline l in previousLines)
+            {
+                programView_debug.RemoveSpecificLine(l);
+            }
+            previousLines.Clear();
+            foreach (Tuple<Point, Point> t in strikeZones)
+            {
+                Polyline temp = new Polyline();
+                PointCollection pointCollection= new PointCollection();
+                pointCollection.Add(t.Item1);
+                pointCollection.Add(t.Item2);
+                temp.Points = pointCollection;
+                temp.Stroke = System.Windows.Media.Brushes.DarkGreen;
+                temp.StrokeDashArray = new DoubleCollection{ 2, 2 }; //TODO
+                temp.StrokeThickness = 2;
+                programView_debug.AddNewLineRight(temp);
+                previousLines.Add(temp);
+            }
         }
 
         /// <summary>
@@ -162,7 +285,7 @@ namespace SketchAssistantWPF
         /// <param name="strikeZones">list of all strike zones which have to be passed</param>
         /// <param name="lineSegmentStartPoint">starting point of the line segment on which the point has to be found</param>
         /// <param name="lineSegmentEndPoint">ending point of the line segment on which the point has to be found</param>
-        /// <returns>the furthest such point or null, if there is no such point on the given segment (start and end point excluded)</returns>
+        /// <returns>the furthest such point or a point with negative coordinates, if there is no such point on the given segment (start and end point excluded)</returns>
         private Point ComputeFurthestCrossingPoint(Point cursorPosition, Point orthogonalProjection, List<Tuple<Point, Point>> strikeZones, Point lineSegmentStartPoint, Point lineSegmentEndPoint)
         {
             Tuple<Point, Point> bsf= new Tuple<Point, Point>(new Point(-1, -1), new Point(-1, -1));
@@ -185,9 +308,17 @@ namespace SketchAssistantWPF
             return (Math.Abs(computeOrientationOfVector(centerPoint, point1) - computeOrientationOfVector(centerPoint, point2)) % 180);
         }
 
-        private Point ComputeCrossingPoint(Point line1Point1, Point lne1Point2, Point line2Point1, Point line2Point2)
+        private Point ComputeCrossingPoint(Point line1Point1, Point line1Point2, Point line2Point1, Point line2Point2)
         {
-            throw new NotImplementedException();
+            if (line2Point1.Equals(line2Point2)) return new Point(-1, -1);
+            double xCoordinateOfCrossingPoint = ( (line1Point1.X * line1Point2.Y - line1Point1.Y * line1Point2.X) * (line2Point1.X - line2Point2.X) - (line1Point1.X - line1Point2.X) * (line2Point1.X * line2Point2.Y - line2Point1.Y * line2Point2.X) ) / ( (line1Point1.X - line1Point2.X) * (line2Point1.Y - line2Point2.Y) - (line1Point1.Y - line1Point2.Y) * (line2Point1.X - line2Point2.X) );
+            double yCoordinateOfCrossingPoint = ( (line1Point1.X * line1Point2.Y - line1Point1.Y * line1Point2.X) * (line2Point1.Y - line2Point2.Y) - (line1Point1.Y - line1Point2.Y) * (line2Point1.X * line2Point2.Y - line2Point1.Y * line2Point2.X) ) / ( (line1Point1.X - line1Point2.X) * (line2Point1.Y - line2Point2.Y) - (line1Point1.Y - line1Point2.Y) * (line2Point1.X - line2Point2.X) );
+            Point crossingPointOfLines = new Point(xCoordinateOfCrossingPoint, yCoordinateOfCrossingPoint);
+            if (BeyondSection(crossingPointOfLines, line1Point1, line1Point2)) return new Point(-1, -1);
+            if (BeyondSection(crossingPointOfLines, line1Point2, line1Point1)) return new Point(-1, -1);
+            if (BeyondSection(crossingPointOfLines, line2Point1, line2Point2)) return new Point(-1, -1);
+            if (BeyondSection(crossingPointOfLines, line2Point2, line2Point1)) return new Point(-1, -1);
+            else return crossingPointOfLines;
         }
 
         /// <summary>
@@ -197,11 +328,14 @@ namespace SketchAssistantWPF
         /// <param name="cursorPosition">the current cursor position</param>
         /// <param name="targetPoint">index of the next target point</param>
         /// <returns>true if all strike zones are passed, else false</returns>
-        private bool allStrikeZonesPassed(List<Tuple<Point, Point>> strikeZones, Point cursorPosition, Point targetPoint)
+        private bool allStrikeZonesPassed(List<Tuple<Point, Point>> strikeZones, Point cursorPosition, Point orthogonalProjection, Point targetPoint)
         {
+            Point lastPoint = orthogonalProjection;
             foreach (Tuple<Point, Point> s in strikeZones )
             {
-                if (!SectionsCrossing(cursorPosition, targetPoint, s.Item1, s.Item2)) return false;
+                if (!SectionsCrossing(cursorPosition, targetPoint, s.Item1, s.Item2)) return false; //strike zone not passed
+                if (SectionsCrossing(cursorPosition, targetPoint, lastPoint, s.Item1)) return false; //line crossed
+                lastPoint = s.Item1;
             }
             return true;
         }
@@ -223,10 +357,30 @@ namespace SketchAssistantWPF
         /// <param name="orthogonalProjection">orthogonal projection of the cursor position onto the active line segment</param>
         /// <param name="cursorPosition">the current cursor position</param>
         /// <returns></returns>
-        private Tuple<Point, Point> computeStrikeZone(Point targetedPoint, Point orthogonalProjection, Point cursorPosition)
+        private Tuple<Point, Point> computeStrikeZone(Point lastPoint, Point targetedPoint, Point nextPoint, Point orthogonalProjection, Point cursorPosition)
         {
-            if (ComputeDistance(cursorPosition, orthogonalProjection) < DEADZONE) return new Tuple<Point, Point>(targetedPoint, targetedPoint);
-            throw new NotImplementedException();
+            if (lastPoint.X == -1 || nextPoint.X == -1 || ComputeDistance(cursorPosition, orthogonalProjection) < DEADZONE)
+            {
+                return new Tuple<Point, Point>(targetedPoint, targetedPoint);
+            }
+            double size = ComputeStrikeZoneSize(ComputeDistance(cursorPosition, orthogonalProjection), ComputeDistance(orthogonalProjection, targetedPoint)); //TODO correct distance to targetPoint
+            double v_x = (lastPoint.X - targetedPoint.X) / ComputeDistance(lastPoint, targetedPoint);
+            double v_y = (lastPoint.Y - targetedPoint.Y) / ComputeDistance(lastPoint, targetedPoint);
+            //double u_x = (nextPoint.X - targetedPoint.X) / ComputeDistance(nextPoint, targetedPoint);
+            //double u_y = (nextPoint.Y - targetedPoint.Y) / ComputeDistance(nextPoint, targetedPoint);
+            //double tmp_x = v_x + u_x;
+            //double tmp_y = v_y + u_y;
+            double tmp_x = v_y;
+            double tmp_y = v_x;
+            double tmp_length = Math.Sqrt(tmp_x * tmp_x + tmp_y * tmp_y);
+            tmp_x = ((tmp_x / tmp_length) * size) + targetedPoint.X;
+            tmp_y = ((tmp_y / tmp_length) * size) + targetedPoint.Y;
+            return new Tuple<Point, Point>(targetedPoint, new Point(tmp_x, tmp_y)); //TODO right direction of vector
+        }
+
+        private double ComputeStrikeZoneSize(double v1, double v2)
+        {
+            return 25; //TODO
         }
 
         /// <summary>
@@ -269,20 +423,28 @@ namespace SketchAssistantWPF
         /// <returns>the orthogonal projection of a point onto the given line segment, or the respective segment end point if the orthogonal projection lies outside the specified segment</returns>
         private Point ComputeOrthogonalProjection(Point cursorPosition, Point lastPoint, Point currentPoint)
         {
-            double r = ComputeDistance(cursorPosition, currentPoint);
-            Point auxiliaryPoint = IntersectCircle(cursorPosition, r, lastPoint, currentPoint);
-            if (BeyondSection(auxiliaryPoint, lastPoint, currentPoint)) return currentPoint;
+            double v_x = cursorPosition.X - lastPoint.X;
+            double v_y= cursorPosition.Y - lastPoint.Y;
+            double u_x = currentPoint.X - lastPoint.X;
+            double u_y = currentPoint.Y - lastPoint.Y;
+            double factor = (v_x * u_x + v_y * u_y) / (u_x * u_x + u_y * u_y);
+            double new_x = factor * u_x + lastPoint.X;
+            double new_y = factor * u_y + lastPoint.Y;
 
-            Point orthogonalProjection = MoveAlongLine(auxiliaryPoint, auxiliaryPoint, lastPoint, ComputeDistance(auxiliaryPoint, lastPoint) / 2);
-
-            if (BeyondSection(orthogonalProjection, currentPoint, lastPoint)) return lastPoint;
-
+            Point orthogonalProjection = new Point(new_x, new_y);
+            Console.Write(orthogonalProjection);
+            if (BeyondSection(orthogonalProjection, lastPoint, currentPoint))
+            {
+                Console.WriteLine("n");
+                return currentPoint;
+            }
+            if (BeyondSection(orthogonalProjection, currentPoint, lastPoint))
+            {
+                Console.WriteLine("l");
+                return lastPoint;
+            }
+            Console.WriteLine("o");
             return orthogonalProjection;
-        }
-
-        private Point IntersectCircle(Point cursorPosition, double r, Point lastPoint, Point currentPoint)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -294,13 +456,14 @@ namespace SketchAssistantWPF
         /// <returns>true iff pointToTest lies beyond sectionEndingPoint, on the line defined by sectionStartingPoint and sectionEndingPoint</returns>
         private bool BeyondSection(Point pointToTest, Point sectionStartingPoint, Point sectionEndingPoint)
         {
-            if(sectionEndingPoint.X > sectionStartingPoint.X)
+            //TODO
+            if(sectionEndingPoint.X >= sectionStartingPoint.X && pointToTest.X > sectionEndingPoint.X)
             {
-                if (pointToTest.X > sectionEndingPoint.X) return true;
+                return true;
             }
-            else if(sectionEndingPoint.X < sectionStartingPoint.X)
+            else if(sectionEndingPoint.X <= sectionStartingPoint.X && pointToTest.X < sectionEndingPoint.X)
             {
-                if (pointToTest.X < sectionEndingPoint.X) return true;
+                return true;
             }
             else
             {
@@ -308,7 +471,7 @@ namespace SketchAssistantWPF
                 {
                     if (pointToTest.Y > sectionEndingPoint.Y) return true;
                 }
-                else if (sectionEndingPoint.Y < sectionStartingPoint.Y)
+                else if (sectionEndingPoint.Y <= sectionStartingPoint.Y)
                 {
                     if (pointToTest.Y < sectionEndingPoint.Y) return true;
                 }

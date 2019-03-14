@@ -119,5 +119,11 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <returns>The cursor Position</returns>
         Point GetCursorPosition();
+
+        /// <summary>
+        /// removes a specific line from the right canvas
+        /// </summary>
+        /// <param name="specificLine">the line to remove</param>
+        void RemoveSpecificLine(Polyline specificLine);
     }
 }
