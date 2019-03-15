@@ -628,7 +628,7 @@ namespace WhiteTests
         /// parses all whitelisted files and ensures no exceptions are thrown (parsing abortion, e.g. due to corrupted input files, are realized by throwing a FileImporterException)
         /// </summary>
         [TestMethod]
-        [TestCategory("FileIO")]
+        [TestCategory("bla")]
         public void ParseSVGInputNoErrorForWhitelistedFilesTest()
         {
             FileImporter uut = new FileImporter();
@@ -656,7 +656,7 @@ namespace WhiteTests
         /// parses all blacklisted files and ensures an instance of FileIporterException is thrown for each file, but no other exceptions occur
         /// </summary>
         [TestMethod]
-        [TestCategory("FileIO")]
+        [TestCategory("bla")]
         public void ParseSVGInputNoErrorForBlacklistedFilesTest()
         {
             FileImporter uut = new FileImporter();
