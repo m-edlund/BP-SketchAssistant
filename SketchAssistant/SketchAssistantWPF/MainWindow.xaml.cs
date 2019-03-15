@@ -92,6 +92,10 @@ namespace SketchAssistantWPF
         /// Stores Lines drawn on RightCanvas.
         /// </summary>
         public StrokeCollection strokeCollection = new StrokeCollection();
+        /// <summary>
+        /// Size of areas marking endpoints of lines in the redraw mode.
+        /// </summary>
+        int markerRadius = 10;
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -112,7 +116,6 @@ namespace SketchAssistantWPF
         public void RightCanvas_StrokeCollection(object sender, InkCanvasStrokeCollectedEventArgs e)
         {
             strokeCollection.Add(e.Stroke);
-            //System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
         }
 
         /// <summary>
@@ -155,7 +158,6 @@ namespace SketchAssistantWPF
         private void RightCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, strokeCollection);
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);");
         }
 
         /// <summary>
@@ -177,6 +179,7 @@ namespace SketchAssistantWPF
 
         /// <summary>
         /// Is called when a stylus is lifted, which has the same effect as releasing the mouse.
+        /// Lifting the finger when using touch also toggles this, therfore this function is sufficient.
         /// </summary>
         private void RightCanvas_IsStylusCapturedChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
@@ -197,29 +200,11 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// Is called when touch is lifted, which has the same effect as releasing the mouse.
-        /// </summary>
-        private void RightCanvas_TouchUp(object sender, TouchEventArgs e)
-        {
-            if (strokeCollection.Count == 0)
-            {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
-            }
-            else
-            {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
-                RightCanvas.Strokes.RemoveAt(0);
-                strokeCollection.RemoveAt(0);
-            }
-        }
-
-        /// <summary>
         /// Get current Mouse positon within the right picture box.
         /// </summary>
         private void RightCanvas_MouseMove(object sender, MouseEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e.GetPosition(RightCanvas));
-            //System.Diagnostics.Debug.WriteLine("new Point(" + ((int)e.GetPosition(RightCanvas).X).ToString() + "," + ((int)e.GetPosition(RightCanvas).Y).ToString() + "), ");
         }
 
         /// <summary>
@@ -240,7 +225,6 @@ namespace SketchAssistantWPF
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             ProgramPresenter.Tick();
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.Tick();");
         }
 
         /// <summary>
@@ -634,7 +618,7 @@ namespace SketchAssistantWPF
                     await Task.Delay(1);
                 }
             }
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection); await Task.Delay(1);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokes); await Task.Delay(1);
             debugRunning = false;
             dispatcherTimer.Start();
         }

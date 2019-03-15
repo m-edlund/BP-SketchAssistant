@@ -39,10 +39,6 @@ namespace SketchAssistantWPF
         /// </summary>
         int deletionRadius = 5;
         /// <summary>
-        /// Size of areas marking endpoints of lines in the redraw mode.
-        /// </summary>
-        int markerRadius = 10;
-        /// <summary>
         /// The Position of the Cursor in the right picture box
         /// </summary>
         Point currentCursorPosition;
@@ -62,10 +58,6 @@ namespace SketchAssistantWPF
         /// Lookup Matrix for getting line ids at a certain postions of the image
         /// </summary>
         HashSet<int>[,] linesMatrix;
-        /// <summary>
-        /// List of items which will be overlayed over the right canvas.
-        /// </summary>
-        List<Tuple<bool, HashSet<Point>>> overlayItems;
         /// <summary>
         /// Width of the LeftImageBox.
         /// </summary>
@@ -98,8 +90,6 @@ namespace SketchAssistantWPF
         /// Whether or not the mouse is pressed.
         /// </summary>
         private bool mouseDown;
-
-        Image rightImageWithoutOverlay;
 
         List<InternalLine> leftLineList;
         
@@ -233,25 +223,7 @@ namespace SketchAssistantWPF
             leftLineList = listOfLines;
             graphicLoaded = true;
             programPresenter.UpdateLeftLines(leftLineList);
-            //programPresenter.ClearRightLines(); //TODO check if right position for this method call
             CanvasActivated();
-            /*
-            var workingCanvas = GetEmptyCanvas(width, height);
-            var workingGraph = Graphics.FromImage(workingCanvas);
-            leftLineList = listOfLines;
-            //redrawAss = new RedrawAssistant(leftLineList);
-            //overlayItems = redrawAss.Initialize(markerRadius);
-            //Lines
-            foreach (InternalLine line in leftLineList)
-            {
-                line.DrawLine(workingGraph);
-            }
-            leftImage = workingCanvas;
-            programPresenter.UpdateLeftImage(leftImage);
-            //Set right image to same size as left image and delete linelist
-            DrawEmptyCanvasRight();
-            rightLineList = new List<Tuple<bool, InternalLine>>();
-            */
         }
 
         /// <summary>
@@ -286,7 +258,6 @@ namespace SketchAssistantWPF
                     default:
                         break;
                 }
-                //TODO: For the person implementing overlay: Add check if overlay needs to be added
                 programPresenter.UpdateRightLines(rightLineList);
             }
             RepopulateDeletionMatrixes();
@@ -372,10 +343,8 @@ namespace SketchAssistantWPF
                     rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
                     newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
                     programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
-                    //TODO: For the person implementing overlay: Add check if overlay needs to be added
                     programPresenter.UpdateRightLines(rightLineList);
                     currentLine.Clear();
-                    //programPresenter.UpdateCurrentLine(currentLine)
                 }
             }
             else
@@ -440,38 +409,6 @@ namespace SketchAssistantWPF
                 }
             }
         }
-        /*
-        /// <summary>
-        /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
-        /// </summary>
-        /// <param name="CanvasSize">The size of the canvas</param>
-        public void UpdateSizes(ImageDimension CanvasSize)
-        {
-            if (rightImageWithoutOverlay != null)
-            {
-                int widthImage = rightImageSize.Width;
-                int heightImage = rightImageSize.Height;
-                int widthBox = CanvasSize.Width;
-                int heightBox = CanvasSize.Height;
-
-                float imageRatio = (float)widthImage / (float)heightImage;
-                float containerRatio = (float)widthBox / (float)heightBox;
-                float zoomFactor = 0;
-                if (imageRatio >= containerRatio)
-                {
-                    //Image is wider than it is high
-                    zoomFactor = (float)widthImage / (float)widthBox;
-                }
-                else
-                {
-                    //Image is higher than it is wide
-                    zoomFactor = (float)heightImage / (float)heightBox;
-                }
-                markerRadius = (int)(10 * zoomFactor);
-                deletionRadius = (int)(5 * zoomFactor);
-            }
-        }
-        */
 
         /// <summary>
         /// If there is unsaved progress.
