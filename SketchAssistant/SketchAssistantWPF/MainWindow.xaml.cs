@@ -618,7 +618,7 @@ namespace SketchAssistantWPF
                     await Task.Delay(1);
                 }
             }
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokes); await Task.Delay(1);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection); await Task.Delay(1);
             debugRunning = false;
             dispatcherTimer.Start();
         }
