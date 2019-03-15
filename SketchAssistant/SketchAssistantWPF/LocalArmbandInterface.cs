@@ -10,13 +10,16 @@ namespace SketchAssistantWPF
     class LocalArmbandInterface
     {
 
-        [DllImport (@"StaticLibMotors.dll")]
+        [DllImport (@"../Debug/StaticLibMotors.dll", EntryPoint = "?setupArmband@ArmbandInterface@@QAAHXZ",
+     CallingConvention = CallingConvention.Cdecl)]
         public static extern int setupArmband();
 
-        [DllImport(@"StaticLibMotors.dll")]
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?startVibrate@ArmbandInterface@@QAAXHM@Z",
+     CallingConvention = CallingConvention.Cdecl)]
         public static extern void startVibrate(int motorNumber, float intensity);
 
-        [DllImport(@"StaticLibMotors.dll")]
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?stopVibrate@ArmbandInterface@@QAAXH@Z",
+     CallingConvention = CallingConvention.Cdecl)]
         public static extern void stopVibration(int motorNumber);
 
         //public void Vibrate()

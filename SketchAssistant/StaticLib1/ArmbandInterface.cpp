@@ -5,10 +5,23 @@ extern "C" {
 #include <ctime>
 #include <stdio.h>
 #include "ArmbandInterface.h"
+#include <stdlib.h>
 
+typedef void(__cdecl *InitFunctionType)(BodyActuator*, BodyActuator_Type, char*, int);
+typedef void(__cdecl *StopFunctionType)(BodyActuator*, uint8_t);
+typedef void(__cdecl *StartFunctionType)(BodyActuator*, uint8_t, float);
+
+static InitFunctionType initFunctionHandle;
+static StartFunctionType startFunctionHandle;
+static StopFunctionType stopFunctionHandle;
+
+static BodyActuator* armband;
+//static char *port = 
+
+static HINSTANCE lib;
 
 extern "C" {
-		__declspec(dllexport) int __cdecl ArmbandInterface::setupArmband() {
+	DllExport int __cdecl ArmbandInterface::setupArmband() {
 			lib = LoadLibrary(TEXT("BodyActuator.dll"));
 			if (lib == NULL) {
 				printf("ERROR: library could not be loaded");
@@ -34,16 +47,20 @@ extern "C" {
 			startVibrate(0, 1.0);
 			return -1;
 		}
-		__declspec(dllexport) void __cdecl ArmbandInterface::startVibrate(int tactor, float intensity) {
+
+		DllExport void __cdecl ArmbandInterface::startVibrate(int tactor, float intensity) {
 			(startFunctionHandle)(armband, (uint8_t)tactor, intensity);
 		}
-		__declspec(dllexport) void __cdecl ArmbandInterface::stopVibrate(int tactor) {
+
+		DllExport void __cdecl ArmbandInterface::stopVibrate(int tactor) {
 			(stopFunctionHandle)(armband, (uint8_t)tactor);
 		}
 	}
 
  void ArmbandInterface::setupMotors() {
-			(initFunctionHandle) (armband, BODYACTUATOR_TYPE_EAI, new char[5]{ 'C', 'O', 'M', '5', '\0' }, 8);
+	 char* port = (char*) "COM5";//malloc(7);
+	 armband = (BodyActuator*) malloc(sizeof(BodyActuator*));
+	 //strcpy_s(port, "COM5");
+			(initFunctionHandle) (armband, BODYACTUATOR_TYPE_EAI, port, 8);
 			printf("armband initialized");
 		}
- 
