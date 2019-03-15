@@ -9,6 +9,7 @@ install:
  
 before_build:
  - ps: .\screenres.ps1
+ - ps: .\testscript.ps1
  
 artifacts:
  - path: \SketchAssistant\GeneratedReports\
