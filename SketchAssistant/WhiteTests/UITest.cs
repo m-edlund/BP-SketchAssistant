@@ -141,15 +141,9 @@ namespace WhiteTests
             Thread.Sleep(20);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Thread.Sleep(20);
-            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
             Thread.Sleep(100);
-            inputSimulator.Mouse.MoveMouseBy(0, 200);
-            inputSimulator.Mouse.LeftButtonDown();
-            Thread.Sleep(20);
-            inputSimulator.Mouse.MoveMouseBy(0, 300);
-            inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(2000);
-            Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
 
