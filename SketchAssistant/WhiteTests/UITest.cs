@@ -122,6 +122,8 @@ namespace WhiteTests
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("LoadMenuButton")).Click();
             Thread.Sleep(20);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("SVGMenuButton")).Click();
+            Thread.Sleep(20);
+            printscreen();
             Thread.Sleep(1000);
             printscreen();
             inputSimulator.Keyboard.TextEntry(getSketchAssistantDirectory() + @"whitelisted\" + filename + ".svg");
