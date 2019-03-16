@@ -44,7 +44,7 @@ extern "C" {
 			}
 			//strcpy(port, "COM5");
 			setupMotors();
-			startVibrate(0, 1.0);
+			//startVibrate(0, 1.0);
 			return -1;
 		}
 

@@ -112,8 +112,9 @@ namespace SketchAssistantWPF
         public MVP_Model(MVP_Presenter presenter)
         {
             //TODO remove
-            LocalArmbandInterface.setupArmband();
-
+            Console.WriteLine("trying to initialize Armband...");
+            int tmp= LocalArmbandInterface.setupArmband();
+            Console.WriteLine("Armband initialization terminated, exit code: " + tmp);
             programPresenter = presenter;
             historyOfActions = new ActionHistory();
             //redrawAss = new RedrawAssistant();
