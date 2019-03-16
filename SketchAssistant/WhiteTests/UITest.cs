@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using Application = TestStack.White.Application;
 using Window = TestStack.White.UIItems.WindowItems.Window;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace WhiteTests
 {
@@ -95,6 +97,18 @@ namespace WhiteTests
             return application.GetWindow("Sketch Assistant");
         }
 
+        public void printscreen()
+        {
+            Regex rx = new Regex(@"^(.*\\SketchAssistant\\)");
+            Match match = rx.Match(TestContext.DeploymentDirectory);
+            String SketchAssistDir = match.Groups[1].Value;
+            Bitmap bitmap = new Bitmap(System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width,
+                        System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height);
+            Graphics graphics = Graphics.FromImage(bitmap as System.Drawing.Image);
+            graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
+            bitmap.Save(SketchAssistDir + "screen" + ".jpg", ImageFormat.Jpeg);
+        }
+
         [DataTestMethod]
         [TestCategory("FileIO")]
         [DataRow("line")]
@@ -109,6 +123,7 @@ namespace WhiteTests
             Thread.Sleep(20);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("SVGMenuButton")).Click();
             Thread.Sleep(1000);
+            printscreen();
             inputSimulator.Keyboard.TextEntry(getSketchAssistantDirectory() + @"whitelisted\" + filename + ".svg");
             Thread.Sleep(1000);
             inputSimulator.Keyboard.KeyPress(VirtualKeyCode.RETURN);
