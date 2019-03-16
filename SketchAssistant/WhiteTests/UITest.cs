@@ -132,10 +132,10 @@ namespace WhiteTests
             Thread.Sleep(20);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Thread.Sleep(20);
-            inputSimulator.Mouse.MoveMouseBy(0, 200);
+            inputSimulator.Mouse.MoveMouseBy(100, 200);
             inputSimulator.Mouse.LeftButtonDown();
             Thread.Sleep(20);
-            inputSimulator.Mouse.MoveMouseBy(500, 300);
+            inputSimulator.Mouse.MoveMouseBy(0, 500);
             Thread.Sleep(20);
             inputSimulator.Mouse.LeftButtonUp();
             Thread.Sleep(20);
@@ -143,12 +143,12 @@ namespace WhiteTests
             Thread.Sleep(20);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
             Thread.Sleep(20);
-            inputSimulator.Mouse.MoveMouseBy(0, 200);
-            inputSimulator.Mouse.LeftButtonDown();
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
             Thread.Sleep(20);
-            inputSimulator.Mouse.MoveMouseBy(0, 400);
-            inputSimulator.Mouse.LeftButtonUp();
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
             Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
+            Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
