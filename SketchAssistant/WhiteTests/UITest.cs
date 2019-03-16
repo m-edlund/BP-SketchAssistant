@@ -116,7 +116,7 @@ namespace WhiteTests
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
-        /*
+
         [TestMethod]
         [TestCategory("DirectInput")]
         public void DrawLineOnCanvasTest()
@@ -239,6 +239,7 @@ namespace WhiteTests
             mainWindow.Close();
         }
 
+        /*
         [TestMethod]
         [TestCategory("DebugInput")]
         public void CreateCanvasTest()
