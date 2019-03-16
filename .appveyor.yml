@@ -12,7 +12,6 @@ before_build:
  
 artifacts:
  - path: \SketchAssistant\GeneratedReports\
- - path: \SketchAssistant\screen.jpg
 #  - path: SketchAssistant/WhiteTests/test_input_files/whitelisted/*.svg
 #    name: whitelisted svg files for testing
 #  - path: SketchAssistant/WhiteTests/test_input_files/blacklisted/*.svg

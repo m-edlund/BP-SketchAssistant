@@ -241,7 +241,6 @@ namespace WhiteTests
             mainWindow.Close();
         }
 
-        /*
         [TestMethod]
         [TestCategory("DebugInput")]
         public void CreateCanvasTest()
@@ -1010,6 +1009,6 @@ namespace WhiteTests
                 }
             }
             Assert.AreEqual(len, uut.GetLength(), 0.000001);
-        }*/
+        }
     }
 }
