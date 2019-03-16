@@ -148,7 +148,7 @@ namespace WhiteTests
             Thread.Sleep(20);
             inputSimulator.Mouse.MoveMouseBy(0, 300);
             inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(20);
+            Thread.Sleep(2000);
             Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
