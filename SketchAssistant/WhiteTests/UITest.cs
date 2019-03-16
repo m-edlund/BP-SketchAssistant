@@ -95,6 +95,28 @@ namespace WhiteTests
             return application.GetWindow("Sketch Assistant");
         }
 
+        [DataTestMethod]
+        [TestCategory("FileIO")]
+        [DataRow("line")]
+        public void LoadSVGFileTestAsync(String filename)
+        {
+            Window mainWindow = setupapp();
+            InputSimulator inputSimulator = new InputSimulator();
+            Thread.Sleep(20);
+            string[] files = Directory.GetFiles(getSketchAssistantDirectory() + @"\whitelisted", "*.svg", SearchOption.AllDirectories);
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("LoadMenuButton")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("SVGMenuButton")).Click();
+            Thread.Sleep(1000);
+            inputSimulator.Keyboard.TextEntry(getSketchAssistantDirectory() + @"whitelisted\" + filename + ".svg");
+            Thread.Sleep(1000);
+            inputSimulator.Keyboard.KeyPress(VirtualKeyCode.RETURN);
+            Thread.Sleep(1000);
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Close();
+        }
+        /*
         [TestMethod]
         [TestCategory("DirectInput")]
         public void DrawLineOnCanvasTest()
@@ -121,7 +143,7 @@ namespace WhiteTests
 
         [TestMethod]
         [TestCategory("DirectInput")]
-        public void DeleteLineOnCanvasTest()
+        public void UndoLineOnCanvasTest()
         {
             Window mainWindow = setupapp();
             Thread.Sleep(20);
@@ -143,6 +165,40 @@ namespace WhiteTests
             Thread.Sleep(20);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
             Thread.Sleep(100);
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Close();
+        }
+
+        [TestMethod]
+        [TestCategory("DirectInput")]
+        public void InvalidLineTest()
+        {
+            Window mainWindow = setupapp();
+            Thread.Sleep(20);
+            InputSimulator inputSimulator = new InputSimulator();
+            MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
+            Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DrawButton")).Click();
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonDown();
+            inputSimulator.Mouse.MoveMouseBy(0, 200);
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(500, 300);
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonUp();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(-1000, 0);
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonDown();
+            inputSimulator.Mouse.MoveMouseBy(1000, 0);
+            inputSimulator.Mouse.LeftButtonUp();
+            Thread.Sleep(20);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
@@ -951,115 +1007,6 @@ namespace WhiteTests
                 }
             }
             Assert.AreEqual(len, uut.GetLength(), 0.000001);
-        }
-    }
-
-    [TestClass]
-    public class FileIOIntegrationTests
-    {
-        public class DummyView : MVP_View
-        {
-
-
-            public DummyView()
-            {
-
-            }
-
-            void MVP_View.AddNewLineLeft(System.Windows.Shapes.Polyline newLine)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.AddNewLineRight(System.Windows.Shapes.Polyline newLine)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.AddNewPointLeft(System.Windows.Shapes.Ellipse newPoint)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.AddNewPointRight(System.Windows.Shapes.Ellipse newPoint, InternalLine line)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.DisplayCurrLine(System.Windows.Shapes.Polyline line)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.EnableTimer()
-            {
-                throw new NotImplementedException();
-            }
-
-            Point MVP_View.GetCursorPosition()
-            {
-                throw new NotImplementedException();
-            }
-
-            bool MVP_View.IsMousePressed()
-            {
-                throw new NotImplementedException();
-            }
-
-            Tuple<string, string> MVP_View.openNewDialog(string Filter)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.RemoveAllLeftLines()
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.RemoveAllRightLines()
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.RemoveCurrLine()
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.SetCanvasState(string canvasName, bool active)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.SetImageSimilarityText(string message)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.SetLastActionTakenText(string message)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.SetToolStripButtonStatus(string buttonName, MainWindow.ButtonState state)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.SetToolStripLoadStatus(string message)
-            {
-                throw new NotImplementedException();
-            }
-
-            void MVP_View.ShowInfoMessage(string message)
-            {
-                throw new NotImplementedException();
-            }
-
-            bool MVP_View.ShowWarning(string message)
-            {
-                throw new NotImplementedException();
-            }
-        }
+        }*/
     }
 }

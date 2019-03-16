@@ -45,7 +45,6 @@ namespace SketchAssistantWPF
 
         public enum MouseAction
         {
-            Click,
             Down,
             Up,
             Up_Invalid,
@@ -85,49 +84,6 @@ namespace SketchAssistantWPF
             CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
             //programModel.UpdateSizes(CanvasSizeRight);
             programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
-        }
-
-        /// <summary>
-        /// Display a new FileDialog to load a collection of lines.
-        /// </summary>
-        /// <returns>True if loading was a success</returns>
-        public bool ExamplePictureToolStripMenuItemClick()
-        {
-            var okToContinue = true; bool returnval = false;
-            if (programModel.HasUnsavedProgress())
-            {
-                okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
-            }
-            if (okToContinue)
-            {
-                var fileNameTup = programView.openNewDialog("Interactive Sketch-Assistant Drawing|*.isad");
-                if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
-                {
-                    programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    try
-                    {
-                        Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
-                        values.Item3.ForEach(line => line.MakePermanent(0)); //Make all lines permanent
-                        programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
-
-                        programModel.ResetRightImage();
-                        programModel.CanvasActivated();
-                        programModel.ChangeState(true);
-                        programView.EnableTimer();
-                        ClearRightLines();
-                        returnval = true;
-                    }
-                    catch (FileImporterException ex)
-                    {
-                        programView.ShowInfoMessage(ex.ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        programView.ShowInfoMessage("exception occured while trying to load interactive sketch-assistant drawing file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace);
-                    }
-                }
-            }
-            return returnval;
         }
 
         /// <summary>
@@ -253,11 +209,6 @@ namespace SketchAssistantWPF
 
             switch (mouseAction)
             {
-                case MouseAction.Click:
-                    programModel.MouseDown();
-                    programModel.Tick();
-                    programModel.MouseUp(true);
-                    break;
                 case MouseAction.Down:
                     programModel.MouseDown();
                     break;

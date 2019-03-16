@@ -22,7 +22,6 @@
         <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Background="LightGray">
             <Menu Background="LightGray"   VerticalAlignment="Center" Padding="5,0,0,0">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
-                    <MenuItem x:Name="ISADMenuButton" Header="Load .isad Drawing" Click="ISADMenuItem_Click"/>
                     <MenuItem x:Name="SVGMenuButton" Header="Import SVG File" Click="SVGMenuItem_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="EditMenuButton" Header="Edit">

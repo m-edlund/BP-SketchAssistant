@@ -228,15 +228,6 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// Import button for .isad drawing, will open an OpenFileDialog
-        /// </summary>
-        private void ISADMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            if(ProgramPresenter.ExamplePictureToolStripMenuItemClick())
-                RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
-        }
-
-        /// <summary>
         /// Import button for .svg file, will open an OpenFileDialog
         /// </summary>
         private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
