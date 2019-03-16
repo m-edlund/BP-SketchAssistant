@@ -147,7 +147,6 @@ namespace WhiteTests
             mainWindow.Close();
         }
 
-        /*
         [TestMethod]
         [TestCategory("DirectInput")]
         public void PointsOnCanvasSimilarityTest()
@@ -1061,6 +1060,6 @@ namespace WhiteTests
             {
                 throw new NotImplementedException();
             }
-        }*/
+        }
     }
 }
