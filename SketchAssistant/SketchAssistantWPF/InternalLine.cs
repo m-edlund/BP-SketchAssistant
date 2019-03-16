@@ -80,16 +80,6 @@ namespace SketchAssistantWPF
             }
         }
 
-        public Point GetStartPoint()
-        {
-            return linePoints.First();
-        }
-
-        public Point GetEndPoint()
-        {
-            return linePoints.Last();
-        }
-
         public List<Point> GetPoints()
         {
             return linePoints;
