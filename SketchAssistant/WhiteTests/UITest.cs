@@ -96,6 +96,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DirectInput")]
         public void DrawLineOnCanvasTest()
         {
             Window mainWindow = setupapp();
@@ -119,6 +120,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DirectInput")]
         public void DeleteLineOnCanvasTest()
         {
             Window mainWindow = setupapp();
@@ -144,14 +146,16 @@ namespace WhiteTests
             inputSimulator.Mouse.MoveMouseBy(0, 200);
             inputSimulator.Mouse.LeftButtonDown();
             Thread.Sleep(20);
-            inputSimulator.Mouse.MoveMouseBy(0, 300);
+            inputSimulator.Mouse.MoveMouseBy(0, 400);
             inputSimulator.Mouse.LeftButtonUp();
             Thread.Sleep(20);
             Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
 
+        /*
         [TestMethod]
+        [TestCategory("DirectInput")]
         public void PointsOnCanvasSimilarityTest()
         {
             Window mainWindow = setupapp();
@@ -187,7 +191,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
-        [TestCategory("bla")]
+        [TestCategory("DebugInput")]
         public void CreateCanvasTest()
         {
             Window mainWindow = setupapp();
@@ -200,7 +204,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
-        [TestCategory("bla")]
+        [TestCategory("DebugInput")]
         public void DrawLineTest()
         {
             Window mainWindow = setupapp();
@@ -220,6 +224,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void DeleteLineTest()
         {
             Window mainWindow = setupapp();
@@ -251,7 +256,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
-        [TestCategory("bla")]
+        [TestCategory("DebugInput")]
         public void UndoTest()
         {
             Window mainWindow = setupapp();
@@ -275,7 +280,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
-        [TestCategory("bla")]
+        [TestCategory("DebugInput")]
         public void RedoTest()
         {
             Window mainWindow = setupapp();
@@ -303,6 +308,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void DrawSeveralLinesTest()
         {
             Window mainWindow = setupapp();
@@ -331,6 +337,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void DeleteSeveralLinesTest()
         {
             Window mainWindow = setupapp();
@@ -370,6 +377,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void UndoSeveralLinesTest()
         {
             Window mainWindow = setupapp();
@@ -406,6 +414,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void RedoSeveralLinesTest()
         {
             Window mainWindow = setupapp();
@@ -450,6 +459,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void UndoAndRedoTest()
         {
             Window mainWindow = setupapp();
@@ -508,6 +518,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void UndoAndDrawTest()
         {
             Window mainWindow = setupapp();
@@ -540,6 +551,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void DeleteSeveralLinesAtOnceTest()
         {
             Window mainWindow = setupapp();
@@ -578,6 +590,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void PointDrawTest()
         {
             Window mainWindow = setupapp();
@@ -598,6 +611,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("DebugInput")]
         public void NewCanvasAfterDrawTest()
         {
             Window mainWindow = setupapp();
@@ -707,7 +721,7 @@ namespace WhiteTests
         /// <param name="xCoordinates">an array containing the x coordinates of the points that will be created (length divisible by 3)</param>
         /// <param name="yCoordinates">an array containing the y coordinates of the points that will be created (length divisible by 3)</param>
         [DataTestMethod]
-        [TestCategory("bla")]
+        [TestCategory("FileIO")]
         [DataRow(new int[] { 54, 43, 57, 11, 145, 34, 113, 299, 0 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 })]
         [DataRow(new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 })]
         [DataRow(new int[] { 33, 42, 140, 30, 30, 30, 32, 145, 2 }, new int[] { 54, 43, 57, 11, 145, 34, 113, 199, 0 })]
@@ -748,7 +762,7 @@ namespace WhiteTests
         /// </summary>
         /// <param name="file">the input file represented as an array of lines</param>
         [DataTestMethod]
-        [TestCategory("bla")]
+        [TestCategory("FileIO")]
         [DataRow(new String[] { })]
         [DataRow(new String[] { "begindrawing", "300x300", "line", "50;50", "100;50", "endline", "enddrawing" })]
         [DataRow(new String[] { "drawing", "300;300", "line", "50;50", "100;50", "endline", "enddrawing" })]
@@ -792,7 +806,7 @@ namespace WhiteTests
         /// parses all whitelisted files and ensures no exceptions are thrown (parsing abortion, e.g. due to corrupted input files, are realized by throwing a FileImporterException)
         /// </summary>
         [TestMethod]
-        [TestCategory("bla")]
+        [TestCategory("FileIO")]
         public void ParseSVGInputNoErrorForWhitelistedFilesTest()
         {
             FileImporter uut = new FileImporter();
@@ -820,7 +834,7 @@ namespace WhiteTests
         /// parses all blacklisted files and ensures an instance of FileIporterException is thrown for each file, but no other exceptions occur
         /// </summary>
         [TestMethod]
-        [TestCategory("bla")]
+        [TestCategory("FileIO")]
         public void ParseSVGInputNoErrorForBlacklistedFilesTest()
         {
             FileImporter uut = new FileImporter();
@@ -860,6 +874,7 @@ namespace WhiteTests
         /// To test the similarity score always stays between 0 and 1.
         /// </summary>
         [TestMethod]
+        [TestCategory("UnitTest")]
         public void StaysWithinParameters()
         {
             Parallel.For(1, 100,
@@ -874,6 +889,7 @@ namespace WhiteTests
         }
 
         [TestMethod]
+        [TestCategory("UnitTest")]
         public void CorrectSimilarity()
         {
             Parallel.ForEach(DebugData.GetSimilarityTestData(),
@@ -897,6 +913,7 @@ namespace WhiteTests
         private DebugData DebugData = new DebugData();
 
         [TestMethod]
+        [TestCategory("UnitTest")]
         public void MakePermanentTest()
         {
 
@@ -911,6 +928,7 @@ namespace WhiteTests
         }
 
         [DataTestMethod]
+        [TestCategory("UnitTest")]
         [DataRow(new int[] { 1 ,1, 3, 3 }, new int[] { 1, 1, 2, 2, 3, 3 }, false, 2.828427125)]
         [DataRow(new int[] { 1, 1, 3, 3 }, new int[] { 1, 1, 2, 2, 3, 3 }, true, 2.828427125)]
         [DataRow(new int[] { 1, 1, 1, 4 ,3, 4 }, new int[] { 1, 1, 1, 2, 1, 3, 1, 4, 2, 4, 3, 4 }, false, 5)]
@@ -1049,6 +1067,6 @@ namespace WhiteTests
             {
                 throw new NotImplementedException();
             }
-        }
+        }*/
     }
 }
