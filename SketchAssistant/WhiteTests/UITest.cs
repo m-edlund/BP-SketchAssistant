@@ -20,8 +20,6 @@ using System.Threading.Tasks;
 using System.Linq;
 using Application = TestStack.White.Application;
 using Window = TestStack.White.UIItems.WindowItems.Window;
-using System.Drawing;
-using System.Drawing.Imaging;
 
 namespace WhiteTests
 {
