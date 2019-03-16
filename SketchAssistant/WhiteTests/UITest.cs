@@ -18,6 +18,8 @@ using WindowsInput;
 using WindowsInput.Native;
 using System.Threading.Tasks;
 using System.Linq;
+using Application = TestStack.White.Application;
+using Window = TestStack.White.UIItems.WindowItems.Window;
 
 namespace WhiteTests
 {
@@ -91,6 +93,97 @@ namespace WhiteTests
             ProcessStartInfo processStart = new ProcessStartInfo(app_path, "-debug");
             application = Application.Launch(processStart);
             return application.GetWindow("Sketch Assistant");
+        }
+
+        [TestMethod]
+        public void DrawLineOnCanvasTest()
+        {
+            Window mainWindow = setupapp();
+            Thread.Sleep(20);
+            InputSimulator inputSimulator = new InputSimulator();
+            MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
+            Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(100,100);
+            inputSimulator.Mouse.LeftButtonDown();
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(100, 100);
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonUp();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Close();
+        }
+
+        [TestMethod]
+        public void DeleteLineOnCanvasTest()
+        {
+            Window mainWindow = setupapp();
+            Thread.Sleep(20);
+            InputSimulator inputSimulator = new InputSimulator();
+            MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
+            Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(0, 200);
+            inputSimulator.Mouse.LeftButtonDown();
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(500, 300);
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonUp();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(0, 200);
+            inputSimulator.Mouse.LeftButtonDown();
+            Thread.Sleep(20);
+            inputSimulator.Mouse.MoveMouseBy(0, 300);
+            inputSimulator.Mouse.LeftButtonUp();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Close();
+        }
+
+        [TestMethod]
+        public void PointsOnCanvasSimilarityTest()
+        {
+            Window mainWindow = setupapp();
+            Thread.Sleep(20);
+            InputSimulator inputSimulator = new InputSimulator();
+            MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
+            Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Assert.AreEqual("-", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
+            inputSimulator.Mouse.MoveMouseBy(0, 200);
+            inputSimulator.Mouse.LeftButtonDown();
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonUp();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Assert.AreEqual("-", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonDown();
+            Thread.Sleep(20);
+            inputSimulator.Mouse.LeftButtonUp();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Assert.AreEqual("1", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Assert.AreEqual("-", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("RedoButton")).Click();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Assert.AreEqual("1", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
+            mainWindow.Close();
         }
 
         [TestMethod]
@@ -442,6 +535,44 @@ namespace WhiteTests
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
             Thread.Sleep(2000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            mainWindow.Close();
+        }
+
+        [TestMethod]
+        public void DeleteSeveralLinesAtOnceTest()
+        {
+            Window mainWindow = setupapp();
+            Thread.Sleep(20);
+            Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
+            Thread.Sleep(20);
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
+            Thread.Sleep(2000);
+            Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
+            Thread.Sleep(2000);
+            Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Thread.Sleep(20);
+            mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
+            Thread.Sleep(20);
+            mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
+            Thread.Sleep(2000);
+            Assert.AreEqual("Last Action: Several Lines were deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Thread.Sleep(20);
             mainWindow.Close();
         }
@@ -812,4 +943,112 @@ namespace WhiteTests
         }
     }
 
+    [TestClass]
+    public class FileIOIntegrationTests
+    {
+        public class DummyView : MVP_View
+        {
+
+
+            public DummyView()
+            {
+
+            }
+
+            void MVP_View.AddNewLineLeft(System.Windows.Shapes.Polyline newLine)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.AddNewLineRight(System.Windows.Shapes.Polyline newLine)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.AddNewPointLeft(System.Windows.Shapes.Ellipse newPoint)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.AddNewPointRight(System.Windows.Shapes.Ellipse newPoint, InternalLine line)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.DisplayCurrLine(System.Windows.Shapes.Polyline line)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.EnableTimer()
+            {
+                throw new NotImplementedException();
+            }
+
+            Point MVP_View.GetCursorPosition()
+            {
+                throw new NotImplementedException();
+            }
+
+            bool MVP_View.IsMousePressed()
+            {
+                throw new NotImplementedException();
+            }
+
+            Tuple<string, string> MVP_View.openNewDialog(string Filter)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.RemoveAllLeftLines()
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.RemoveAllRightLines()
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.RemoveCurrLine()
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.SetCanvasState(string canvasName, bool active)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.SetImageSimilarityText(string message)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.SetLastActionTakenText(string message)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.SetToolStripButtonStatus(string buttonName, MainWindow.ButtonState state)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.SetToolStripLoadStatus(string message)
+            {
+                throw new NotImplementedException();
+            }
+
+            void MVP_View.ShowInfoMessage(string message)
+            {
+                throw new NotImplementedException();
+            }
+
+            bool MVP_View.ShowWarning(string message)
+            {
+                throw new NotImplementedException();
+            }
+        }
+    }
 }
