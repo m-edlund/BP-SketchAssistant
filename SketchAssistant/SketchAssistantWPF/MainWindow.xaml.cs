@@ -19,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Windows.Ink;
+using System.Windows.Media.Effects;
 
 namespace SketchAssistantWPF
 {
@@ -50,6 +51,8 @@ namespace SketchAssistantWPF
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
+            //Setup overlay items
+            SetupOverlay();
         }
 
         public enum ButtonState
@@ -95,7 +98,11 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Size of areas marking endpoints of lines in the redraw mode.
         /// </summary>
-        int markerRadius = 10;
+        public int markerRadius = 5;
+        /// <summary>
+        /// Dictionary containing the overlay elements
+        /// </summary>
+        public Dictionary<String, Shape> OverlayDictionary = new Dictionary<string, Shape>();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -531,7 +538,27 @@ namespace SketchAssistantWPF
         /*** HELPING FUNCTION ***/
         /************************/
 
-
+        /// <summary>
+        /// A function that generates the overlay elements and sets all their values.
+        /// </summary>
+        private void SetupOverlay()
+        {
+            DropShadowEffect effect = new DropShadowEffect(); effect.ShadowDepth = 0;
+            //Startpoint of a line to be redrawn
+            OverlayCanvas.Background = null;
+            Ellipse StartPointOverlay = new Ellipse();
+            StartPointOverlay.Height = markerRadius * 2; StartPointOverlay.Width = markerRadius * 2;
+            StartPointOverlay.Opacity = 0.00001; StartPointOverlay.Fill = Brushes.Green; StartPointOverlay.IsHitTestVisible = false;
+            OverlayDictionary.Add("startpoint", StartPointOverlay); OverlayCanvas.Children.Add(StartPointOverlay);
+            StartPointOverlay.Effect = effect;
+            //Pointer of the optitrack system
+            Ellipse OptitrackMarker = new Ellipse(); OptitrackMarker.Height = 5; OptitrackMarker.Width = 5;
+            OptitrackMarker.Opacity = 0.00001; OptitrackMarker.Fill = Brushes.Black; OptitrackMarker.IsHitTestVisible = false;
+            OverlayDictionary.Add("optipoint", OptitrackMarker); OverlayCanvas.Children.Add(OptitrackMarker);
+            OptitrackMarker.Effect = effect;
+            //Enable optipoint initially
+            ProgramPresenter.SetOverlayStatus("optipoint", true, GetCursorPosition());
+        }
 
         /// <summary>
         /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
