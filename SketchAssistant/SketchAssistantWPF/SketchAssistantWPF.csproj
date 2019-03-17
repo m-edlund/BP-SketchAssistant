@@ -83,8 +83,6 @@
     <Compile Include="FileImporterException.cs" />
     <Compile Include="GeometryCalculator.cs" />
     <Compile Include="ImageDimension.cs" />
-    <Compile Include="RedrawLine.cs" />
-    <Compile Include="RedrawManager.cs" />
     <Compile Include="SketchAction.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
