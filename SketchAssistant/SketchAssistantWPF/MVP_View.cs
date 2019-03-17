@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Ink;
 using System.Windows.Shapes;
 
 namespace SketchAssistantWPF
@@ -120,5 +121,13 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <returns>The cursor Position</returns>
         Point GetCursorPosition();
+
+        /// <summary>
+        /// Sets the contents of the status bar label containing
+        /// the similarity score of the left and right image.
+        /// </summary>
+        /// <param name="message">The message to be set, 
+        /// will be set to the default value if left empty.</param>
+        void SetImageSimilarityText(string message);
     }
 }

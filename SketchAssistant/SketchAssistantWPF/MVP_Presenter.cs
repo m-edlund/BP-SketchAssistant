@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -34,13 +35,16 @@ namespace SketchAssistantWPF
 
         ImageDimension ImageSizeRight = new ImageDimension(0, 0);
 
+        List<double> ImageSimilarity = new List<double>();
+
+        List<InternalLine> LeftLines = new List<InternalLine>();
+
         /*******************/
         /*** ENUMERATORS ***/
         /*******************/
 
         public enum MouseAction
         {
-            Click,
             Down,
             Up,
             Up_Invalid,
@@ -83,50 +87,12 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// Display a new FileDialog to load a collection of lines.
-        /// </summary>
-        public void ExamplePictureToolStripMenuItemClick()
-        {
-            var okToContinue = true;
-            if (programModel.HasUnsavedProgress())
-            {
-                okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
-            }
-            if (okToContinue)
-            {
-                var fileNameTup = programView.openNewDialog("Interactive Sketch-Assistant Drawing|*.isad");
-                if (!fileNameTup.Item1.Equals("") && !fileNameTup.Item2.Equals(""))
-                {
-                    programView.SetToolStripLoadStatus(fileNameTup.Item2);
-                    try
-                    {
-                        Tuple<int, int, List<InternalLine>> values = fileImporter.ParseISADInputFile(fileNameTup.Item1);
-                        programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
-
-                        programModel.ResetRightImage();
-                        programModel.CanvasActivated();
-                        programModel.ChangeState(true);
-                        programView.EnableTimer();
-                        ClearRightLines();
-                    }
-                    catch (FileImporterException ex)
-                    {
-                        programView.ShowInfoMessage(ex.ToString());
-                    }
-                    catch (Exception ex)
-                    {
-                        programView.ShowInfoMessage("exception occured while trying to load interactive sketch-assistant drawing file:\n\n" + ex.ToString() + "\n\n" + ex.StackTrace);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Display a new FileDialog to a svg drawing.
         /// </summary>
-        public void SVGToolStripMenuItemClick()
+        /// <returns>True if loading was a success</returns>
+        public bool SVGToolStripMenuItemClick()
         {
-            var okToContinue = true;
+            var okToContinue = true; bool returnval = false;
             if (programModel.HasUnsavedProgress())
             {
                 okToContinue = programView.ShowWarning("You have unsaved progress. Continue?");
@@ -140,12 +106,14 @@ namespace SketchAssistantWPF
                     try
                     {
                         Tuple<int, int, List<InternalLine>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
+                        values.Item3.ForEach(line => line.MakePermanent(0)); //Make all lines permanent
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
                         programModel.ResetRightImage();
                         programModel.CanvasActivated();
                         programModel.ChangeState(true);
                         programView.EnableTimer();
                         ClearRightLines();
+                        returnval = true;
                     }
                     catch (FileImporterException ex)
                     {
@@ -157,6 +125,7 @@ namespace SketchAssistantWPF
                     }
                 }
             }
+            return returnval;
         }
 
         /// <summary>
@@ -234,21 +203,28 @@ namespace SketchAssistantWPF
         /// Pass-trough function that calls the correct Mouse event of the model, when the mouse is clicked.
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
-        /// <param name="e">The Mouse event arguments.</param>
-        public void MouseEvent(MouseAction mouseAction)
+        /// <param name="strokes">The Strokes.</param>
+        public void MouseEvent(MouseAction mouseAction, StrokeCollection strokes)
         {
+
             switch (mouseAction)
             {
-                case MouseAction.Click:
-                    programModel.MouseDown();
-                    programModel.Tick();
-                    programModel.MouseUp(true);
-                    break;
                 case MouseAction.Down:
                     programModel.MouseDown();
                     break;
                 case MouseAction.Up:
-                    programModel.MouseUp(true);
+                    if(strokes.Count > 0)
+                    {
+                        StylusPointCollection sPoints = strokes.First().StylusPoints;
+                        List<Point> points = new List<Point>();
+                        foreach(StylusPoint p in sPoints)
+                            points.Add(new Point(p.X, p.Y));
+                        programModel.MouseUp(points);
+                    }
+                    else
+                    {
+                        programModel.MouseUp(true);
+                    }
                     break;
                 case MouseAction.Up_Invalid:
                     programModel.MouseUp(false);
@@ -278,6 +254,8 @@ namespace SketchAssistantWPF
         {
             programView.RemoveAllRightLines();
             rightPolyLines = new Dictionary<int, Shape>();
+            //Reset the similarity display
+            UpdateSimilarityScore(Double.NaN);
         }
 
         /// <summary>
@@ -306,6 +284,20 @@ namespace SketchAssistantWPF
                     }
                 }
                 SetVisibility(rightPolyLines[line.GetID()], status);
+            }
+            //Calculate similarity scores 
+            UpdateSimilarityScore(Double.NaN); var templist = lines.Where(tup => tup.Item1).ToList();
+            if(LeftLines.Count > 0)
+            {
+                for(int i = 0; i < LeftLines.Count; i++)
+                {
+                    if (templist.Count == i) break;
+                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, LeftLines[i]));
+                }
+            }
+            else if(templist.Count > 1)
+            {
+                UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[templist.Count-2].Item2, templist[templist.Count-1].Item2));
             }
         }
 
@@ -337,6 +329,8 @@ namespace SketchAssistantWPF
             }
             programView.SetCanvasState("LeftCanvas", true);
             programView.SetCanvasState("RightCanvas", true);
+
+            LeftLines = lines;
         }
 
         /// <summary>
@@ -403,6 +397,25 @@ namespace SketchAssistantWPF
         public bool IsMousePressed()
         {
             return programView.IsMousePressed();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="score">Score will be reset if NaN is passed, 
+        /// will be ignored if the score is not between 0 and 1</param>
+        public void UpdateSimilarityScore(double score)
+        {
+            if (Double.IsNaN(score))
+            {
+                ImageSimilarity.Clear();
+                programView.SetImageSimilarityText("");
+            }
+            else
+            {
+                if (score >= 0 && score <= 1) ImageSimilarity.Add(score);
+                programView.SetImageSimilarityText((ImageSimilarity.Sum() / ImageSimilarity.Count).ToString());
+            }
         }
 
         /*************************/
