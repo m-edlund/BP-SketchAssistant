@@ -516,11 +516,11 @@ namespace SketchAssistantWPF
 
         void getOptiTrackPosition(OptiTrack.Frame frame)
         {
-            if(frame.Markers.Length > 1)
+            if(frame.Trackables.Length > 1)
             {
-                optiTrackX = frame.Markers[0].X;
-                optiTrackY = frame.Markers[0].Y;
-                optiTrackZ = frame.Markers[0].Z;
+                optiTrackX = frame.Trackables[0].X;
+                optiTrackY = frame.Trackables[0].Y;
+                optiTrackZ = frame.Trackables[0].Z;
             }
         }
 
