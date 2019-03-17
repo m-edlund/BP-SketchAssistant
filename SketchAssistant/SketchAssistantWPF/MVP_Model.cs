@@ -516,9 +516,12 @@ namespace SketchAssistantWPF
 
         void getOptiTrackPosition(OptiTrack.Frame frame)
         {
-            optiTrackX = frame.Trackables[0].X;
-            optiTrackY = frame.Trackables[0].Y;
-            optiTrackZ = frame.Trackables[0].Z;
+            if(frame.Markers.Length > 1)
+            {
+                optiTrackX = frame.Markers[0].X;
+                optiTrackY = frame.Markers[0].Y;
+                optiTrackZ = frame.Markers[0].Z;
+            }
         }
 
         /// <summary>
@@ -528,7 +531,7 @@ namespace SketchAssistantWPF
         {
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
-            if (optiTrackInUse)
+            if (optiTrackInUse) //drawing optiTrack
             {
                 if (CheckInsideDrawingZone(optiTrackZ))
                 {
@@ -570,7 +573,7 @@ namespace SketchAssistantWPF
                 //}
                 cursorPositions.Enqueue(currentCursorPosition);
             }
-            else
+            else //drawing normal
             {
                 cursorPositions.Enqueue(currentCursorPosition);
                 if (inDrawingMode && programPresenter.IsMousePressed())
