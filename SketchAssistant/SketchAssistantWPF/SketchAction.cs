@@ -72,7 +72,7 @@ namespace SketchAssistantWPF
         /// <returns>A String describing what happend at this action.</returns>
         public String GetActionInformation()
         {
-            String returnString;
+            String returnString = "";
             switch (thisAction)
             {
                 case ActionType.Start:
@@ -87,9 +87,6 @@ namespace SketchAssistantWPF
                     {
                         returnString = "Several Lines were deleted.";
                     }
-                    break;
-                default:
-                    returnString = "There is no information available for this action.";
                     break;
             }
             return returnString;
