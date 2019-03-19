@@ -27,7 +27,7 @@ namespace SketchAssistantWPF
         /// </summary>
         Dictionary<int, Shape> rightPolyLines;
 
-        ImageDimension CanvasSizeLeft = new ImageDimension(0,0);
+        ImageDimension CanvasSizeLeft = new ImageDimension(0, 0);
 
         ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
 
@@ -213,11 +213,11 @@ namespace SketchAssistantWPF
                     programModel.MouseDown();
                     break;
                 case MouseAction.Up:
-                    if(strokes.Count > 0)
+                    if (strokes.Count > 0)
                     {
                         StylusPointCollection sPoints = strokes.First().StylusPoints;
                         List<Point> points = new List<Point>();
-                        foreach(StylusPoint p in sPoints)
+                        foreach (StylusPoint p in sPoints)
                             points.Add(new Point(p.X, p.Y));
                         programModel.MouseUp(points);
                     }
@@ -263,7 +263,7 @@ namespace SketchAssistantWPF
         /// </summary>
         public void UpdateRightLines(List<Tuple<bool, InternalLine>> lines)
         {
-            foreach(Tuple<bool, InternalLine> tup in lines)
+            foreach (Tuple<bool, InternalLine> tup in lines)
             {
                 var status = tup.Item1;
                 var line = tup.Item2;
@@ -287,21 +287,20 @@ namespace SketchAssistantWPF
             }
             //Calculate similarity scores 
             UpdateSimilarityScore(Double.NaN); var templist = lines.Where(tup => tup.Item1).ToList();
-            if(LeftLines.Count > 0)
+            if (LeftLines.Count > 0)
             {
-                for(int i = 0; i < LeftLines.Count; i++)
+                for (int i = 0; i < LeftLines.Count; i++)
                 {
                     if (templist.Count == i) break;
                     UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, LeftLines[i]));
                 }
             }
-            else if(templist.Count > 1)
+            else if (templist.Count > 1)
             {
-                UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[templist.Count-2].Item2, templist[templist.Count-1].Item2));
+                UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[templist.Count - 2].Item2, templist[templist.Count - 1].Item2));
             }
         }
 
-        /*
         /// <summary>
         /// Updates the currentline
         /// </summary>
@@ -313,7 +312,7 @@ namespace SketchAssistantWPF
             currentLine.Points = new PointCollection(linepoints);
             programView.DisplayCurrLine(currentLine);
         }
-        */
+
         /// <summary>
         /// A function to update the displayed lines in the left canvas.
         /// </summary>
@@ -400,7 +399,7 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// 
+        /// Update the similarity score displayed in the UI.
         /// </summary>
         /// <param name="score">Score will be reset if NaN is passed, 
         /// will be ignored if the score is not between 0 and 1</param>
@@ -418,9 +417,95 @@ namespace SketchAssistantWPF
             }
         }
 
+        /// <summary>
+        /// Change the properties of an overlay item.
+        /// </summary>
+        /// <param name="name">The name of the item in the overlay dictionary</param>
+        /// <param name="visible">If the element should be visible</param>
+        /// <param name="position">The new position of the element</param>
+        public void SetOverlayStatus(String name, bool visible, Point position)
+        {
+            Shape shape = new Ellipse(); double visibility = 1; double xDif = 0; double yDif = 0;
+            switch (name)
+            {
+                case "optipoint":
+                    shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
+                    visibility = 0.5; xDif = 2.5; yDif = 2.5;
+                    break;
+                case "startpoint":
+                    shape = ((MainWindow)programView).OverlayDictionary["startpoint"];
+                    xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
+                    break;
+                case "endpoint":
+                    shape = ((MainWindow)programView).OverlayDictionary["endpoint"];
+                    xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
+                    break;
+                default:
+                    Console.WriteLine("Unknown Overlay Item. Please check in MVP_Presenter if this item exists.");
+                    return;
+            }
+            if (visible) shape.Opacity = visibility;
+            else shape.Opacity = 0.00001;
+            Point point = ConvertRightCanvasCoordinateToOverlay(position);
+            shape.Margin = new Thickness(point.X - xDif, point.Y - yDif, 0, 0);
+        }
+
+        /// <summary>
+        /// Change the properties of an overlay item.
+        /// </summary>
+        /// <param name="name">The name of the item in the overlay dictionary</param>
+        /// <param name="visible">If the element should be visible</param>
+        /// <param name="pos1">The new position of the element</param>
+        /// <param name="pos2">The new position of the element</param>
+        public void SetOverlayStatus(String name, bool visible, Point pos1, Point pos2)
+        {
+            Shape shape = new Ellipse();
+            switch (name.Substring(0, 7))
+            {
+                case "dotLine":
+                    if (((MainWindow)programView).OverlayDictionary.ContainsKey(name))
+                    {
+                        shape = ((MainWindow)programView).OverlayDictionary[name];
+                        break;
+                    }
+                    goto default;
+                default:
+                    SetOverlayStatus(name, visible, pos1);
+                    return;
+            }
+            if (visible) shape.Opacity = 1;
+            else shape.Opacity = 0.00001;
+            Point p1 = ConvertRightCanvasCoordinateToOverlay(pos1); Point p2 = ConvertRightCanvasCoordinateToOverlay(pos2);
+            ((Line)shape).X1 = p1.X; ((Line)shape).X2 = p2.X; ((Line)shape).Y1 = p1.Y; ((Line)shape).Y2 = p2.Y;
+        }
+
+        /// <summary>
+        /// Move the optitrack pointer to a new position.
+        /// </summary>
+        /// <param name="position">Position relative to the Rightcanvas</param>
+        public void MoveOptiPoint(Point position)
+        {
+            Point point = ConvertRightCanvasCoordinateToOverlay(position);
+            Shape shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
+            shape.Margin = new Thickness(point.X - 2.5, point.Y - 2.5, 0, 0);
+        }
+
         /*************************/
         /*** HELPING FUNCTIONS ***/
         /*************************/
+
+        /// <summary>
+        /// Convert point relative to the right canvas to a point relative to the overlay canvas.
+        /// </summary>
+        /// <param name="p">The point to convert.</param>
+        /// <returns>The respective overlay canvas.</returns>
+        private Point ConvertRightCanvasCoordinateToOverlay(Point p)
+        {
+            MainWindow main = (MainWindow)programView;
+            double xDif = (main.CanvasLeftEdge.ActualWidth + main.LeftCanvas.ActualWidth + main.CanvasSeperator.ActualWidth);
+            double yDif = (main.ButtonToolbar.ActualHeight);
+            return new Point(p.X + xDif, p.Y + yDif);
+        }
 
         /// <summary>
         /// Sets the visibility of a polyline.

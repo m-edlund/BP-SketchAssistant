@@ -19,6 +19,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Windows.Ink;
+using System.Windows.Media.Effects;
 
 namespace SketchAssistantWPF
 {
@@ -39,7 +40,7 @@ namespace SketchAssistantWPF
                     InDebugMode = true;
                 }
             }
-            if(!InDebugMode)
+            if (!InDebugMode)
             {
                 DebugMode.Visibility = Visibility.Collapsed;
             }
@@ -50,6 +51,8 @@ namespace SketchAssistantWPF
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
+            //Setup overlay items
+            SetupOverlay();
         }
 
         public enum ButtonState
@@ -95,7 +98,11 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Size of areas marking endpoints of lines in the redraw mode.
         /// </summary>
-        int markerRadius = 10;
+        public int markerRadius = 5;
+        /// <summary>
+        /// Dictionary containing the overlay elements
+        /// </summary>
+        public Dictionary<String, Shape> OverlayDictionary = new Dictionary<string, Shape>();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -131,7 +138,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
-            if(!IsMousePressed()) ProgramPresenter.Undo();
+            if (!IsMousePressed()) ProgramPresenter.Undo();
         }
 
         /// <summary>
@@ -165,7 +172,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if(strokeCollection.Count == 0)
+            if (strokeCollection.Count == 0)
             {
                 ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
             }
@@ -188,7 +195,7 @@ namespace SketchAssistantWPF
             {
                 if (strokeCollection.Count == 0)
                 {
-                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid,strokeCollection);
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
                 }
                 else
                 {
@@ -232,7 +239,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            if(ProgramPresenter.SVGToolStripMenuItemClick())
+            if (ProgramPresenter.SVGToolStripMenuItemClick())
                 RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
 
@@ -255,8 +262,10 @@ namespace SketchAssistantWPF
         /// <returns>Whether or not the mouse is pressed.</returns>
         public bool IsMousePressed()
         {
-            if (!debugRunning) {
-                return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed)); }
+            if (!debugRunning)
+            {
+                return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed));
+            }
             else return true;
         }
 
@@ -329,7 +338,7 @@ namespace SketchAssistantWPF
             newPoint.Height = 3; newPoint.Width = 3;
             newPoint.Fill = Brushes.Black;
             RightCanvas.Children.Add(newPoint);
-            newPoint.Margin = new Thickness(line.point.X - 1.5, line.point.Y - 1.5, 0,0);
+            newPoint.Margin = new Thickness(line.point.X - 1.5, line.point.Y - 1.5, 0, 0);
         }
 
         /// <summary>
@@ -502,24 +511,12 @@ namespace SketchAssistantWPF
             switch (canvasName)
             {
                 case ("LeftCanvas"):
-                    if (active)
-                    {
-                        LeftCanvas.Background = Brushes.White;
-                    }
-                    else
-                    {
-                        LeftCanvas.Background = Brushes.SlateGray;
-                    }
+                    if (active) LeftCanvas.Background = Brushes.White;
+                    else LeftCanvas.Background = Brushes.SlateGray;
                     break;
                 case ("RightCanvas"):
-                    if (active)
-                    {
-                        RightCanvas.Background = Brushes.White;
-                    }
-                    else
-                    {
-                        RightCanvas.Background = Brushes.SlateGray;
-                    }
+                    if (active) RightCanvas.Background = Brushes.White;
+                    else RightCanvas.Background = Brushes.SlateGray;
                     break;
                 default:
                     throw new InvalidOperationException("Unknown canvas name, Check that the canvas passed is either LeftCanvas or RightCanvas");
@@ -530,7 +527,51 @@ namespace SketchAssistantWPF
         /*** HELPING FUNCTION ***/
         /************************/
 
+        /// <summary>
+        /// A function that generates the overlay elements and sets all their values.
+        /// </summary>
+        private void SetupOverlay()
+        {
+            DropShadowEffect effect = new DropShadowEffect(); effect.ShadowDepth = 0;
+            OverlayCanvas.Background = null;
+            //Startpoint of a line to be redrawn
+            Ellipse StartPointOverlay = new Ellipse();
+            StartPointOverlay.Height = markerRadius * 2; StartPointOverlay.Width = markerRadius * 2;
+            StartPointOverlay.Fill = Brushes.Green;
+            StartPointOverlay.Effect = effect;
+            OverlayDictionary.Add("startpoint", StartPointOverlay);
+            //Endpoint of a line to be redrawn
+            Ellipse EndPointOverlay = new Ellipse();
+            EndPointOverlay.Height = markerRadius * 2; EndPointOverlay.Width = markerRadius * 2;
+            EndPointOverlay.Fill = Brushes.Green;
+            EndPointOverlay.Effect = effect;
+            OverlayDictionary.Add("endpoint", EndPointOverlay);
+            //Pointer of the optitrack system
+            Ellipse OptitrackMarker = new Ellipse(); OptitrackMarker.Height = 5; OptitrackMarker.Width = 5;
+            OptitrackMarker.Fill = Brushes.LightGray;
+            OptitrackMarker.Effect = effect;
+            OverlayDictionary.Add("optipoint", OptitrackMarker);
+            //10 Dotted Lines for debugging (if more are needed simply extend the for-loop
+            for (int x = 0; x < 10; x++)
+            {
+                Line dotLine = new Line();
+                dotLine.Stroke = Brushes.Red;
+                dotLine.StrokeDashArray = new DoubleCollection { 2 + x, 2 + x };
+                dotLine.StrokeThickness = 1;
+                OverlayDictionary.Add("dotLine" + x.ToString(), dotLine);
+            }
 
+            //Common features of all overlay items
+            foreach (KeyValuePair<String, Shape> s in OverlayDictionary)
+            {
+                OverlayCanvas.Children.Add(s.Value);
+                s.Value.Opacity = 0.00001;
+                s.Value.IsHitTestVisible = false;
+            }
+
+            //Enable optipoint initially
+            ProgramPresenter.SetOverlayStatus("optipoint", true, GetCursorPosition());
+        }
 
         /// <summary>
         /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
@@ -567,6 +608,8 @@ namespace SketchAssistantWPF
         {
             Debug(4);
         }
+
+
 
         /// <summary>
         /// A function which simulates canvas input for debugging.

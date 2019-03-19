@@ -97,8 +97,6 @@ namespace SketchAssistantWPF
 
         List<Point> currentLine = new List<Point>();
 
-
-
         public MVP_Model(MVP_Presenter presenter)
         {
             programPresenter = presenter;
@@ -312,6 +310,8 @@ namespace SketchAssistantWPF
         public void SetCurrentCursorPosition(Point p)
         {
             currentCursorPosition = p;
+            //Temporary position of the optipoint change, change this when merging with optitrack branch
+            programPresenter.MoveOptiPoint(currentCursorPosition);
             mouseDown = programPresenter.IsMousePressed();
         }
 
