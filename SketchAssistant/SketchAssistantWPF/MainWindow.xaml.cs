@@ -552,10 +552,10 @@ namespace SketchAssistantWPF
             OverlayDictionary.Add("startpoint", StartPointOverlay);
             //Endpoint of a line to be redrawn
             Ellipse EndPointOverlay = new Ellipse();
-            EndPointOverlay.Height = markerRadius * 2; StartPointOverlay.Width = markerRadius * 2;
+            EndPointOverlay.Height = markerRadius * 2; EndPointOverlay.Width = markerRadius * 2;
             EndPointOverlay.Fill = Brushes.Green;
             EndPointOverlay.Effect = effect;
-            OverlayDictionary.Add("endpoint", StartPointOverlay);
+            OverlayDictionary.Add("endpoint", EndPointOverlay);
             //Pointer of the optitrack system
             Ellipse OptitrackMarker = new Ellipse(); OptitrackMarker.Height = 5; OptitrackMarker.Width = 5;
             OptitrackMarker.Fill = Brushes.LightGray;
