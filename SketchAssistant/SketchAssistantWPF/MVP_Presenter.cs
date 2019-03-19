@@ -399,7 +399,7 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
-        /// 
+        /// Update the similarity score displayed in the UI.
         /// </summary>
         /// <param name="score">Score will be reset if NaN is passed, 
         /// will be ignored if the score is not between 0 and 1</param>
@@ -436,11 +436,42 @@ namespace SketchAssistantWPF
                     shape = ((MainWindow)programView).OverlayDictionary["startpoint"];
                     xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
                     break;
+                default:
+                    Console.WriteLine("Unknown Overlay Item. Please check in MVP_Presenter if this item exists.");
+                    return;
             }
             if (visible) shape.Opacity = visibility;
             else shape.Opacity = 0.00001;
             Point point = ConvertRightCanvasCoordinateToOverlay(position);
             shape.Margin = new Thickness(point.X - xDif, point.Y - yDif, 0, 0);
+        }
+
+        /// <summary>
+        /// Change the properties of an overlay item.
+        /// </summary>
+        /// <param name="name">The name of the item in the overlay dictionary</param>
+        /// <param name="visible">If the element should be visible</param>
+        /// <param name="pos1">The new position of the element</param>
+        /// <param name="pos2">The new position of the element</param>
+        public void SetOverlayStatus(String name, bool visible, Point pos1, Point pos2)
+        {
+            Shape shape = new Ellipse();
+            switch (name.Substring(0,7))
+            {
+                case "dotLine":
+                    if (((MainWindow)programView).OverlayDictionary.ContainsKey(name))
+                    { shape = ((MainWindow)programView).OverlayDictionary[name];
+                        break;
+                    }
+                    goto default;
+                default:
+                    SetOverlayStatus(name, visible, pos1);
+                    return;
+            }
+            if (visible) shape.Opacity = 1;
+            else shape.Opacity = 0.00001;
+            Point p1 = ConvertRightCanvasCoordinateToOverlay(pos1); Point p2 = ConvertRightCanvasCoordinateToOverlay(pos2);
+            ((Line)shape).X1 = p1.X; ((Line)shape).X2 = p2.X; ((Line)shape).Y1 = p1.Y; ((Line)shape).Y2 = p2.Y;
         }
 
         /// <summary>

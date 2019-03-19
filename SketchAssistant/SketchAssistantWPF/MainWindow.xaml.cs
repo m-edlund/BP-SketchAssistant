@@ -367,7 +367,6 @@ namespace SketchAssistantWPF
         public Tuple<string, string> openNewDialog(string Filter)
         {
             openFileDialog.Filter = Filter;
-            openFileDialog.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory;
             if (openFileDialog.ShowDialog() == true)
             {
                 return new Tuple<string, string>(openFileDialog.FileName, openFileDialog.SafeFileName);
@@ -544,18 +543,36 @@ namespace SketchAssistantWPF
         private void SetupOverlay()
         {
             DropShadowEffect effect = new DropShadowEffect(); effect.ShadowDepth = 0;
-            //Startpoint of a line to be redrawn
             OverlayCanvas.Background = null;
+            //Startpoint of a line to be redrawn
             Ellipse StartPointOverlay = new Ellipse();
             StartPointOverlay.Height = markerRadius * 2; StartPointOverlay.Width = markerRadius * 2;
-            StartPointOverlay.Opacity = 0.00001; StartPointOverlay.Fill = Brushes.Green; StartPointOverlay.IsHitTestVisible = false;
-            OverlayDictionary.Add("startpoint", StartPointOverlay); OverlayCanvas.Children.Add(StartPointOverlay);
+            StartPointOverlay.Fill = Brushes.Green;
             StartPointOverlay.Effect = effect;
+            OverlayDictionary.Add("startpoint", StartPointOverlay);
             //Pointer of the optitrack system
             Ellipse OptitrackMarker = new Ellipse(); OptitrackMarker.Height = 5; OptitrackMarker.Width = 5;
-            OptitrackMarker.Opacity = 0.00001; OptitrackMarker.Fill = Brushes.Black; OptitrackMarker.IsHitTestVisible = false;
-            OverlayDictionary.Add("optipoint", OptitrackMarker); OverlayCanvas.Children.Add(OptitrackMarker);
+            OptitrackMarker.Fill = Brushes.LightGray;
             OptitrackMarker.Effect = effect;
+            OverlayDictionary.Add("optipoint", OptitrackMarker);
+            //10 Dotted Lines for debugging (if more are needed simply extend the for-loop
+            for(int x = 0; x < 10; x++)
+            {
+                Line dotLine = new Line();
+                dotLine.Stroke = Brushes.Red;
+                dotLine.StrokeDashArray = new DoubleCollection { 2 + x, 2 + x };
+                dotLine.StrokeThickness = 1;
+                OverlayDictionary.Add("dotLine" + x.ToString(), dotLine);
+            }
+
+            //Common features of all overlay items
+            foreach (KeyValuePair<String, Shape> s  in OverlayDictionary)
+            {
+                OverlayCanvas.Children.Add(s.Value);
+                s.Value.Opacity = 0.00001;
+                s.Value.IsHitTestVisible = false;
+            }
+
             //Enable optipoint initially
             ProgramPresenter.SetOverlayStatus("optipoint", true, GetCursorPosition());
         }
