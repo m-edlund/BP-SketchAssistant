@@ -436,6 +436,10 @@ namespace SketchAssistantWPF
                     shape = ((MainWindow)programView).OverlayDictionary["startpoint"];
                     xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
                     break;
+                case "endpoint":
+                    shape = ((MainWindow)programView).OverlayDictionary["endpoint"];
+                    xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
+                    break;
                 default:
                     Console.WriteLine("Unknown Overlay Item. Please check in MVP_Presenter if this item exists.");
                     return;
