@@ -27,7 +27,7 @@ namespace SketchAssistantWPF
         /// </summary>
         Dictionary<int, Shape> rightPolyLines;
 
-        ImageDimension CanvasSizeLeft = new ImageDimension(0,0);
+        ImageDimension CanvasSizeLeft = new ImageDimension(0, 0);
 
         ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
 
@@ -213,11 +213,11 @@ namespace SketchAssistantWPF
                     programModel.MouseDown();
                     break;
                 case MouseAction.Up:
-                    if(strokes.Count > 0)
+                    if (strokes.Count > 0)
                     {
                         StylusPointCollection sPoints = strokes.First().StylusPoints;
                         List<Point> points = new List<Point>();
-                        foreach(StylusPoint p in sPoints)
+                        foreach (StylusPoint p in sPoints)
                             points.Add(new Point(p.X, p.Y));
                         programModel.MouseUp(points);
                     }
@@ -263,7 +263,7 @@ namespace SketchAssistantWPF
         /// </summary>
         public void UpdateRightLines(List<Tuple<bool, InternalLine>> lines)
         {
-            foreach(Tuple<bool, InternalLine> tup in lines)
+            foreach (Tuple<bool, InternalLine> tup in lines)
             {
                 var status = tup.Item1;
                 var line = tup.Item2;
@@ -287,17 +287,17 @@ namespace SketchAssistantWPF
             }
             //Calculate similarity scores 
             UpdateSimilarityScore(Double.NaN); var templist = lines.Where(tup => tup.Item1).ToList();
-            if(LeftLines.Count > 0)
+            if (LeftLines.Count > 0)
             {
-                for(int i = 0; i < LeftLines.Count; i++)
+                for (int i = 0; i < LeftLines.Count; i++)
                 {
                     if (templist.Count == i) break;
                     UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, LeftLines[i]));
                 }
             }
-            else if(templist.Count > 1)
+            else if (templist.Count > 1)
             {
-                UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[templist.Count-2].Item2, templist[templist.Count-1].Item2));
+                UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[templist.Count - 2].Item2, templist[templist.Count - 1].Item2));
             }
         }
 
@@ -460,11 +460,12 @@ namespace SketchAssistantWPF
         public void SetOverlayStatus(String name, bool visible, Point pos1, Point pos2)
         {
             Shape shape = new Ellipse();
-            switch (name.Substring(0,7))
+            switch (name.Substring(0, 7))
             {
                 case "dotLine":
                     if (((MainWindow)programView).OverlayDictionary.ContainsKey(name))
-                    { shape = ((MainWindow)programView).OverlayDictionary[name];
+                    {
+                        shape = ((MainWindow)programView).OverlayDictionary[name];
                         break;
                     }
                     goto default;
@@ -503,7 +504,7 @@ namespace SketchAssistantWPF
             MainWindow main = (MainWindow)programView;
             double xDif = (main.CanvasLeftEdge.ActualWidth + main.LeftCanvas.ActualWidth + main.CanvasSeperator.ActualWidth);
             double yDif = (main.ButtonToolbar.ActualHeight);
-            return new Point(p.X + xDif,p.Y + yDif);
+            return new Point(p.X + xDif, p.Y + yDif);
         }
 
         /// <summary>
