@@ -360,7 +360,6 @@ namespace SketchAssistantWPF
         public Tuple<string, string> openNewDialog(string Filter)
         {
             openFileDialog.Filter = Filter;
-            openFileDialog.InitialDirectory = AppDomain.CurrentDomain.BaseDirectory;
             if (openFileDialog.ShowDialog() == true)
             {
                 return new Tuple<string, string>(openFileDialog.FileName, openFileDialog.SafeFileName);
