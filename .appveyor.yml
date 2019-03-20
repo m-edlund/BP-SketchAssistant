@@ -19,9 +19,8 @@ artifacts:
 
 before_test:
     - ps: "SketchAssistant/GenerateCoverageReport.bat"
-
-test:
-    #don't run tests depending on [DeploymentItem] and filesystem access
-    categories:
-        except:
-            - FileIO
+#test:
+#don't run tests depending on [DeploymentItem] and filesystem access
+#categories:
+#    except:
+#        - FileIO

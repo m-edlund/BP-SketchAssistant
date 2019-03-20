@@ -23,8 +23,14 @@ namespace SketchAssistantWPF
         /// History of Actions
         /// </summary>
         ActionHistory historyOfActions;
+        /// <summary>
+        /// The assistant responsible for the redraw mode
+        /// </summary>
+
 
         OptiTrackConnector connector;
+
+
 
         /***********************/
         /*** CLASS VARIABLES ***/
@@ -42,10 +48,6 @@ namespace SketchAssistantWPF
         /// Size of deletion area
         /// </summary>
         int deletionRadius = 5;
-        /// <summary>
-        /// Size of areas marking endpoints of lines in the redraw mode.
-        /// </summary>
-        int markerRadius = 10;
         /// <summary>
         /// The Position of the Cursor in the right picture box
         /// </summary>
@@ -66,10 +68,6 @@ namespace SketchAssistantWPF
         /// Lookup Matrix for getting line ids at a certain postions of the image
         /// </summary>
         HashSet<int>[,] linesMatrix;
-        /// <summary>
-        /// List of items which will be overlayed over the right canvas.
-        /// </summary>
-        List<Tuple<bool, HashSet<Point>>> overlayItems;
         /// <summary>
         /// Width of the LeftImageBox.
         /// </summary>
@@ -93,7 +91,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Indicates whether or not the canvas on the right side is active.
         /// </summary>
-        public bool canvasActive { get; set; }
+        public bool canvasActive {get; set;}
         /// <summary>
         /// Indicates if there is a graphic loaded in the left canvas.
         /// </summary>
@@ -132,17 +130,18 @@ namespace SketchAssistantWPF
         bool testing = false;//TODO: remove after finishing userstory
 
 
-        Image rightImageWithoutOverlay;
         /// <summary>
         /// Whether or not the mouse is pressed.
         /// </summary>
         private bool mouseDown;
 
         List<InternalLine> leftLineList;
-
+        
         List<Tuple<bool, InternalLine>> rightLineList;
 
         List<Point> currentLine = new List<Point>();
+
+
 
         public MVP_Model(MVP_Presenter presenter)
         {
@@ -182,7 +181,6 @@ namespace SketchAssistantWPF
             RightDown = 0x08,
             RightUp = 0x10
         }
-
 
         /**************************/
         /*** INTERNAL FUNCTIONS ***/
@@ -312,9 +310,8 @@ namespace SketchAssistantWPF
         /// <param name="RightCanvas">The size of the right canvas.</param>
         public void ResizeEvent(ImageDimension LeftCanvas, ImageDimension RightCanvas)
         {
-            if (LeftCanvas.Height >= 0 && LeftCanvas.Width >= 0) { leftImageSize = LeftCanvas; }
-            if (RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
-
+            if(LeftCanvas.Height >= 0 && LeftCanvas.Width>= 0) { leftImageSize = LeftCanvas; }
+            if(RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
             RepopulateDeletionMatrixes();
         }
 
@@ -342,23 +339,6 @@ namespace SketchAssistantWPF
             graphicLoaded = true;
             programPresenter.UpdateLeftLines(leftLineList);
             CanvasActivated();
-            /*
-            var workingCanvas = GetEmptyCanvas(width, height);
-            var workingGraph = Graphics.FromImage(workingCanvas);
-            leftLineList = listOfLines;
-            //redrawAss = new RedrawAssistant(leftLineList);
-            //overlayItems = redrawAss.Initialize(markerRadius);
-            //Lines
-            foreach (InternalLine line in leftLineList)
-            {
-                line.DrawLine(workingGraph);
-            }
-            leftImage = workingCanvas;
-            programPresenter.UpdateLeftImage(leftImage);
-            //Set right image to same size as left image and delete linelist
-            DrawEmptyCanvasRight();
-            rightLineList = new List<Tuple<bool, InternalLine>>();
-            */
         }
 
         /// <summary>
@@ -393,7 +373,6 @@ namespace SketchAssistantWPF
                     default:
                         break;
                 }
-                //TODO: For the person implementing overlay: Add check if overlay needs to be added
                 programPresenter.UpdateRightLines(rightLineList);
             }
             RepopulateDeletionMatrixes();
@@ -450,7 +429,8 @@ namespace SketchAssistantWPF
             optiTrackInUse = usingOptiTrack;
             if (usingOptiTrack && optiTrackX == 0 && optiTrackY == 0 && optiTrackZ == 0)
             {
-                programPresenter.PassMessageToView("Trackable not detected, please check if OptiTrack is activated and Trackable is recognized", "Warning");
+                programPresenter.PassWarning("Trackable not detected, please check if OptiTrack is activated and Trackable is recognized");
+                optiTrackInUse = false;
             }
         }
 
@@ -469,6 +449,7 @@ namespace SketchAssistantWPF
         /// </summary>
         public void StartNewLine()
         {
+            mouseDown = true;
             if (optiTrackInUse || programPresenter.IsMousePressed())
             {
                 if (inDrawingMode)
@@ -492,6 +473,7 @@ namespace SketchAssistantWPF
                     Console.WriteLine(p.X + ";" + p.Y);
                 }
             }
+            mouseDown = false;
             if (valid)
             {
                 if (inDrawingMode && currentLine.Count > 0)
@@ -513,10 +495,31 @@ namespace SketchAssistantWPF
             UpdateUI();
         }
 
+        /// <summary>
+        /// Finish the current Line, when the pressed Mouse is released.
+        /// Overload that is used to pass a list of points to be used when one is available.
+        /// </summary>
+        /// <param name="p">The list of points</param>
+        public void FinishCurrentLine(List<Point> p)
+        {
+            mouseDown = false;
+            if (inDrawingMode && currentLine.Count > 0)
+            {
+                InternalLine newLine = new InternalLine(p, rightLineList.Count);
+                rightLineList.Add(new Tuple<bool, InternalLine>(true, newLine));
+                newLine.PopulateMatrixes(isFilledMatrix, linesMatrix);
+                programPresenter.PassLastActionTaken(historyOfActions.AddNewAction(new SketchAction(SketchAction.ActionType.Draw, newLine.GetID())));
+                programPresenter.UpdateRightLines(rightLineList);
+                currentLine.Clear();
+            }
+            UpdateUI();
+        }
+
+
 
         void getOptiTrackPosition(OptiTrack.Frame frame)
         {
-            if(frame.Trackables.Length >= 1)
+            if (frame.Trackables.Length >= 1)
             {
                 optiTrackX = frame.Trackables[0].X;
                 optiTrackY = frame.Trackables[0].Y;
@@ -531,62 +534,17 @@ namespace SketchAssistantWPF
         {
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
-            if (optiTrackInUse) //drawing optiTrack
+            cursorPositions.Enqueue(currentCursorPosition);
+            //Drawing
+            if (inDrawingMode && programPresenter.IsMousePressed())
             {
-                if (CheckInsideDrawingZone(optiTrackZ))
-                {
-                    SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
-                    currentLine.Add(currentCursorPosition);
-                    programPresenter.UpdateCurrentLine(currentLine);
-                    if (!optiTrackInsideDrawingZone)
-                    {
-                        optiTrackInsideDrawingZone = true;
-                        StartNewLine();
-                        if (testing)
-                        {
-                            Console.WriteLine("new line begun");
-                        }
-                    }
-                    if (optiTrackZ > WARNING_ZONE_BOUNDARY)
-                    {
-                        armband.pushForward();
-                    }
-                    else if (optiTrackZ < -1 * WARNING_ZONE_BOUNDARY)
-                    {
-                        armband.pushBackward();
-                    }
-                }
-                else
-                {
-                    if (optiTrackInsideDrawingZone) //trackable was in drawing zone last tick -> finish line
-                    {
-                        optiTrackInsideDrawingZone = false;
-                        FinishCurrentLine(true);
-                        if (testing)
-                        {
-                            Console.WriteLine("line finished");
-                        }
-                    }
-                }
-                //if (optitrackAvailable) { TODO test and remove
-                projectPointOntoScreen(optiTrackX, optiTrackY);
-                //}
-                cursorPositions.Enqueue(currentCursorPosition);
-            }
-            else //drawing normal
-            {
-                cursorPositions.Enqueue(currentCursorPosition);
-                if (inDrawingMode && programPresenter.IsMousePressed())
-                {
-                    currentLine.Add(currentCursorPosition);
-                    //programPresenter.UpdateCurrentLine(currentLine);
-                }
+                currentLine.Add(currentCursorPosition);
+                //programPresenter.UpdateCurrentLine(currentLine);
             }
             //Deleting
             if (!inDrawingMode && programPresenter.IsMousePressed())
             {
                 List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
-
                 foreach (Point currPoint in uncheckedPoints)
                 {
                     HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionRadius);
@@ -604,51 +562,6 @@ namespace SketchAssistantWPF
                 }
             }
         }
-
-        private void projectPointOntoScreen(float optiTrackX, float optiTrackY)
-        {
-            Point auxiliaryPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
-            SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
-        }
-
-        private bool CheckInsideDrawingZone(float optiTrackZ)
-        {
-            if (Math.Abs(optiTrackZ) > WARNING_ZONE_BOUNDARY * 2) return false;
-            return true;
-        }
-
-        /*
-        /// <summary>
-        /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
-        /// </summary>
-        /// <param name="CanvasSize">The size of the canvas</param>
-        public void UpdateSizes(ImageDimension CanvasSize)
-        {
-            if (rightImageWithoutOverlay != null)
-            {
-                int widthImage = rightImageSize.Width;
-                int heightImage = rightImageSize.Height;
-                int widthBox = CanvasSize.Width;
-                int heightBox = CanvasSize.Height;
-
-                float imageRatio = (float)widthImage / (float)heightImage;
-                float containerRatio = (float)widthBox / (float)heightBox;
-                float zoomFactor = 0;
-                if (imageRatio >= containerRatio)
-                {
-                    //Image is wider than it is high
-                    zoomFactor = (float)widthImage / (float)widthBox;
-                }
-                else
-                {
-                    //Image is higher than it is wide
-                    zoomFactor = (float)heightImage / (float)heightBox;
-                }
-                markerRadius = (int)(10 * zoomFactor);
-                deletionRadius = (int)(5 * zoomFactor);
-            }
-        }
-        */
 
         /// <summary>
         /// If there is unsaved progress.

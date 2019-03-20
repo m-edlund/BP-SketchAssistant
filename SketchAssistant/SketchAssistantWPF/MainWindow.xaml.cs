@@ -92,7 +92,11 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Stores Lines drawn on RightCanvas.
         /// </summary>
-        StrokeCollection strokeCollection = new StrokeCollection();
+        public StrokeCollection strokeCollection = new StrokeCollection();
+        /// <summary>
+        /// Size of areas marking endpoints of lines in the redraw mode.
+        /// </summary>
+        int markerRadius = 10;
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -113,7 +117,6 @@ namespace SketchAssistantWPF
         public void RightCanvas_StrokeCollection(object sender, InkCanvasStrokeCollectedEventArgs e)
         {
             strokeCollection.Add(e.Stroke);
-            System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
         }
 
         /// <summary>
@@ -121,7 +124,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RedoButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.Redo();
+            if (!IsMousePressed()) ProgramPresenter.Redo();
         }
 
         /// <summary>
@@ -129,7 +132,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.Undo();
+            if (!IsMousePressed()) ProgramPresenter.Undo();
         }
 
         /// <summary>
@@ -166,8 +169,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RightCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);");
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, strokeCollection);
         }
 
         /// <summary>
@@ -177,16 +179,36 @@ namespace SketchAssistantWPF
         {
             if (strokeCollection.Count == 0)
             {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid);
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
             }
             else
             {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
+                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
                 RightCanvas.Strokes.RemoveAt(0);
                 strokeCollection.RemoveAt(0);
-                System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
             }
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);");
+        }
+
+        /// <summary>
+        /// Is called when a stylus is lifted, which has the same effect as releasing the mouse.
+        /// Lifting the finger when using touch also toggles this, therfore this function is sufficient.
+        /// </summary>
+        private void RightCanvas_IsStylusCapturedChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Stylus Capture is now: {0}", RightCanvas.IsStylusCaptured);
+            if (!RightCanvas.IsStylusCaptured)
+            {
+                if (strokeCollection.Count == 0)
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
+                }
+                else
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
+                    RightCanvas.Strokes.RemoveAt(0);
+                    strokeCollection.RemoveAt(0);
+                }
+            }
         }
 
         /// <summary>
@@ -195,7 +217,6 @@ namespace SketchAssistantWPF
         private void RightCanvas_MouseMove(object sender, MouseEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e.GetPosition(RightCanvas));
-            //System.Diagnostics.Debug.WriteLine("new Point(" + ((int)e.GetPosition(RightCanvas).X).ToString() + "," + ((int)e.GetPosition(RightCanvas).Y).ToString() + "), ");
         }
 
         /// <summary>
@@ -216,25 +237,17 @@ namespace SketchAssistantWPF
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             ProgramPresenter.Tick();
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.Tick();");
         }
-
-        /// <summary>
-        /// Import button for .isad drawing, will open an OpenFileDialog
-        /// </summary>
-        private void ISADMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            ProgramPresenter.ExamplePictureToolStripMenuItemClick();
-        }
-
 
         /// <summary>
         /// Import button for .svg file, will open an OpenFileDialog
         /// </summary>
         private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.SVGToolStripMenuItemClick();
+            if (ProgramPresenter.SVGToolStripMenuItemClick())
+                RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
+
         /*************************/
         /*** PRESENTER -> VIEW ***/
         /*************************/
@@ -389,6 +402,17 @@ namespace SketchAssistantWPF
             OptiTrackBox.Text = message;
         }
 
+        /// Sets the contents of the status bar label containing
+        /// the similarity score of the left and right image.
+        /// </summary>
+        /// <param name="message">The message to be set, 
+        /// will be set to the default value if left empty.</param>
+        public void SetImageSimilarityText(string message)
+        {
+            if (message.Count() > 0) LineSimilarityBox.Text = message;
+            else LineSimilarityBox.Text = "-";
+        }
+
         /// <summary>
         /// Changes the states of a tool strip button.
         /// </summary>
@@ -476,16 +500,11 @@ namespace SketchAssistantWPF
 
         /// <summary>
         /// shows the given info message in a popup and asks the user to aknowledge it
-        /// if caption is "Warning" add MessageBoxImage.Warning to the pop up window
         /// </summary>
         /// <param name="message">the message to show</param>
-        public void ShowInfoMessage(string message, string caption)
-        {   
-            if(caption == "Warning")
-            {
-                MessageBox.Show(message, caption, MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            else MessageBox.Show(message, caption);
+        public void ShowInfoMessage(string message)
+        {
+            MessageBox.Show(message);
         }
 
         /// <summary>
@@ -605,7 +624,7 @@ namespace SketchAssistantWPF
             debugRunning = true;
             ProgramPresenter.Tick(); await Task.Delay(10);
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, start);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down); await Task.Delay(10);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, strokeCollection); await Task.Delay(10);
             for (int x = 0; x < points.Length; x++)
             {
                 ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, points[x]);
@@ -616,7 +635,7 @@ namespace SketchAssistantWPF
                     await Task.Delay(1);
                 }
             }
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up); await Task.Delay(1);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection); await Task.Delay(1);
             debugRunning = false;
             dispatcherTimer.Start();
         }

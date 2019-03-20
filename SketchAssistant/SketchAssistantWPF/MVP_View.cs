@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Ink;
 using System.Windows.Shapes;
 
 namespace SketchAssistantWPF
@@ -87,7 +88,7 @@ namespace SketchAssistantWPF
         /// shows the given info message in a popup and asks the user to aknowledge it
         /// </summary>
         /// <param name="message">the message to show</param>
-        void ShowInfoMessage(String message, String caption);
+        void ShowInfoMessage(String message);
 
         /// <summary>
         /// Shows a warning box with the given message (Yes/No Buttons)and returns true if the user aknowledges it.
@@ -126,5 +127,13 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="message">The new contents</param>
         void SetOptiTrackText(String message);
+
+        /// <summary>
+        /// Sets the contents of the status bar label containing
+        /// the similarity score of the left and right image.
+        /// </summary>
+        /// <param name="message">The message to be set, 
+        /// will be set to the default value if left empty.</param>
+        void SetImageSimilarityText(string message);
     }
 }

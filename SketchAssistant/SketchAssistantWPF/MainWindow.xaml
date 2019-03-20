@@ -1,4 +1,4 @@
-﻿<Window x:Class="SketchAssistantWPF.MainWindow" 
+<Window x:Class="SketchAssistantWPF.MainWindow" 
     xmlns:local="clr-namespace:SketchAssistantWPF" 
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
@@ -6,27 +6,21 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" Title="Sketch Assistant" Height="612" Width="914" SizeChanged="Window_SizeChanged">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="170*"/>
-            <ColumnDefinition Width="55*"/>
-            <ColumnDefinition Width="225*"/>
             <ColumnDefinition Width="5"/>
-            <ColumnDefinition Width="226*"/>
-            <ColumnDefinition Width="225*"/>
-            <ColumnDefinition Width="auto"/>
-            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="5"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <ToolBar x:Name="MenuToolbar" Grid.Column="0" Grid.ColumnSpan="5" Grid.Row="0" Background="LightGray">
-            <Menu Background="LightGray">
+        <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Background="LightGray">
+            <Menu Background="LightGray" VerticalAlignment="Center" Padding="5,0,0,0">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
-                    <MenuItem x:Name="ISADMenuButton" Header="Load Template (.isad)" Click="ISADMenuItem_Click"/>
-                    <MenuItem x:Name="SVGMenuButton" Header="Load Template (.svg)" Click="SVGMenuItem_Click"/>
+                    <MenuItem x:Name="SVGMenuButton" Header="Import SVG File" Click="SVGMenuItem_Click"/>
                 </MenuItem>
                 <MenuItem x:Name="EditMenuButton" Header="Edit">
                     <MenuItem x:Name="CanvasMenuButton" Header="New Canvas" Click="CanvasButton_Click"/>
@@ -40,10 +34,11 @@
                     </MenuItem>
                 </MenuItem>
             </Menu>
-        </ToolBar>
-        <!-- All Icons in the Toolbar taken from openclipart.org -->
-        <ToolBar x:Name="DrawingToolBar" Grid.Column="6" Grid.Row="0" Grid.ColumnSpan="2" Background="LightGray">
-            <Button x:Name="CanvasButton" ToolTip="Create a new Canvas" Click="CanvasButton_Click">
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="3" Background="LightGray">
+            <Canvas Name="ToolbarSpacer" Width="5" Background="LightGray" />
+            <!-- All Icons in the StackPanel taken from openclipart.org -->
+            <Button x:Name="CanvasButton" ToolTip="Create a new Canvas" Click="CanvasButton_Click" BorderThickness="0">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -72,7 +67,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </Button>
-            <ToggleButton x:Name="DrawButton" ToolTip="Enter Drawing Mode" Click="DrawButton_Click">
+            <ToggleButton x:Name="DrawButton" ToolTip="Enter Drawing Mode" Click="DrawButton_Click" BorderThickness="0">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -87,7 +82,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click">
+            <ToggleButton x:Name="DeleteButton" ToolTip="Enter Deletion Mode" Click="DeleteButton_Click" BorderThickness="0">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -129,7 +124,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click">
+            <Button x:Name="UndoButton" ToolTip="Undo the last action" Click="UndoButton_Click" BorderThickness="0">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -151,7 +146,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </Button>
-            <Button x:Name="RedoButton" ToolTip="Redo the last undone action" Click="RedoButton_Click">
+            <Button x:Name="RedoButton" ToolTip="Redo the last undone action" Click="RedoButton_Click" BorderThickness="0">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -175,7 +170,7 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </Button>
-            <ToggleButton x:Name="DrawWithOptiButton" ToolTip="Enter Drawing Mode (OptiTrack)" Click="DrawWithOptiButton_Click">
+            <ToggleButton x:Name="DrawWithOptiButton" ToolTip="Enter Drawing Mode (OptiTrack)" Click="DrawWithOptiButton_Click" BorderThickness="0">
                 <Rectangle Width="30" Height="30">
                     <Rectangle.Fill>
                         <DrawingBrush>
@@ -216,11 +211,13 @@
                     </Rectangle.Fill>
                 </Rectangle>
             </ToggleButton>
-        </ToolBar>
-        <local:CustomCanvas x:Name="LeftCanvas" Background="SlateGray" Grid.Column="2" Grid.Row="1" Height="auto" Grid.ColumnSpan="3"/>
-        <Canvas Name="CanvasSeperator" Grid.Column="5" Grid.Row="1" Background="LightGray" />
-        <InkCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="6" Grid.Row="1" Height="auto" PreviewMouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" StrokeCollected="RightCanvas_StrokeCollection" EditingMode="None"/>
+        </StackPanel>
+        <Canvas Name="CanvasLeftEdge" Grid.Column="0" Grid.Row="1" Background="LightGray" />
+        <Canvas x:Name="LeftCanvas" Background="SlateGray" Grid.Column="1" Grid.Row="1" Height="auto" Grid.ColumnSpan="1"/>
+        <Canvas Name="CanvasSeperator" Grid.Column="2" Grid.Row="1" Background="LightGray" />
+        <InkCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="3" Grid.Row="1" Height="auto" PreviewMouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" StrokeCollected="RightCanvas_StrokeCollection" EditingMode="None" IsStylusCapturedChanged="RightCanvas_IsStylusCapturedChanged"/>
 
+        <Canvas Name="CanvasRightEdge" Grid.Column="4" Grid.Row="1" Background="LightGray" />
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="8">
             <StatusBar DockPanel.Dock="Bottom" Name="StatusBar" Background="LightGray">
@@ -229,6 +226,8 @@
                 <TextBox Name="LastActionBox" Text="none" Background="LightGray"/>
                 <Separator/>
                 <TextBox Name="OptiTrackBox" Text="none" Background="LightGray"/>
+                <Separator/>
+                <TextBox Name="LineSimilarityBox" Text="-" Background="LightGray"/>
             </StatusBar>
         </DockPanel>
     </Grid>
