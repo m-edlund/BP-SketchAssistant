@@ -120,11 +120,11 @@ namespace WhiteTests
         {
             Window mainWindow = setupapp();
             InputSimulator inputSimulator = new InputSimulator();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             string[] files = Directory.GetFiles(getSketchAssistantDirectory() + @"\whitelisted", "*.svg", SearchOption.AllDirectories);
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("LoadMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("SVGMenuButton")).Click();
             Thread.Sleep(1000);
             inputSimulator.Keyboard.TextEntry(getSketchAssistantDirectory() + @"whitelisted\" + filename + ".svg");
@@ -140,21 +140,21 @@ namespace WhiteTests
         public void DrawLineOnCanvasTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             InputSimulator inputSimulator = new InputSimulator();
             MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.MoveMouseBy(100, 100);
             inputSimulator.Mouse.LeftButtonDown();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.MoveMouseBy(100, 100);
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
@@ -164,23 +164,23 @@ namespace WhiteTests
         public void UndoLineOnCanvasTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             InputSimulator inputSimulator = new InputSimulator();
             MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.MoveMouseBy(0, 200);
             inputSimulator.Mouse.LeftButtonDown();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.MoveMouseBy(500, 300);
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
             Thread.Sleep(100);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
@@ -192,31 +192,31 @@ namespace WhiteTests
         public void InvalidLineTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             InputSimulator inputSimulator = new InputSimulator();
             MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DrawButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonDown();
             inputSimulator.Mouse.MoveMouseBy(0, 200);
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.MoveMouseBy(500, 300);
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.MoveMouseBy(-1000, 0);
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonDown();
             inputSimulator.Mouse.MoveMouseBy(1000, 0);
             inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
@@ -226,7 +226,7 @@ namespace WhiteTests
         public void PointsOnCanvasSimilarityTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             InputSimulator inputSimulator = new InputSimulator();
             MouseSimulator mouseSimulator = new MouseSimulator(inputSimulator);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
@@ -234,24 +234,24 @@ namespace WhiteTests
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
             inputSimulator.Mouse.MoveMouseBy(0, 200);
             inputSimulator.Mouse.LeftButtonDown();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Assert.AreEqual("-", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonDown();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             inputSimulator.Mouse.LeftButtonUp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Assert.AreEqual("1", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Assert.AreEqual("-", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("RedoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Assert.AreEqual("1", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LineSimilarityBox")).Text.ToString());
             mainWindow.Close();
@@ -262,10 +262,10 @@ namespace WhiteTests
         public void CreateCanvasTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
@@ -275,15 +275,15 @@ namespace WhiteTests
         public void DrawLineTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
@@ -295,27 +295,27 @@ namespace WhiteTests
         public void DeleteLineTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DrawButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
@@ -327,21 +327,21 @@ namespace WhiteTests
         public void UndoTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
@@ -351,25 +351,25 @@ namespace WhiteTests
         public void RedoTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("RedoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
@@ -379,27 +379,27 @@ namespace WhiteTests
         public void DrawSeveralLinesTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugTwo")).Click();
             Thread.Sleep(30000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
 
@@ -408,35 +408,35 @@ namespace WhiteTests
         public void DeleteSeveralLinesTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugTwo")).Click();
             Thread.Sleep(24000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugThree")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 1 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Thread.Sleep(10000);
             Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
@@ -448,35 +448,35 @@ namespace WhiteTests
         public void UndoSeveralLinesTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugTwo")).Click();
             Thread.Sleep(30000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
 
@@ -485,43 +485,43 @@ namespace WhiteTests
         public void RedoSeveralLinesTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugTwo")).Click();
             Thread.Sleep(24000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("RedoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("RedoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
 
@@ -530,57 +530,57 @@ namespace WhiteTests
         public void UndoAndRedoTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugOne")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugTwo")).Click();
             Thread.Sleep(24000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("RedoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("RedoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugThree")).Click();
             Thread.Sleep(7000);
             Assert.AreEqual("Last Action: Line number 0 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 1 was deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
 
@@ -589,31 +589,31 @@ namespace WhiteTests
         public void UndoAndDrawTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
             Thread.Sleep(2000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("UndoButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
             Thread.Sleep(2000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
 
@@ -622,37 +622,37 @@ namespace WhiteTests
         public void DeleteSeveralLinesAtOnceTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
             Thread.Sleep(2000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
             Thread.Sleep(2000);
             Assert.AreEqual("Last Action: Line number 1 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("DeleteButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
             Thread.Sleep(2000);
             Assert.AreEqual("Last Action: Several Lines were deleted.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
 
@@ -661,19 +661,19 @@ namespace WhiteTests
         public void PointDrawTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugFour")).Click();
             Thread.Sleep(4000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
 
@@ -682,43 +682,43 @@ namespace WhiteTests
         public void NewCanvasAfterDrawTest()
         {
             Window mainWindow = setupapp();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("none", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("EditMenuButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugMode")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Menu>(SearchCriteria.ByAutomationId("DebugThree")).Click();
             Thread.Sleep(4000);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             // Click on No button in warning
             Window messageBox0 = mainWindow.MessageBox("Warning");
             messageBox0.Get<Button>(SearchCriteria.ByText("No")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             // close warning
             Window messageBox1 = mainWindow.MessageBox("Warning");
             messageBox1.Close();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: Line number 0 was drawn.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Get<Button>(SearchCriteria.ByAutomationId("CanvasButton")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             // click yes button on warning
             Window messageBox2 = mainWindow.MessageBox("Warning");
             messageBox2.Get<Button>(SearchCriteria.ByText("Yes")).Click();
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
-            Thread.Sleep(20);
+            Thread.Sleep(30);
             mainWindow.Close();
         }
     }

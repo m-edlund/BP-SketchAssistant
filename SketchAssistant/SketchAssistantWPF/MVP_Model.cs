@@ -91,7 +91,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Indicates whether or not the canvas on the right side is active.
         /// </summary>
-        public bool canvasActive {get; set;}
+        public bool canvasActive { get; set; }
         /// <summary>
         /// Indicates if there is a graphic loaded in the left canvas.
         /// </summary>
@@ -136,12 +136,10 @@ namespace SketchAssistantWPF
         private bool mouseDown;
 
         List<InternalLine> leftLineList;
-        
+
         List<Tuple<bool, InternalLine>> rightLineList;
 
         List<Point> currentLine = new List<Point>();
-
-
 
         public MVP_Model(MVP_Presenter presenter)
         {
@@ -297,6 +295,7 @@ namespace SketchAssistantWPF
                 Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
             currentCursorPosition = correctedPoint;
+            programPresenter.MoveOptiPoint(currentCursorPosition);
         }
 
         /********************************************/
@@ -310,8 +309,8 @@ namespace SketchAssistantWPF
         /// <param name="RightCanvas">The size of the right canvas.</param>
         public void ResizeEvent(ImageDimension LeftCanvas, ImageDimension RightCanvas)
         {
-            if(LeftCanvas.Height >= 0 && LeftCanvas.Width>= 0) { leftImageSize = LeftCanvas; }
-            if(RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
+            if (LeftCanvas.Height >= 0 && LeftCanvas.Width >= 0) { leftImageSize = LeftCanvas; }
+            if (RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
             RepopulateDeletionMatrixes();
         }
 
@@ -431,6 +430,13 @@ namespace SketchAssistantWPF
             {
                 programPresenter.PassWarning("Trackable not detected, please check if OptiTrack is activated and Trackable is recognized");
                 optiTrackInUse = false;
+                //Disable optipoint
+                programPresenter.SetOverlayStatus("optipoint", false, currentCursorPosition);
+            }
+            else
+            {
+                //Enable optipoint
+                programPresenter.SetOverlayStatus("optipoint", true, currentCursorPosition);
             }
         }
 
@@ -441,6 +447,7 @@ namespace SketchAssistantWPF
         public void SetCurrentCursorPosition(Point p)
         {
             if (!optiTrackInUse) currentCursorPosition = p;
+            //Temporary position of the optipoint change, change this when merging with optitrack branch
             mouseDown = programPresenter.IsMousePressed();
         }
 

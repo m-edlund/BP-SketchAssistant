@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" Title="Sketch Assistant" Height="612" Width="914" SizeChanged="Window_SizeChanged">
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="*"/>
@@ -17,7 +17,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Background="LightGray">
+        <StackPanel x:Name="MenuToolbar" Orientation="Horizontal" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Background="LightGray">
             <Menu Background="LightGray" VerticalAlignment="Center" Padding="5,0,0,0">
                 <MenuItem x:Name="LoadMenuButton" Header="Load">
                     <MenuItem x:Name="SVGMenuButton" Header="Import SVG File" Click="SVGMenuItem_Click"/>
@@ -35,7 +35,7 @@
                 </MenuItem>
             </Menu>
         </StackPanel>
-        <StackPanel Orientation="Horizontal" Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="3" Background="LightGray">
+        <StackPanel x:Name="ButtonToolbar" Orientation="Horizontal" Grid.Column="2" Grid.Row="0" Grid.ColumnSpan="3" Background="LightGray">
             <Canvas Name="ToolbarSpacer" Width="5" Background="LightGray" />
             <!-- All Icons in the StackPanel taken from openclipart.org -->
             <Button x:Name="CanvasButton" ToolTip="Create a new Canvas" Click="CanvasButton_Click" BorderThickness="0">
@@ -216,7 +216,6 @@
         <Canvas x:Name="LeftCanvas" Background="SlateGray" Grid.Column="1" Grid.Row="1" Height="auto" Grid.ColumnSpan="1"/>
         <Canvas Name="CanvasSeperator" Grid.Column="2" Grid.Row="1" Background="LightGray" />
         <InkCanvas x:Name="RightCanvas" Background="SlateGray" Grid.Column="3" Grid.Row="1" Height="auto" PreviewMouseDown="RightCanvas_MouseDown" MouseUp="RightCanvas_MouseUp" MouseMove="RightCanvas_MouseMove" Grid.ColumnSpan="2" StrokeCollected="RightCanvas_StrokeCollection" EditingMode="None" IsStylusCapturedChanged="RightCanvas_IsStylusCapturedChanged"/>
-
         <Canvas Name="CanvasRightEdge" Grid.Column="4" Grid.Row="1" Background="LightGray" />
 
         <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="8">
@@ -230,5 +229,7 @@
                 <TextBox Name="LineSimilarityBox" Text="-" Background="LightGray"/>
             </StatusBar>
         </DockPanel>
+        <Ellipse x:Name="optipoint" Opacity="0.00001" Height="5" Width="5" Fill="Black"/>
+        <Canvas x:Name="OverlayCanvas" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="5" Grid.RowSpan="3"/>
     </Grid>
 </Window>
