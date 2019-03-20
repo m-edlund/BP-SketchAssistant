@@ -534,17 +534,62 @@ namespace SketchAssistantWPF
         {
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
-            cursorPositions.Enqueue(currentCursorPosition);
-            //Drawing
-            if (inDrawingMode && programPresenter.IsMousePressed())
+            if (optiTrackInUse) //drawing optiTrack
             {
-                currentLine.Add(currentCursorPosition);
-                //programPresenter.UpdateCurrentLine(currentLine);
+                if (CheckInsideDrawingZone(optiTrackZ))
+                {
+                    SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
+                    currentLine.Add(currentCursorPosition);
+                    programPresenter.UpdateCurrentLine(currentLine);
+                    if (!optiTrackInsideDrawingZone)
+                    {
+                        optiTrackInsideDrawingZone = true;
+                        StartNewLine();
+                        if (testing)
+                        {
+                            Console.WriteLine("new line begun");
+                        }
+                    }
+                    if (optiTrackZ > WARNING_ZONE_BOUNDARY)
+                    {
+                        armband.pushForward();
+                    }
+                    else if (optiTrackZ < -1 * WARNING_ZONE_BOUNDARY)
+                    {
+                        armband.pushBackward();
+                    }
+                }
+                else
+                {
+                    if (optiTrackInsideDrawingZone) //trackable was in drawing zone last tick -> finish line
+                    {
+                        optiTrackInsideDrawingZone = false;
+                        FinishCurrentLine(true);
+                        if (testing)
+                        {
+                            Console.WriteLine("line finished");
+                        }
+                    }
+                }
+                //if (optitrackAvailable) { TODO test and remove
+                projectPointOntoScreen(optiTrackX, optiTrackY);
+                //}
+                cursorPositions.Enqueue(currentCursorPosition);
+            }
+            else //drawing normal
+            {
+                cursorPositions.Enqueue(currentCursorPosition);
+                if (inDrawingMode && programPresenter.IsMousePressed())
+                {
+                    currentLine.Add(currentCursorPosition);
+                    //programPresenter.UpdateCurrentLine(currentLine);
+                }
             }
             //Deleting
             if (!inDrawingMode && programPresenter.IsMousePressed())
             {
                 List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+
                 foreach (Point currPoint in uncheckedPoints)
                 {
                     HashSet<int> linesToDelete = CheckDeletionMatrixesAroundPoint(currPoint, deletionRadius);
@@ -561,6 +606,18 @@ namespace SketchAssistantWPF
                     }
                 }
             }
+        }
+
+        private void projectPointOntoScreen(float optiTrackX, float optiTrackY)
+        {
+            Point auxiliaryPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
+            SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
+        }
+
+        private bool CheckInsideDrawingZone(float optiTrackZ)
+        {
+            if (Math.Abs(optiTrackZ) > WARNING_ZONE_BOUNDARY * 2) return false;
+            return true;
         }
 
         /// <summary>
