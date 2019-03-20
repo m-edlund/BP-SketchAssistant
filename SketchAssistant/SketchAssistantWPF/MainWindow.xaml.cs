@@ -156,7 +156,6 @@ namespace SketchAssistantWPF
         /// </summary>
         private void DrawButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.ChangeOptiTrack(false);
             ProgramPresenter.ChangeState(true);
             RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
         }
@@ -166,9 +165,19 @@ namespace SketchAssistantWPF
         /// </summary>
         private void DrawWithOptiButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.ChangeOptiTrack(true);
-            ProgramPresenter.ChangeState(true);
-            RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+            if (ProgramPresenter.GetOptitrackActive())
+            {
+                ProgramPresenter.ChangeOptiTrack(false);
+                if (ProgramPresenter.GetDrawingState())
+                    RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+                else
+                    RightCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
+            }
+            else
+            {
+                ProgramPresenter.ChangeOptiTrack(true);
+                RightCanvas.EditingMode = InkCanvasEditingMode.None;
+            }
         }
 
         /// <summary>

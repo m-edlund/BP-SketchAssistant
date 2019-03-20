@@ -139,6 +139,24 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Gets whether the program is in drawing state or not.
+        /// </summary>
+        /// <returns></returns>
+        public bool GetDrawingState()
+        {
+            return programModel.inDrawingMode;
+        }
+
+        /// <summary>
+        /// Gets whether Optitrack is in use or not.
+        /// </summary>
+        /// <returns>Return optiTrackInUse</returns>
+        public bool GetOptitrackActive()
+        {
+            return programModel.optiTrackInUse;
+        }
+
+        /// <summary>
         /// Pass-through function to change the OptiTrack-in-use state of the model
         /// </summary>
         public void ChangeOptiTrack(bool usingOptiTrack)

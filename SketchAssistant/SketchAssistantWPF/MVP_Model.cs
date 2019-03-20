@@ -39,7 +39,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// If the program is in drawing mode.
         /// </summary>
-        bool inDrawingMode;
+        public bool inDrawingMode { get; private set; }
         /// <summary>
         /// if the program is using OptiTrack
         /// </summary>
@@ -60,6 +60,21 @@ namespace SketchAssistantWPF
         /// Queue for the cursorPositions
         /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
+
+        /// <summary>
+        /// The Position of the Cursor of opti track
+        /// </summary>
+        Point currentOptiCursorPosition;
+        /// <summary>
+        /// The Previous Cursor Position of opti track
+        /// </summary>
+        Point previousOptiCursorPosition;
+        /// <summary>
+        /// Queue for the cursorPositions of opti track
+        /// </summary>
+        Queue<Point> optiCursorPositions = new Queue<Point>();
+
+
         /// <summary>
         /// Lookup Matrix for checking postions of lines in the image
         /// </summary>
@@ -101,15 +116,15 @@ namespace SketchAssistantWPF
         /// </summary>
         public bool optitrackAvailable { get; private set; }
         /// <summary>
-        /// x koordinate in real world. one unit is one meter. If standing in front of video wall facing it, moving left results in incrementation of x.
+        /// x coordinate in real world. one unit is one meter. If standing in front of video wall facing it, moving left results in incrementation of x.
         /// </summary>
         public float optiTrackX;
         /// <summary>
-        /// y koordinate in real world. one unit is one meter. If standing in front of video wall, moving up results in incrementation of y.
+        /// y coordinate in real world. one unit is one meter. If standing in front of video wall, moving up results in incrementation of y.
         /// </summary>
         public float optiTrackY;
         /// <summary>
-        /// z koordinate in real world. one unit is one meter. If standing in front of video wall, moving back results in incrementation of y.
+        /// z coordinate in real world. one unit is one meter. If standing in front of video wall, moving back results in incrementation of y.
         /// </summary>
         public float optiTrackZ;
         /// <summary>
@@ -128,7 +143,6 @@ namespace SketchAssistantWPF
         /// deactivates all Console.WriteLine() when set to false
         /// </summary>
         bool testing = false;//TODO: remove after finishing userstory
-
 
         /// <summary>
         /// Whether or not the mouse is pressed.
@@ -294,8 +308,11 @@ namespace SketchAssistantWPF
                 Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
                 Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
-            currentCursorPosition = correctedPoint;
-            programPresenter.MoveOptiPoint(currentCursorPosition);
+            currentOptiCursorPosition = correctedPoint;
+            if (optiCursorPositions.Count > 0) { previousOptiCursorPosition = optiCursorPositions.Dequeue(); }
+            else { previousOptiCursorPosition = currentOptiCursorPosition; }
+
+            programPresenter.MoveOptiPoint(currentOptiCursorPosition);
         }
 
         /********************************************/
@@ -473,13 +490,10 @@ namespace SketchAssistantWPF
         /// <param name="valid">Whether the up event is valid or not</param>
         public void FinishCurrentLine(bool valid)
         {
-            foreach (Point p in currentLine)
-            {
-                if (testing)
-                {
+            if (testing)
+                foreach (Point p in currentLine)
                     Console.WriteLine(p.X + ";" + p.Y);
-                }
-            }
+
             mouseDown = false;
             if (valid)
             {
@@ -541,22 +555,35 @@ namespace SketchAssistantWPF
         {
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
-            if (optiTrackInUse) //drawing optiTrack
+
+            if (optiTrackInUse && inDrawingMode) // optitrack is being used
             {
+                SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
+
+                //outside of drawing zone
+                if (!CheckInsideDrawingZone(optiTrackZ))
+                {
+                    //Check if trackable was in drawing zone last tick & program is in drawing mode-> finish line
+                    if (optiTrackInsideDrawingZone && inDrawingMode) 
+                    {
+                        optiTrackInsideDrawingZone = false;
+                        FinishCurrentLine(true);
+                        if (testing) Console.WriteLine("line finished");
+                    }
+                }
+
+                //Draw with optitrack, when in drawing zone
                 if (CheckInsideDrawingZone(optiTrackZ))
                 {
-                    SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
-                    currentLine.Add(currentCursorPosition);
-                    programPresenter.UpdateCurrentLine(currentLine);
+                    //Optitrack wasn't in the drawing zone last tick -> start a new line
                     if (!optiTrackInsideDrawingZone)
                     {
                         optiTrackInsideDrawingZone = true;
                         StartNewLine();
-                        if (testing)
-                        {
-                            Console.WriteLine("new line begun");
-                        }
+                        if (testing) Console.WriteLine("new line begun");
                     }
+                    else currentLine.Add(currentOptiCursorPosition);
+                    programPresenter.UpdateCurrentLine(currentLine);
                     if (optiTrackZ > WARNING_ZONE_BOUNDARY)
                     {
                         armband.pushForward();
@@ -566,36 +593,32 @@ namespace SketchAssistantWPF
                         armband.pushBackward();
                     }
                 }
-                else
-                {
-                    if (optiTrackInsideDrawingZone) //trackable was in drawing zone last tick -> finish line
-                    {
-                        optiTrackInsideDrawingZone = false;
-                        FinishCurrentLine(true);
-                        if (testing)
-                        {
-                            Console.WriteLine("line finished");
-                        }
-                    }
-                }
+
+
                 //if (optitrackAvailable) { TODO test and remove
                 projectPointOntoScreen(optiTrackX, optiTrackY);
                 //}
-                cursorPositions.Enqueue(currentCursorPosition);
             }
-            else //drawing normal
+            else if( !optiTrackInUse && inDrawingMode)
             {
+                //drawing without optitrack
                 cursorPositions.Enqueue(currentCursorPosition);
                 if (inDrawingMode && programPresenter.IsMousePressed())
                 {
                     currentLine.Add(currentCursorPosition);
                     //programPresenter.UpdateCurrentLine(currentLine);
                 }
+
             }
-            //Deleting
-            if (!inDrawingMode && programPresenter.IsMousePressed())
+
+            //Deletion mode for optitrack and regular use
+            if (!inDrawingMode)
             {
-                List<Point> uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                List<Point> uncheckedPoints = new List<Point>();
+                if (programPresenter.IsMousePressed() && !optiTrackInUse) //without optitrack
+                    uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
+                if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ)) //with optitrack
+                    uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousOptiCursorPosition, currentOptiCursorPosition);
 
                 foreach (Point currPoint in uncheckedPoints)
                 {
@@ -608,7 +631,6 @@ namespace SketchAssistantWPF
                             rightLineList[lineID] = new Tuple<bool, InternalLine>(false, rightLineList[lineID].Item2);
                         }
                         RepopulateDeletionMatrixes();
-                        //TODO: For the person implementing overlay: Add check if overlay needs to be added
                         programPresenter.UpdateRightLines(rightLineList);
                     }
                 }
