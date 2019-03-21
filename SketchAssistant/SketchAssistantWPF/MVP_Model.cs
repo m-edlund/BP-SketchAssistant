@@ -303,12 +303,15 @@ namespace SketchAssistantWPF
         public void SetCurrentFingerPosition(Point p)
         {
             Point correctedPoint = ConvertTo96thsOfInch(p);
+            Point convertToPixelPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
             if (testing)
             {
                 Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
                 Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
-            currentOptiCursorPosition = correctedPoint;
+            
+            
+            currentOptiCursorPosition = convertToPixelPoint;
             if (optiCursorPositions.Count > 0) { previousOptiCursorPosition = optiCursorPositions.Dequeue(); }
             else { previousOptiCursorPosition = currentOptiCursorPosition; }
 
@@ -596,7 +599,7 @@ namespace SketchAssistantWPF
 
 
                 //if (optitrackAvailable) { TODO test and remove
-                projectPointOntoScreen(optiTrackX, optiTrackY);
+                //projectPointOntoScreen(optiTrackX, optiTrackY);
                 //}
             }
             else if( !optiTrackInUse && inDrawingMode)
