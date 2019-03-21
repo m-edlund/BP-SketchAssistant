@@ -142,7 +142,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// deactivates all Console.WriteLine() when set to false
         /// </summary>
-        bool testing = false;//TODO: remove after finishing userstory
+        bool testing = true;//TODO: remove after finishing userstory
 
         /// <summary>
         /// Whether or not the mouse is pressed.
@@ -267,11 +267,11 @@ namespace SketchAssistantWPF
         }
 
         //TODO: calibrate
-        double OPTITRACK_X_OFFSET = 0.7878;
-        double OPTITRACK_Y_OFFSET = 0.7977;
-        double OPTITRACK_CANVAS_HEIGHT = 1.29;
-        double OPTITRACK_X_SCALE = -0.254 * (((1.816/*size of canvis*/ / 0.0254) * 96) / (1.816));
-        double OPTITRACK_Y_SCALE = 0.254 * (((1.360 / 0.0254) * 96) / (1.360));
+        double OPTITRACK_X_OFFSET = -0.4854;
+        double OPTITRACK_Y_OFFSET = 0.9;
+        double OPTITRACK_CANVAS_HEIGHT = 1.2;
+        double OPTITRACK_X_SCALE = 0.21 * (((1.8316/*size of canvis*/ / 0.0254) * 96) / (1.8316));
+        double OPTITRACK_Y_SCALE = 0.205 * (((1.2 / 0.0254) * 96) / (1.2));
         /// <summary>
         /// converts given point to device-independent pixel
         /// </summary>
@@ -306,8 +306,8 @@ namespace SketchAssistantWPF
             Point convertToPixelPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
             if (testing)
             {
-                Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
-                Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
+                //Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
+                //Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
             
             
@@ -546,6 +546,10 @@ namespace SketchAssistantWPF
                 optiTrackX = frame.Trackables[0].X;
                 optiTrackY = frame.Trackables[0].Y;
                 optiTrackZ = frame.Trackables[0].Z;
+                Console.WriteLine("X:" + optiTrackX);
+                Console.WriteLine("Y:" + optiTrackY);
+                Console.WriteLine("Z:" + optiTrackZ);
+
             }
         }
 
