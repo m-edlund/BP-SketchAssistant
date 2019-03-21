@@ -311,11 +311,9 @@ namespace SketchAssistantWPF
             }
             
             
-            currentOptiCursorPosition = convertToPixelPoint;
+            currentOptiCursorPosition = correctedPoint;
             if (optiCursorPositions.Count > 0) { previousOptiCursorPosition = optiCursorPositions.Dequeue(); }
             else { previousOptiCursorPosition = currentOptiCursorPosition; }
-
-            programPresenter.MoveOptiPoint(currentOptiCursorPosition);
         }
 
         /********************************************/
@@ -599,7 +597,7 @@ namespace SketchAssistantWPF
 
 
                 //if (optitrackAvailable) { TODO test and remove
-                //projectPointOntoScreen(optiTrackX, optiTrackY);
+                projectPointOntoScreen(optiTrackX, optiTrackY);
                 //}
             }
             else if( !optiTrackInUse && inDrawingMode)
@@ -620,8 +618,11 @@ namespace SketchAssistantWPF
                 List<Point> uncheckedPoints = new List<Point>();
                 if (programPresenter.IsMousePressed() && !optiTrackInUse) //without optitrack
                     uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
-                if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ)) //with optitrack
+                if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ))
+                {//with optitrack
                     uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousOptiCursorPosition, currentOptiCursorPosition);
+                    projectPointOntoScreen(optiTrackX, optiTrackY);
+                } 
 
                 foreach (Point currPoint in uncheckedPoints)
                 {
@@ -643,7 +644,9 @@ namespace SketchAssistantWPF
         private void projectPointOntoScreen(float optiTrackX, float optiTrackY)
         {
             Point auxiliaryPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
-            SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
+
+            programPresenter.MoveOptiPoint(auxiliaryPoint);
+            //SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
         }
 
         private bool CheckInsideDrawingZone(float optiTrackZ)
