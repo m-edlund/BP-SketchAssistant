@@ -310,6 +310,12 @@ namespace SketchAssistantWPF
                 Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
             
+            if(optiTrackZ < -1 * WARNING_ZONE_BOUNDARY)
+                programPresenter.SetOverlayColor("optipoint", Brushes.Red);
+            else if(optiTrackZ > WARNING_ZONE_BOUNDARY)
+                programPresenter.SetOverlayColor("optipoint", Brushes.Yellow);
+            else
+                programPresenter.SetOverlayColor("optipoint", Brushes.Green)
             
             currentOptiCursorPosition = correctedPoint;
             programPresenter.MoveOptiPoint(currentOptiCursorPosition);

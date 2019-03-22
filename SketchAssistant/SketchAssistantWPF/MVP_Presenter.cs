@@ -494,6 +494,25 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Change the color of an overlay item.
+        /// </summary>
+        /// <param name="name">The name of the item in the overlay dictionary</param>
+        /// <param name="color">The color of the item</param>
+        public void SetOverlayColor(String name, Brush color)
+        {
+            Shape shape = new Ellipse();
+            if(((MainWindow)programView).OverlayDictionary.ContainsKey(name))
+            {
+                shape = ((MainWindow)programView).OverlayDictionary[name];
+                
+                if(name.Substring(0, 7).Equals("dotLine"))
+                    shape.Stroke = color;
+                else
+                    shape.Fill = color;
+            }
+        }
+
+        /// <summary>
         /// Change the properties of an overlay item.
         /// </summary>
         /// <param name="name">The name of the item in the overlay dictionary</param>
