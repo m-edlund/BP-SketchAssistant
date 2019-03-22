@@ -154,6 +154,10 @@ namespace SketchAssistantWPF
         /// The Layer in which the optitrack system was. 0 is drawing layer, -1 is in front, 1 is behind
         /// </summary>
         int OptiLayer = 0;
+        /// <summary>
+        /// The path traveled since the last tick
+        /// </summary>
+        double PathTraveled = 0;
 
         /// <summary>
         /// Whether or not the mouse is pressed.
@@ -223,6 +227,23 @@ namespace SketchAssistantWPF
                 {
                     rightLineList[lineId] = new Tuple<bool, InternalLine>(shown, rightLineList[lineId].Item2);
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// Check if enough distance has been travelled to warrant a vibration.
+        /// </summary>
+        private void CheckPathTraveled()
+        {
+            var a = Math.Abs(previousOptiCursorPosition.X - currentOptiCursorPosition.X);
+            var b = Math.Abs(previousOptiCursorPosition.Y - currentOptiCursorPosition.Y);
+            PathTraveled += Math.Sqrt(Math.Pow(a,2) + Math.Pow(b,2));
+            //Set the Interval of vibrations here
+            if(PathTraveled > 2)
+            {
+                PathTraveled = 0; 
+                //Activate vibration here
             }
         }
 
