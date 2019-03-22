@@ -22,6 +22,10 @@ namespace SketchAssistantWPF
      CallingConvention = CallingConvention.Cdecl)]
         public static extern void stopVibration(int motorNumber);
 
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate@ArmbandInterface@@QAAXHNH@Z",
+     CallingConvention = CallingConvention.Cdecl)]
+        public static extern void actuate(int motorNumber, double intensity, int duration);
+
         //public void Vibrate()
 
     }

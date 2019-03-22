@@ -10,10 +10,12 @@ extern "C" {
 typedef void(__cdecl *InitFunctionType)(BodyActuator*, BodyActuator_Type, char*, int);
 typedef void(__cdecl *StopFunctionType)(BodyActuator*, uint8_t);
 typedef void(__cdecl *StartFunctionType)(BodyActuator*, uint8_t, float);
+typedef void(_cdecl *ActuateFunctionType)(BodyActuator*, uint8_t, double, uint64_t);
 
 static InitFunctionType initFunctionHandle;
 static StartFunctionType startFunctionHandle;
 static StopFunctionType stopFunctionHandle;
+static ActuateFunctionType actuateFunctionHandle;
 
 static BodyActuator* armband;
 //static char *port = 
@@ -42,6 +44,11 @@ extern "C" {
 				printf("ERROR: stop function could not be retrieved");
 				return 3;
 			}
+			actuateFunctionHandle = (ActuateFunctionType)GetProcAddress(lib, "BodyActuator_actuate");
+			if (actuateFunctionHandle == NULL) {
+				printf("ERROR: actuate function could not be retrieved");
+				return 4;
+			}
 			//strcpy(port, "COM5");
 			setupMotors();
 			//startVibrate(0, 1.0);
@@ -54,6 +61,10 @@ extern "C" {
 
 		DllExport void __cdecl ArmbandInterface::stopVibrate(int tactor) {
 			(stopFunctionHandle)(armband, (uint8_t)tactor);
+		}
+		
+		DllExport void __cdecl ArmbandInterface::actuate(int tactor, double intensity, int duration) {
+			(actuateFunctionHandle)(armband, (uint8_t)tactor, (double)intensity, (uint64_t)duration);
 		}
 	}
 
