@@ -49,7 +49,7 @@ namespace SketchAssistantWPF
             //  DispatcherTimer setup
             dispatcherTimer = new DispatcherTimer(DispatcherPriority.Render);
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 5);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
             //Setup overlay items

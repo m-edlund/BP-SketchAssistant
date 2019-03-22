@@ -312,7 +312,7 @@ namespace SketchAssistantWPF
 
             if (optiTrackZ < -2.2 * WARNING_ZONE_BOUNDARY)
                 programPresenter.SetOverlayColor("optipoint", Brushes.Yellow);
-            else if (optiTrackZ > 1.5 * WARNING_ZONE_BOUNDARY)
+            else if (optiTrackZ > 2 * WARNING_ZONE_BOUNDARY)
                 programPresenter.SetOverlayColor("optipoint", Brushes.Red);
             else
                 programPresenter.SetOverlayColor("optipoint", Brushes.Green);
@@ -345,6 +345,8 @@ namespace SketchAssistantWPF
         /// </summary>
         public void ResetRightImage()
         {
+            if(currentLine.Count > 0)
+                FinishCurrentLine(true);
             rightLineList.Clear();
             programPresenter.PassLastActionTaken(historyOfActions.Reset());
             programPresenter.ClearRightLines();
@@ -441,6 +443,8 @@ namespace SketchAssistantWPF
         /// <param name="nowDrawing">The new drawingstate of the program</param>
         public void ChangeState(bool nowDrawing)
         {
+            if(inDrawingMode && !nowDrawing && currentLine.Count > 0)
+                FinishCurrentLine(true);
             inDrawingMode = nowDrawing;
             UpdateUI();
         }
