@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace SketchAssistantWPF
 {
-    class LocalArmbandInterface
+    public static class LocalArmbandInterface
     {
 
         [DllImport (@"../Debug/StaticLibMotors.dll", EntryPoint = "?setupArmband@ArmbandInterface@@QAAHXZ",
@@ -25,6 +25,10 @@ namespace SketchAssistantWPF
         [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate@ArmbandInterface@@QAAXHNH@Z",
      CallingConvention = CallingConvention.Cdecl)]
         public static extern void actuate(int motorNumber, double intensity, int duration);
+
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?deleteArmband@ArmbandInterface@@QAAXXZ",
+     CallingConvention = CallingConvention.Cdecl)]
+        public static extern void deleteArmband();
 
         //public void Vibrate()
 

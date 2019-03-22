@@ -10,12 +10,14 @@ extern "C" {
 typedef void(__cdecl *InitFunctionType)(BodyActuator*, BodyActuator_Type, char*, int);
 typedef void(__cdecl *StopFunctionType)(BodyActuator*, uint8_t);
 typedef void(__cdecl *StartFunctionType)(BodyActuator*, uint8_t, float);
-typedef void(_cdecl *ActuateFunctionType)(BodyActuator*, uint8_t, double, uint64_t);
+typedef void(__cdecl *ActuateFunctionType)(BodyActuator*, uint8_t, double, uint64_t);
+typedef void(__cdecl *DeleteFunctionType)(BodyActuator*);
 
 static InitFunctionType initFunctionHandle;
 static StartFunctionType startFunctionHandle;
 static StopFunctionType stopFunctionHandle;
 static ActuateFunctionType actuateFunctionHandle;
+static DeleteFunctionType deleteFunctionHandle;
 
 static BodyActuator* armband;
 //static char *port = 
@@ -49,6 +51,11 @@ extern "C" {
 				printf("ERROR: actuate function could not be retrieved");
 				return 4;
 			}
+			deleteFunctionHandle = (DeleteFunctionType)GetProcAddress(lib, "BodyActuator_delete");
+			if (deleteFunctionHandle == NULL) {
+				printf("ERROR: delete function could not be retrieved");
+				return 5;
+			}
 			//strcpy(port, "COM5");
 			setupMotors();
 			//startVibrate(0, 1.0);
@@ -75,3 +82,7 @@ extern "C" {
 			(initFunctionHandle) (armband, BODYACTUATOR_TYPE_EAI, port, 8);
 			printf("armband initialized");
 		}
+
+ void ArmbandInterface::deleteArmband() {
+	 deleteFunctionHandle(armband);
+ }

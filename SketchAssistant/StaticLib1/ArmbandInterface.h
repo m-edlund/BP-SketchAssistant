@@ -13,6 +13,7 @@ DllExport int setupArmband();
 DllExport void startVibrate(int tactor, float intensity);
 DllExport void stopVibrate(int tactor);
 DllExport void actuate(int tactor, double intensity, int duration);
+DllExport void deleteArmband();
 
 class ArmbandInterface
 {
@@ -29,5 +30,6 @@ class ArmbandInterface
 		__declspec(dllexport) void __cdecl startVibrate(int tactor, float intensity);
 		__declspec(dllexport) void __cdecl stopVibrate(int tactor);
 		__declspec(dllexport) void __cdecl actuate(int tactor, double intensity, int duration);
+		__declspec(dllexport) void __cdecl deleteArmband();
 		void setupMotors();
 };

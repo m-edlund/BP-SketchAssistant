@@ -98,6 +98,16 @@ namespace SketchAssistantWPF
         /********************************************/
 
         /// <summary>
+        /// Window closed event, connected bracelet gets disconnected.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            LocalArmbandInterface.deleteArmband();
+        }
+
+        /// <summary>
         /// Resize Function connected to the form resize event, will refresh the form when it is resized
         /// </summary>
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
