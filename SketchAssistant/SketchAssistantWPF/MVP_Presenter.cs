@@ -527,7 +527,7 @@ namespace SketchAssistantWPF
             {
                 case "optipoint":
                     shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
-                    visibility = 0.5; xDif = 2.5; yDif = 2.5;
+                    visibility = 0.75; xDif = 2.5; yDif = 2.5;
                     break;
                 case "startpoint":
                     shape = ((MainWindow)programView).OverlayDictionary["startpoint"];

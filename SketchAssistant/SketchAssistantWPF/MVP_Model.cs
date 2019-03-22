@@ -309,13 +309,13 @@ namespace SketchAssistantWPF
                 Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
                 Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
-            
-            if(optiTrackZ < -1 * WARNING_ZONE_BOUNDARY)
-                programPresenter.SetOverlayColor("optipoint", Brushes.Red);
-            else if(optiTrackZ > WARNING_ZONE_BOUNDARY)
+
+            if (optiTrackZ < -2.2 * WARNING_ZONE_BOUNDARY)
                 programPresenter.SetOverlayColor("optipoint", Brushes.Yellow);
+            else if (optiTrackZ > 1.5 * WARNING_ZONE_BOUNDARY)
+                programPresenter.SetOverlayColor("optipoint", Brushes.Red);
             else
-                programPresenter.SetOverlayColor("optipoint", Brushes.Green)
+                programPresenter.SetOverlayColor("optipoint", Brushes.Green);
             
             currentOptiCursorPosition = correctedPoint;
             programPresenter.MoveOptiPoint(currentOptiCursorPosition);
