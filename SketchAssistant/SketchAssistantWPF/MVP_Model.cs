@@ -142,7 +142,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// deactivates all Console.WriteLine() when set to false
         /// </summary>
-        bool testing = true;//TODO: remove after finishing userstory
+        bool testing = false;//TODO: remove after finishing userstory
 
         /// <summary>
         /// Whether or not the mouse is pressed.
@@ -284,6 +284,7 @@ namespace SketchAssistantWPF
             return new Point(xCoordinate, yCoordinate);
         }
 
+        
         /// <summary>
         /// converts given point to pixel, calibrated for video wall in a08
         /// </summary>
@@ -295,23 +296,24 @@ namespace SketchAssistantWPF
             double yCoordinate = (((OPTITRACK_CANVAS_HEIGHT + 0/*meter von oberer Rand Leinwand zu oberer Rand Bildschirm*/) - (p.Y - OPTITRACK_Y_OFFSET))) * (/*Anzahl Pixel Y-Richtung*/0 / (1.360));
             return new Point(xCoordinate, yCoordinate);
         }
-
+        
         /// <summary>
-        /// Updates the current cursor position of the model.
+        /// Updates the Optitrack coordiantes, aswell as the marker for optitrack.
         /// </summary>
         /// <param name="p">The new cursor position</param>
         public void SetCurrentFingerPosition(Point p)
         {
             Point correctedPoint = ConvertTo96thsOfInch(p);
-            Point convertToPixelPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
             if (testing)
             {
-                //Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
-                //Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
+                Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
+                Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
             
             
             currentOptiCursorPosition = correctedPoint;
+            programPresenter.MoveOptiPoint(currentOptiCursorPosition);
+
             if (optiCursorPositions.Count > 0) { previousOptiCursorPosition = optiCursorPositions.Dequeue(); }
             else { previousOptiCursorPosition = currentOptiCursorPosition; }
         }
@@ -450,9 +452,11 @@ namespace SketchAssistantWPF
                 optiTrackInUse = false;
                 //Disable optipoint
                 programPresenter.SetOverlayStatus("optipoint", false, currentCursorPosition);
+                Console.WriteLine("Point disabled");
             }
             else
             {
+                Console.WriteLine("Point enabled: {0}",optiTrackInUse);
                 //Enable optipoint
                 programPresenter.SetOverlayStatus("optipoint", true, currentCursorPosition);
             }
@@ -475,9 +479,14 @@ namespace SketchAssistantWPF
         public void StartNewLine()
         {
             mouseDown = true;
-            if (optiTrackInUse || programPresenter.IsMousePressed())
+            if (inDrawingMode)
             {
-                if (inDrawingMode)
+                if(optiTrackInUse)
+                {
+                    currentLine.Clear();
+                    currentLine.Add(currentOptiCursorPosition);
+                }
+                else if (programPresenter.IsMousePressed())
                 {
                     currentLine.Clear();
                     currentLine.Add(currentCursorPosition);
@@ -546,10 +555,11 @@ namespace SketchAssistantWPF
                 optiTrackX = frame.Trackables[0].X;
                 optiTrackY = frame.Trackables[0].Y;
                 optiTrackZ = frame.Trackables[0].Z;
+                /*
                 Console.WriteLine("X:" + optiTrackX);
                 Console.WriteLine("Y:" + optiTrackY);
                 Console.WriteLine("Z:" + optiTrackZ);
-
+                */
             }
         }
 
@@ -561,10 +571,11 @@ namespace SketchAssistantWPF
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
 
-            if (optiTrackInUse && inDrawingMode) // optitrack is being used
-            {
+            if(optitrackAvailable)
                 SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
 
+            if (optiTrackInUse && inDrawingMode) // optitrack is being used
+            {
                 //outside of drawing zone
                 if (!CheckInsideDrawingZone(optiTrackZ))
                 {
@@ -598,11 +609,6 @@ namespace SketchAssistantWPF
                         armband.pushBackward();
                     }
                 }
-
-
-                //if (optitrackAvailable) { TODO test and remove
-                projectPointOntoScreen(optiTrackX, optiTrackY);
-                //}
             }
             else if( !optiTrackInUse && inDrawingMode)
             {
@@ -625,7 +631,6 @@ namespace SketchAssistantWPF
                 if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ))
                 {//with optitrack
                     uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousOptiCursorPosition, currentOptiCursorPosition);
-                    projectPointOntoScreen(optiTrackX, optiTrackY);
                 } 
 
                 foreach (Point currPoint in uncheckedPoints)
@@ -644,15 +649,14 @@ namespace SketchAssistantWPF
                 }
             }
         }
-
+        /*
         private void projectPointOntoScreen(float optiTrackX, float optiTrackY)
         {
             Point auxiliaryPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
 
-            programPresenter.MoveOptiPoint(auxiliaryPoint);
             //SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
         }
-
+        */
         private bool CheckInsideDrawingZone(float optiTrackZ)
         {
             if (Math.Abs(optiTrackZ) > WARNING_ZONE_BOUNDARY * 2) return false;

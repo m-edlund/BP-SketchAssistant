@@ -508,7 +508,7 @@ namespace SketchAssistantWPF
             {
                 case "optipoint":
                     shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
-                    visibility = 0.5; xDif = 2.5; yDif = 2.5; point = position;
+                    visibility = 0.5; xDif = 2.5; yDif = 2.5;
                     break;
                 case "startpoint":
                     shape = ((MainWindow)programView).OverlayDictionary["startpoint"];
@@ -564,7 +564,7 @@ namespace SketchAssistantWPF
         {
             Point point = ConvertRightCanvasCoordinateToOverlay(position);
             Shape shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
-            shape.Margin = new Thickness(position.X - 2.5, position.Y - 2.5, 0, 0);
+            shape.Margin = new Thickness(point.X - 2.5, point.Y - 2.5, 0, 0);
         }
 
         /*************************/
