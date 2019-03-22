@@ -64,7 +64,7 @@ extern "C" {
 		}
 		
 		DllExport void __cdecl ArmbandInterface::actuate(int tactor, double intensity, int duration) {
-			(actuateFunctionHandle)(armband, (uint8_t)tactor, (double)intensity, (uint64_t)duration);
+			(actuateFunctionHandle)(armband, (uint8_t)tactor, intensity, (uint64_t)duration);
 		}
 	}
 
