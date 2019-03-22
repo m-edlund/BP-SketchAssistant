@@ -145,6 +145,17 @@ namespace SketchAssistantWPF
         bool testing = false;//TODO: remove after finishing userstory
 
         /// <summary>
+        /// Is set to true when the trackable has passed to the backside of the drawing surface, 
+        /// invalidating all inputs on its way back.
+        /// </summary>
+        bool OptiMovingBack = false;
+
+        /// <summary>
+        /// The Layer in which the optitrack system was. 0 is drawing layer, -1 is in front, 1 is behind
+        /// </summary>
+        int OptiLayer = 0;
+
+        /// <summary>
         /// Whether or not the mouse is pressed.
         /// </summary>
         private bool mouseDown;
@@ -310,13 +321,22 @@ namespace SketchAssistantWPF
                 Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
             }
 
-            if (optiTrackZ < -2.2 * WARNING_ZONE_BOUNDARY)
+
+            if (optiTrackZ < -2.2 * WARNING_ZONE_BOUNDARY && OptiLayer > -1)
+            {
+                OptiLayer = -1; OptiMovingBack = false;
                 programPresenter.SetOverlayColor("optipoint", Brushes.Yellow);
-            else if (optiTrackZ > 2 * WARNING_ZONE_BOUNDARY)
+            }
+            else if (optiTrackZ > 2 * WARNING_ZONE_BOUNDARY && OptiLayer < 1)
+            {
                 programPresenter.SetOverlayColor("optipoint", Brushes.Red);
-            else
+                OptiMovingBack = true; OptiLayer = 1;
+            }
+            else if(optiTrackZ <= 2 * WARNING_ZONE_BOUNDARY && optiTrackZ >= -2.2 * WARNING_ZONE_BOUNDARY && OptiLayer != 0){
                 programPresenter.SetOverlayColor("optipoint", Brushes.Green);
-            
+
+            }
+
             currentOptiCursorPosition = correctedPoint;
             programPresenter.MoveOptiPoint(currentOptiCursorPosition);
 
@@ -583,8 +603,9 @@ namespace SketchAssistantWPF
 
             if(optitrackAvailable)
                 SetCurrentFingerPosition(new Point(optiTrackX, optiTrackY));
+            
 
-            if (optiTrackInUse && inDrawingMode) // optitrack is being used
+            if (optiTrackInUse && inDrawingMode && !OptiMovingBack) // optitrack is being used
             {
                 //outside of drawing zone
                 if (!CheckInsideDrawingZone(optiTrackZ))
@@ -638,7 +659,7 @@ namespace SketchAssistantWPF
                 List<Point> uncheckedPoints = new List<Point>();
                 if (programPresenter.IsMousePressed() && !optiTrackInUse) //without optitrack
                     uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
-                if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ))
+                if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ)  && !OptiMovingBack)
                 {//with optitrack
                     uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousOptiCursorPosition, currentOptiCursorPosition);
                 } 
