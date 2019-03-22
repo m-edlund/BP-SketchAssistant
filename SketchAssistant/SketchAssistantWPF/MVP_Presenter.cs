@@ -502,11 +502,13 @@ namespace SketchAssistantWPF
         public void SetOverlayStatus(String name, bool visible, Point position)
         {
             Shape shape = new Ellipse(); double visibility = 1; double xDif = 0; double yDif = 0;
+            Point point = ConvertRightCanvasCoordinateToOverlay(position);
+            
             switch (name)
             {
                 case "optipoint":
                     shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
-                    visibility = 0.5; xDif = 2.5; yDif = 2.5;
+                    visibility = 0.5; xDif = 2.5; yDif = 2.5; point = position;
                     break;
                 case "startpoint":
                     shape = ((MainWindow)programView).OverlayDictionary["startpoint"];
@@ -522,7 +524,6 @@ namespace SketchAssistantWPF
             }
             if (visible) shape.Opacity = visibility;
             else shape.Opacity = 0.00001;
-            Point point = ConvertRightCanvasCoordinateToOverlay(position);
             shape.Margin = new Thickness(point.X - xDif, point.Y - yDif, 0, 0);
         }
 
@@ -563,7 +564,7 @@ namespace SketchAssistantWPF
         {
             Point point = ConvertRightCanvasCoordinateToOverlay(position);
             Shape shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
-            shape.Margin = new Thickness(point.X - 2.5, point.Y - 2.5, 0, 0);
+            shape.Margin = new Thickness(position.X - 2.5, position.Y - 2.5, 0, 0);
         }
 
         /*************************/
