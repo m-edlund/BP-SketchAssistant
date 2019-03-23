@@ -193,15 +193,18 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (strokeCollection.Count == 0)
+            if (ProgramPresenter.GetDrawingState())
             {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
-            }
-            else
-            {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
-                RightCanvas.Strokes.RemoveAt(0);
-                strokeCollection.RemoveAt(0);
+                if (strokeCollection.Count == 0)
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
+                }
+                else
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
+                    RightCanvas.Strokes.RemoveAt(0);
+                    strokeCollection.RemoveAt(0);
+                }
             }
         }
 

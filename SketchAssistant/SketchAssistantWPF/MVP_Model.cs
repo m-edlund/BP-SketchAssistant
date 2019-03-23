@@ -486,7 +486,7 @@ namespace SketchAssistantWPF
         /// <param name="nowDrawing">The new drawingstate of the program</param>
         public void ChangeState(bool nowDrawing)
         {
-            if(inDrawingMode && !nowDrawing && currentLine.Count > 0)
+            if(inDrawingMode && !nowDrawing && currentLine.Count > 0 && optiTrackInUse)
                 FinishCurrentLine(true);
             inDrawingMode = nowDrawing;
             UpdateUI();
@@ -521,7 +521,8 @@ namespace SketchAssistantWPF
         /// <param name="p">The new cursor position</param>
         public void SetCurrentCursorPosition(Point p)
         {
-            if (!optiTrackInUse) currentCursorPosition = p;
+            //if (!optiTrackInUse)
+            currentCursorPosition = p;
             //Temporary position of the optipoint change, change this when merging with optitrack branch
             mouseDown = programPresenter.IsMousePressed();
         }
