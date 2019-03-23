@@ -264,7 +264,11 @@ namespace SketchAssistantWPF
         private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (ProgramPresenter.SVGToolStripMenuItemClick())
+            {
+                ProgramPresenter.NewCanvas();
                 RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+                RightCanvas.Strokes.Clear();
+            }
         }
 
         /*************************/

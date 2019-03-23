@@ -109,6 +109,7 @@ namespace SketchAssistantWPF
                         Tuple<int, int, List<InternalLine>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
                         values.Item3.ForEach(line => line.MakePermanent(0)); //Make all lines permanent
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                        programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
                         programModel.ResetRightImage();
                         programModel.CanvasActivated();
                         programModel.ChangeState(true);
