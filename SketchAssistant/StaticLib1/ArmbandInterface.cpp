@@ -72,15 +72,15 @@ extern "C" {
 			(stopFunctionHandle)(armband, (uint8_t)tactor);
 		}
 		
-		DllExport void __cdecl ArmbandInterface::actuate100(int tactor, float intensity, int duration) {
+		DllExport void __cdecl ArmbandInterface::actuate100() {
 			(actuateFunctionHandle)(armband, 0, 1.0, 20);
 		}
 
-		DllExport void __cdecl ArmbandInterface::actuate66(int tactor, float intensity, int duration) {
+		DllExport void __cdecl ArmbandInterface::actuate66() {
 		(actuateFunctionHandle)(armband, 0, 0.66, 20);
 		}
 
-		DllExport void __cdecl ArmbandInterface::actuate33(int tactor, float intensity, int duration) {
+		DllExport void __cdecl ArmbandInterface::actuate33() {
 		(actuateFunctionHandle)(armband, 0, 0.33, 20);
 		}
 	

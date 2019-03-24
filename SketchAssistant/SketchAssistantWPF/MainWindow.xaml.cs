@@ -104,7 +104,7 @@ namespace SketchAssistantWPF
         /// <param name="e"></param>
         private void Window_Closed(object sender, EventArgs e)
         {
-            LocalArmbandInterface.deleteArmband();
+           // LocalArmbandInterface.deleteArmband();
             Console.WriteLine("armband deleted 2");
         }
 

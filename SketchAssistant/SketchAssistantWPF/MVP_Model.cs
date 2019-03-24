@@ -362,7 +362,7 @@ namespace SketchAssistantWPF
             }
             //TODO remove
             //LocalArmbandInterface.startVibrate(0, 1);
-            LocalArmbandInterface.actuate33(0, 1.0, 1000);
+            LocalArmbandInterface.actuate100();
             Console.WriteLine("StartVibrate");
         }
 
@@ -393,7 +393,7 @@ namespace SketchAssistantWPF
             }
             UpdateUI();
             //TODO remove
-            LocalArmbandInterface.stopVibration(0);
+           // LocalArmbandInterface.stopVibration(0);
         }
 
         /// <summary>

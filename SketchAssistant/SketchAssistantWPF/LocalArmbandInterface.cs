@@ -14,7 +14,7 @@ namespace SketchAssistantWPF
      CallingConvention = CallingConvention.Cdecl)]
         public static extern int setupArmband();
 
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?startVibrate@ArmbandInterface@@QAAXHM@Z",
+       [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?startVibrate@ArmbandInterface@@QAAXHM@Z",
      CallingConvention = CallingConvention.Cdecl)]
         public static extern void startVibrate(int motorNumber, float intensity);
 
@@ -22,21 +22,21 @@ namespace SketchAssistantWPF
      CallingConvention = CallingConvention.Cdecl)]
         public static extern void stopVibration(int motorNumber);
 
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate100@ArmbandInterface@@QAAXHMH@Z",
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate100@ArmbandInterface@@QAAXXZ",
      CallingConvention = CallingConvention.Cdecl)]
-        public static extern void actuate100(int motorNumber, double intensity, int duration);
+        public static extern void actuate100();
 
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate66@ArmbandInterface@@QAAXHMH@Z",
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate66@ArmbandInterface@@QAAXXZ",
      CallingConvention = CallingConvention.Cdecl)]
-        public static extern void actuate66(int motorNumber, double intensity, int duration);
+        public static extern void actuate66();
 
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate33@ArmbandInterface@@QAAXHMH@Z",
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate33@ArmbandInterface@@QAAXXZ",
      CallingConvention = CallingConvention.Cdecl)]
-        public static extern void actuate33(int motorNumber, double intensity, int duration);
+        public static extern void actuate33();
 
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?deleteArmband@ArmbandInterface@@QAAXXZ",
+      /*  [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?deleteArmband@ArmbandInterface@@QAAXXZ",
      CallingConvention = CallingConvention.Cdecl)]
-        public static extern void deleteArmband();
+        public static extern void deleteArmband(); */
 
         //public void Vibrate()
 
