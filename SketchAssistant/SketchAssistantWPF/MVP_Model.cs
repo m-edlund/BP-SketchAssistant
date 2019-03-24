@@ -361,7 +361,9 @@ namespace SketchAssistantWPF
                 currentLine.Add(currentCursorPosition);
             }
             //TODO remove
-            LocalArmbandInterface.startVibrate(0, 1);
+            //LocalArmbandInterface.startVibrate(0, 1);
+            LocalArmbandInterface.actuate33(0, 1.0, 1000);
+            Console.WriteLine("StartVibrate");
         }
 
         /// <summary>

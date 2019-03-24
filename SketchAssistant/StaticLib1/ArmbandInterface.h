@@ -3,7 +3,7 @@
 extern "C" {
 #include "MotorHeader/BodyActuator.h"
 }
-#include <ctime>
+#include <time.h>
 #include <stdio.h>
 #define DllExport extern "C" __declspec( dllexport )
 
@@ -12,7 +12,9 @@ extern "C" {
 DllExport int setupArmband();
 DllExport void startVibrate(int tactor, float intensity);
 DllExport void stopVibrate(int tactor);
-DllExport void actuate(int tactor, double intensity, int duration);
+DllExport void actuate100(int tactor, float intensity, int duration);
+DllExport void actuate66(int tactor, float intensity, int duration);
+DllExport void actuate33(int tactor, float intensity, int duration);
 DllExport void deleteArmband();
 
 class ArmbandInterface
@@ -29,7 +31,10 @@ class ArmbandInterface
 		__declspec(dllexport) int __cdecl  setupArmband();
 		__declspec(dllexport) void __cdecl startVibrate(int tactor, float intensity);
 		__declspec(dllexport) void __cdecl stopVibrate(int tactor);
-		__declspec(dllexport) void __cdecl actuate(int tactor, double intensity, int duration);
+		__declspec(dllexport) void __cdecl actuate100(int tactor, float intensity, int duration);
+		__declspec(dllexport) void __cdecl actuate66(int tactor, float intensity, int duration);
+		__declspec(dllexport) void __cdecl actuate33(int tactor, float intensity, int duration);
 		__declspec(dllexport) void __cdecl deleteArmband();
 		void setupMotors();
+	//	void actuate(int tactor, double intensity, int duration);
 };

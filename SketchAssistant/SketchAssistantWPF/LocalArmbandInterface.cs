@@ -18,13 +18,21 @@ namespace SketchAssistantWPF
      CallingConvention = CallingConvention.Cdecl)]
         public static extern void startVibrate(int motorNumber, float intensity);
 
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?stopVibrate@ArmbandInterface@@QAAXH@Z",
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?stopVibrate@ArmbandInterface@@QAAXH@Z",                       
      CallingConvention = CallingConvention.Cdecl)]
         public static extern void stopVibration(int motorNumber);
 
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate@ArmbandInterface@@QAAXHNH@Z",
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate100@ArmbandInterface@@QAAXHMH@Z",
      CallingConvention = CallingConvention.Cdecl)]
-        public static extern void actuate(int motorNumber, double intensity, int duration);
+        public static extern void actuate100(int motorNumber, double intensity, int duration);
+
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate66@ArmbandInterface@@QAAXHMH@Z",
+     CallingConvention = CallingConvention.Cdecl)]
+        public static extern void actuate66(int motorNumber, double intensity, int duration);
+
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate33@ArmbandInterface@@QAAXHMH@Z",
+     CallingConvention = CallingConvention.Cdecl)]
+        public static extern void actuate33(int motorNumber, double intensity, int duration);
 
         [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?deleteArmband@ArmbandInterface@@QAAXXZ",
      CallingConvention = CallingConvention.Cdecl)]
