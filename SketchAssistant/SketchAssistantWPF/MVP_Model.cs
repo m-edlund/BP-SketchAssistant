@@ -25,6 +25,14 @@ namespace SketchAssistantWPF
         /// </summary>
         //RedrawAssistant redrawAss;
 
+        /// <summary>
+        /// intensity of the tectile feedback occuring once every passed centimeter (ranging from 0.0 to 1.0)
+        /// </summary>
+        static readonly double TACTILE_SURFACE_FEEDBACK_INTENSITY = 1.0;
+        /// <summary>
+        /// duration of the tectile feedback occuring once every passed centimeter (in milliseconds)
+        /// </summary>
+        static readonly int TACTILE_SURFACE_FEEDBACK_DURATION = 50;
 
         /***********************/
         /*** CLASS VARIABLES ***/
@@ -362,8 +370,8 @@ namespace SketchAssistantWPF
             }
             //TODO remove
             //LocalArmbandInterface.startVibrate(0, 1);
-            LocalArmbandInterface.actuate100();
-            Console.WriteLine("StartVibrate");
+            LocalArmbandInterface.Actuate(0, 1.0, 20);
+            Console.WriteLine("Vibrate motor 0 for 20ms");
         }
 
         /// <summary>
@@ -392,8 +400,6 @@ namespace SketchAssistantWPF
                 currentLine.Clear();
             }
             UpdateUI();
-            //TODO remove
-           // LocalArmbandInterface.stopVibration(0);
         }
 
         /// <summary>
@@ -430,39 +436,63 @@ namespace SketchAssistantWPF
                     }
                 }
             }
-        }
-        /*
-        /// <summary>
-        /// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
-        /// </summary>
-        /// <param name="CanvasSize">The size of the canvas</param>
-        public void UpdateSizes(ImageDimension CanvasSize)
-        {
-            if (rightImageWithoutOverlay != null)
-            {
-                int widthImage = rightImageSize.Width;
-                int heightImage = rightImageSize.Height;
-                int widthBox = CanvasSize.Width;
-                int heightBox = CanvasSize.Height;
 
-                float imageRatio = (float)widthImage / (float)heightImage;
-                float containerRatio = (float)widthBox / (float)heightBox;
-                float zoomFactor = 0;
-                if (imageRatio >= containerRatio)
+            if (programPresenter.IsMousePressed()) //TODO only use if optitrack is in use (currently only available on different branch)
+            {
+                if(CentimeterGridPassed(previousCursorPosition, currentCursorPosition)) //TODO replace with optitrack coordinates (and introduce a buffer for previous real-world coordinates)
                 {
-                    //Image is wider than it is high
-                    zoomFactor = (float)widthImage / (float)widthBox;
+                    LocalArmbandInterface.Actuate(0, TACTILE_SURFACE_FEEDBACK_INTENSITY, TACTILE_SURFACE_FEEDBACK_DURATION);
                 }
-                else
-                {
-                    //Image is higher than it is wide
-                    zoomFactor = (float)heightImage / (float)heightBox;
-                }
-                markerRadius = (int)(10 * zoomFactor);
-                deletionRadius = (int)(5 * zoomFactor);
             }
         }
-        */
+
+        /// <summary>
+        /// checks if the centimeter grid has been passed since the last tick and a vibrotactile feedback has to be sent to the user
+        /// a high enough tick rate must be ensured to provide a useful feedback and avoid skipping necessary feedback
+        /// </summary>
+        /// <param name="previousCursorPosition">the curser position in real world coordinates (obtained from Optitrack) at the last tick</param>
+        /// <param name="currentCursorPosition">the curser position in real world coordinates (obtained from Optitrack) at the current tick</param>
+        /// <returns>true iff the grid has been passed</returns>
+        private bool CentimeterGridPassed(Point previousCursorPositionRealWorldCoordinates, Point currentCursorPositionRealWorldCoordinates)
+        {
+            //truncate coordiates to int after converting to centimeters (from meters), 
+            if ((int)(previousCursorPositionRealWorldCoordinates.X * 100) != (int)(currentCursorPositionRealWorldCoordinates.X * 100)) return true;
+            if ((int)(previousCursorPositionRealWorldCoordinates.Y * 100) != (int)(currentCursorPositionRealWorldCoordinates.Y * 100)) return true;
+            return false;
+        }
+
+        /*
+/// <summary>
+/// A helper Function that updates the markerRadius & deletionRadius, considering the size of the canvas.
+/// </summary>
+/// <param name="CanvasSize">The size of the canvas</param>
+public void UpdateSizes(ImageDimension CanvasSize)
+{
+   if (rightImageWithoutOverlay != null)
+   {
+       int widthImage = rightImageSize.Width;
+       int heightImage = rightImageSize.Height;
+       int widthBox = CanvasSize.Width;
+       int heightBox = CanvasSize.Height;
+
+       float imageRatio = (float)widthImage / (float)heightImage;
+       float containerRatio = (float)widthBox / (float)heightBox;
+       float zoomFactor = 0;
+       if (imageRatio >= containerRatio)
+       {
+           //Image is wider than it is high
+           zoomFactor = (float)widthImage / (float)widthBox;
+       }
+       else
+       {
+           //Image is higher than it is wide
+           zoomFactor = (float)heightImage / (float)heightBox;
+       }
+       markerRadius = (int)(10 * zoomFactor);
+       deletionRadius = (int)(5 * zoomFactor);
+   }
+}
+*/
 
         /// <summary>
         /// If there is unsaved progress.

@@ -57,7 +57,7 @@ class ArmbandInterface
 		*/
 		__declspec(dllexport) void __cdecl actuate(int tactor, double intensity, int duration);
 		/*
-		sets the frequency of the specified tactor to a new value (unit unknown atm...)
+		sets the frequency of the specified tactor to a new value (unit unknown, possibly Hz...)
 		*/
 		__declspec(dllexport) void __cdecl setFrequency(int tactor, int frequency);
 		/*
