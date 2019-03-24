@@ -113,7 +113,7 @@ namespace SketchAssistantWPF
         {
             //TODO remove
             Console.WriteLine("trying to initialize Armband...");
-            int tmp= LocalArmbandInterface.setupArmband();
+            int tmp= LocalArmbandInterface.SetupArmband();
             Console.WriteLine("Armband initialization terminated, exit code: " + tmp);
             programPresenter = presenter;
             historyOfActions = new ActionHistory();
