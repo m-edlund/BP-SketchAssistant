@@ -122,8 +122,7 @@ extern "C" {
 			return 8;
 		}
 		//initialize the BodyActuator instance
-		setupMotors();
-		return -1;
+		return setupMotors();
 	}
 
 	/*
@@ -202,10 +201,16 @@ extern "C" {
 /*
 internal method to initialize the BodyActuator object (and handle the memory allocation involved)
 */
-void ArmbandInterface::setupMotors() {
+int ArmbandInterface::setupMotors() {
 	 char* port = (char*) "COM5";//malloc(7);
 	 armband = (BodyActuator*) malloc(sizeof(BodyActuator*));
 	 //strcpy_s(port, "COM5");
-	(initFunctionHandle) (armband, BODYACTUATOR_TYPE_EAI, port, 8);
+	 try {
+		 (initFunctionHandle)(armband, BODYACTUATOR_TYPE_EAI, port, 8);
+		 return -1;
+	 }
+	 catch (...) {
+		 return -99;
+	 }
 	//printf("armband initialized");
 }

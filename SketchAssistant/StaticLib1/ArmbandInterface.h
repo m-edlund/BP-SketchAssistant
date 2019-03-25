@@ -76,5 +76,5 @@ class ArmbandInterface
 		/*
 		internal method to initialize the BodyActuator object (and handle the memory allocation involved)
 		*/
-		void setupMotors();
+		int setupMotors();
 };
