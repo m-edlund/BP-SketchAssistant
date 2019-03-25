@@ -503,9 +503,9 @@ namespace SketchAssistantWPF
         public void SetOverlayColor(String name, Brush color)
         {
             Shape shape = new Ellipse();
-            if(((MainWindow)programView).OverlayDictionary.ContainsKey(name))
+            if(((MainWindow)programView).overlayDictionary.ContainsKey(name))
             {
-                shape = ((MainWindow)programView).OverlayDictionary[name];
+                shape = ((MainWindow)programView).overlayDictionary[name];
                 
                 if(name.Substring(0, 7).Equals("dotLine"))
                     shape.Stroke = color;
@@ -528,15 +528,15 @@ namespace SketchAssistantWPF
             switch (name)
             {
                 case "optipoint":
-                    shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
+                    shape = ((MainWindow)programView).overlayDictionary["optipoint"];
                     visibility = 0.75; xDif = 2.5; yDif = 2.5;
                     break;
                 case "startpoint":
-                    shape = ((MainWindow)programView).OverlayDictionary["startpoint"];
+                    shape = ((MainWindow)programView).overlayDictionary["startpoint"];
                     xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
                     break;
                 case "endpoint":
-                    shape = ((MainWindow)programView).OverlayDictionary["endpoint"];
+                    shape = ((MainWindow)programView).overlayDictionary["endpoint"];
                     xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
                     break;
                 default:
@@ -561,9 +561,9 @@ namespace SketchAssistantWPF
             switch (name.Substring(0, 7))
             {
                 case "dotLine":
-                    if (((MainWindow)programView).OverlayDictionary.ContainsKey(name))
+                    if (((MainWindow)programView).overlayDictionary.ContainsKey(name))
                     {
-                        shape = ((MainWindow)programView).OverlayDictionary[name];
+                        shape = ((MainWindow)programView).overlayDictionary[name];
                         break;
                     }
                     goto default;
@@ -584,7 +584,7 @@ namespace SketchAssistantWPF
         public void MoveOptiPoint(Point position)
         {
             Point point = ConvertRightCanvasCoordinateToOverlay(position);
-            Shape shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
+            Shape shape = ((MainWindow)programView).overlayDictionary["optipoint"];
             shape.Margin = new Thickness(point.X - 2.5, point.Y - 2.5, 0, 0);
         }
 
