@@ -114,8 +114,14 @@ namespace WhiteTests
         }
 
         [DataTestMethod]
-        [TestCategory("FileIO")]
+        [TestCategory("Local")]
         [DataRow("line")]
+        [DataRow("all")]
+        [DataRow("circle_ellipse")]
+        [DataRow("path")]
+        [DataRow("polygon")]
+        [DataRow("polyline")]
+        [DataRow("rect")]
         public void LoadSVGFileTest(String filename)
         {
             Window mainWindow = setupapp();
@@ -131,7 +137,7 @@ namespace WhiteTests
             Thread.Sleep(1000);
             inputSimulator.Keyboard.KeyPress(VirtualKeyCode.RETURN);
             Thread.Sleep(1000);
-            //Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
+            Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             mainWindow.Close();
         }
 

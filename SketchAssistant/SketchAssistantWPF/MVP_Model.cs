@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using OptiTrack;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.IO.Ports;
 
 namespace SketchAssistantWPF
 {
@@ -171,13 +172,24 @@ namespace SketchAssistantWPF
         /// The line currently being drawin with optitrack.
         /// </summary>
         List<Point> currentLine = new List<Point>();
+        /// <summary>
+        /// If the COM5 port is available.
+        /// </summary>
+        bool comFiveAvailable = false;
 
         public MVP_Model(MVP_Presenter presenter)
         {
             //TODO remove
-            Console.WriteLine("trying to initialize Armband...");
-            int tmp= LocalArmbandInterface.SetupArmband();
-            Console.WriteLine("Armband initialization terminated, exit code: " + tmp);
+            var portName = "COM5";
+
+            var isValid = SerialPort.GetPortNames().Any(x => string.Compare(x, portName, true) == 0);
+            if (isValid)
+            {
+                Console.WriteLine("trying to initialize Armband...");
+                int tmp = LocalArmbandInterface.SetupArmband();
+                Console.WriteLine("Armband initialization terminated, exit code: " + tmp);
+            }
+
             programPresenter = presenter;
             historyOfActions = new ActionHistory();
             rightLineList = new List<Tuple<bool, InternalLine>>();
@@ -258,7 +270,8 @@ namespace SketchAssistantWPF
             if(PathTraveled > 15)
             {
                 PathTraveled = 0;
-                LocalArmbandInterface.Actuate(0, TACTILE_SURFACE_FEEDBACK_INTENSITY, TACTILE_SURFACE_FEEDBACK_DURATION);
+                if(comFiveAvailable)
+                    LocalArmbandInterface.Actuate(0, TACTILE_SURFACE_FEEDBACK_INTENSITY, TACTILE_SURFACE_FEEDBACK_DURATION);
             }
         }
 
