@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace SketchAssistantWPF
 {
-    internal class Armband
+    internal class Wristband
     {
         //[StructLayout(LayoutKind.Sequential)]
         //public class BodyActuator
@@ -57,11 +57,17 @@ namespace SketchAssistantWPF
         //[DllImport("BodyActuator.dll", EntryPoint = "BodyActuator_actuate")]
         //static extern void pushForward(ref BodyActuator self, byte tactor, double intensity, ulong duration);
 
+        /// <summary>
+        /// Function to call when the wristband should push forwards.
+        /// </summary>
         internal void pushForward()
         {
             Console.WriteLine("FORWARD_PUSH");
         }
 
+        /// <summary>
+        /// Function to call when the wristband should push backwards.
+        /// </summary>
         internal void pushBackward()
         {
             Console.WriteLine("BACKWARD_PUSH");

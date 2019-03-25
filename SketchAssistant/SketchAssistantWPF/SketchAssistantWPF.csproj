@@ -101,7 +101,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ActionHistory.cs" />
-    <Compile Include="Armband.cs" />
+    <Compile Include="Wristband.cs" />
     <Compile Include="CustomCanvas.cs" />
     <Compile Include="DebugData.cs" />
     <Compile Include="FileImporter.cs" />

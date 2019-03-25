@@ -30,19 +30,19 @@ namespace SketchAssistantWPF
         /// <summary>
         /// The actual size of the left canvas.
         /// </summary>
-        ImageDimension CanvasSizeLeft = new ImageDimension(0, 0);
+        ImageDimension canvasSizeLeft = new ImageDimension(0, 0);
         /// <summary>
         /// The actual size of the right canvas.
         /// </summary>
-        ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
+        ImageDimension canvasSizeRight = new ImageDimension(0, 0);
         /// <summary>
         /// A list of line similarities, resulting in the similarity of the whole image.
         /// </summary>
-        List<double> ImageSimilarity = new List<double>();
+        List<double> imageSimilarity = new List<double>();
         /// <summary>
         /// The lines in the left canvas.
         /// </summary>
-        List<InternalLine> LeftLines = new List<InternalLine>();
+        List<InternalLine> leftLines = new List<InternalLine>();
 
         /*******************/
         /*** ENUMERATORS ***/
@@ -84,9 +84,9 @@ namespace SketchAssistantWPF
         /// <param name="rightPBS">The new size of the left picture box.</param>
         public void Resize(Tuple<int, int> leftPBS, Tuple<int, int> rightPBS)
         {
-            CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
-            CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
-            programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
+            canvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
+            canvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
+            programModel.ResizeEvent(canvasSizeLeft, canvasSizeRight);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace SketchAssistantWPF
                         Tuple<int, int, List<InternalLine>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
                         values.Item3.ForEach(line => line.MakePermanent(0)); //Make all lines permanent
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
-                        programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
+                        programModel.ResizeEvent(canvasSizeLeft, canvasSizeRight);
                         programModel.ResetRightImage();
                         programModel.CanvasActivated();
                         programModel.ChangeState(true);
@@ -206,7 +206,7 @@ namespace SketchAssistantWPF
             }
             if (okToContinue)
             {
-                programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
+                programModel.ResizeEvent(canvasSizeLeft, canvasSizeRight);
                 programModel.ResetRightImage();
                 programModel.CanvasActivated();
                 programModel.ChangeState(true);
@@ -335,12 +335,12 @@ namespace SketchAssistantWPF
             }
             //Calculate similarity scores 
             UpdateSimilarityScore(Double.NaN); var templist = lines.Where(tup => tup.Item1).ToList();
-            if (LeftLines.Count > 0)
+            if (leftLines.Count > 0)
             {
-                for (int i = 0; i < LeftLines.Count; i++)
+                for (int i = 0; i < leftLines.Count; i++)
                 {
                     if (templist.Count == i) break;
-                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, LeftLines[i]));
+                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, leftLines[i]));
                 }
             }
             else if (templist.Count > 1)
@@ -365,7 +365,7 @@ namespace SketchAssistantWPF
             programView.SetCanvasState("LeftCanvas", true);
             programView.SetCanvasState("RightCanvas", true);
 
-            LeftLines = lines;
+            leftLines = lines;
         }
 
         /// <summary>
@@ -485,13 +485,13 @@ namespace SketchAssistantWPF
         {
             if (Double.IsNaN(score))
             {
-                ImageSimilarity.Clear();
+                imageSimilarity.Clear();
                 programView.SetImageSimilarityText("");
             }
             else
             {
-                if (score >= 0 && score <= 1) ImageSimilarity.Add(score);
-                programView.SetImageSimilarityText((ImageSimilarity.Sum() / ImageSimilarity.Count).ToString());
+                if (score >= 0 && score <= 1) imageSimilarity.Add(score);
+                programView.SetImageSimilarityText((imageSimilarity.Sum() / imageSimilarity.Count).ToString());
             }
         }
 

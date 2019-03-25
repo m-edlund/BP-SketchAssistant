@@ -131,9 +131,9 @@ namespace SketchAssistantWPF
         /// </summary>
         private double WARNING_ZONE_BOUNDARY = 0.10; //10cm
         /// <summary>
-        /// object of class Armband used for controlling the vibrotactil armband
+        /// object of class wristband used for controlling the vibrotactile wristband
         /// </summary>
-        private Armband armband;
+        private Wristband wristband;
         /// <summary>
         /// Is set to true when the trackable has passed to the backside of the drawing surface, 
         /// invalidating all inputs on its way back.
@@ -173,7 +173,7 @@ namespace SketchAssistantWPF
             UpdateUI();
             rightImageSize = new ImageDimension(0, 0);
             connector = new OptiTrackConnector();
-            armband = new Armband();
+            wristband = new Wristband();
 
             //Set up Optitrack
             optitrackAvailable = false;
@@ -182,7 +182,7 @@ namespace SketchAssistantWPF
                 if (connector.Init(@"C:\Users\videowall-pc-user\Documents\BP-SketchAssistant\SketchAssistant\optitrack_setup.ttp"))
                 {
                     optitrackAvailable = true;
-                    connector.StartTracking(getOptiTrackPosition);
+                    connector.StartTracking(GetOptiTrackPosition);
                 }
             }
         }
@@ -207,7 +207,7 @@ namespace SketchAssistantWPF
         /// Function that is called by the OptitrackController to pass frames to the model.
         /// </summary>
         /// <param name="frame">An Optitrack Frame</param>
-        void getOptiTrackPosition(OptiTrack.Frame frame)
+        void GetOptiTrackPosition(OptiTrack.Frame frame)
         {
             if (frame.Trackables.Length >= 1)
             {
@@ -617,11 +617,11 @@ namespace SketchAssistantWPF
                     programPresenter.UpdateCurrentLine(currentLine);
                     if (optiTrackZ > WARNING_ZONE_BOUNDARY)
                     {
-                        armband.pushForward();
+                        wristband.pushForward();
                     }
                     else if (optiTrackZ < -1 * WARNING_ZONE_BOUNDARY)
                     {
-                        armband.pushBackward();
+                        wristband.pushBackward();
                     }
                 }
             }

@@ -103,7 +103,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Dictionary containing the overlay elements
         /// </summary>
-        public Dictionary<String, Shape> OverlayDictionary = new Dictionary<string, Shape>();
+        public Dictionary<String, Shape> overlayDictionary = new Dictionary<string, Shape>();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -579,18 +579,18 @@ namespace SketchAssistantWPF
             StartPointOverlay.Height = markerRadius * 2; StartPointOverlay.Width = markerRadius * 2;
             StartPointOverlay.Fill = Brushes.Green;
             StartPointOverlay.Effect = effect;
-            OverlayDictionary.Add("startpoint", StartPointOverlay);
+            overlayDictionary.Add("startpoint", StartPointOverlay);
             //Endpoint of a line to be redrawn
             Ellipse EndPointOverlay = new Ellipse();
             EndPointOverlay.Height = markerRadius * 2; EndPointOverlay.Width = markerRadius * 2;
             EndPointOverlay.Fill = Brushes.Green;
             EndPointOverlay.Effect = effect;
-            OverlayDictionary.Add("endpoint", EndPointOverlay);
+            overlayDictionary.Add("endpoint", EndPointOverlay);
             //Pointer of the optitrack system
             Ellipse OptitrackMarker = new Ellipse(); OptitrackMarker.Height = 5; OptitrackMarker.Width = 5;
             OptitrackMarker.Fill = Brushes.LightGray;
             OptitrackMarker.Effect = effect;
-            OverlayDictionary.Add("optipoint", OptitrackMarker);
+            overlayDictionary.Add("optipoint", OptitrackMarker);
             //10 Dotted Lines for debugging (if more are needed simply extend the for-loop
             for (int x = 0; x < 10; x++)
             {
@@ -598,11 +598,11 @@ namespace SketchAssistantWPF
                 dotLine.Stroke = Brushes.Red;
                 dotLine.StrokeDashArray = new DoubleCollection { 2 + x, 2 + x };
                 dotLine.StrokeThickness = 1;
-                OverlayDictionary.Add("dotLine" + x.ToString(), dotLine);
+                overlayDictionary.Add("dotLine" + x.ToString(), dotLine);
             }
 
             //Common features of all overlay items
-            foreach (KeyValuePair<String, Shape> s in OverlayDictionary)
+            foreach (KeyValuePair<String, Shape> s in overlayDictionary)
             {
                 OverlayCanvas.Children.Add(s.Value);
                 s.Value.Opacity = 0.00001;
