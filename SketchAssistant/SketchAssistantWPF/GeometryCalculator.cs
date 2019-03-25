@@ -28,7 +28,7 @@ namespace SketchAssistantWPF
             if (DistSim < 0) DistSim = 0;
             if (CosSim < 0.5 || Double.IsNaN(CosSim)) CosSim = 0;
             double output = (2 * CosSim + LenSim + DistSim) / 4;
-            System.Diagnostics.Debug.WriteLine("Results: CosSim: {0}, LenSim: {1}, AvDist {2}, DistSim: {3}. Total: {4}", 
+            System.Diagnostics.Debug.WriteLine("Results: CosSim: {0}, LenSim: {1}, AvDist {2}, DistSim: {3}. Total: {4}",
                 CosSim, LenSim, AvDist, DistSim, output);
             return output;
         }
@@ -80,9 +80,9 @@ namespace SketchAssistantWPF
                 //Determine if the longer list is of similar length or contains significatly more items
                 List<Point> shortL = points0; List<Point> longL = points0;
                 if (points0.Count < points1.Count) { longL = points1; }
-                if (points0.Count > points1.Count) { shortL = points1;}
+                if (points0.Count > points1.Count) { shortL = points1; }
                 double dif = (longL.Count - 1) / (shortL.Count - 1);
-                if(dif > 1)
+                if (dif > 1)
                 {
                     //The longer list is significantly longer
                     //Each element in the shorter list is compared to multiple 
@@ -135,7 +135,7 @@ namespace SketchAssistantWPF
             if (len1 > len0) shorter = len0;
             else shorter = len1;
             if (dif >= shorter) return 0;
-            return (shorter - dif )/shorter;
+            return (shorter - dif) / shorter;
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace SketchAssistantWPF
         {
             List<Point> points0 = line0.GetPoints();
             List<Point> points1 = line1.GetPoints();
-            double distfirstfirst = Math.Sqrt(Math.Pow((points0[0].X - points1[0].X) , 2) + Math.Pow((points0[0].Y - points1[0].Y) , 2));
+            double distfirstfirst = Math.Sqrt(Math.Pow((points0[0].X - points1[0].X), 2) + Math.Pow((points0[0].Y - points1[0].Y), 2));
             double distlastlast = Math.Sqrt(Math.Pow((points0.Last().X - points1.Last().X), 2) + Math.Pow((points0.Last().Y - points1.Last().Y), 2));
             double distfirstlast = Math.Sqrt(Math.Pow((points0[0].X - points1.Last().X), 2) + Math.Pow((points0[0].Y - points1.Last().Y), 2));
             double distlastfirst = Math.Sqrt(Math.Pow((points0.Last().X - points1[0].X), 2) + Math.Pow((points0.Last().Y - points1[0].Y), 2));

@@ -1,27 +1,26 @@
 image:
- - Visual Studio 2017
- 
+    - Visual Studio 2017
+
 install:
- - "nuget install TestStack.White"
- - "nuget install MSTest.TestAdapter"
- - "nuget install MSTest.TestFramework"
- - "nuget restore SketchAssistant/SketchAssistant.sln"
- 
+    - "nuget install TestStack.White"
+    - "nuget install MSTest.TestAdapter"
+    - "nuget install MSTest.TestFramework"
+    - "nuget restore SketchAssistant/SketchAssistant.sln"
+
 before_build:
- - ps: .\screenres.ps1
- 
+    - ps: .\screenres.ps1
+
 artifacts:
- - path: \SketchAssistant\GeneratedReports\
+    - path: \SketchAssistant\GeneratedReports\
 #  - path: SketchAssistant/WhiteTests/test_input_files/whitelisted/*.svg
 #    name: whitelisted svg files for testing
 #  - path: SketchAssistant/WhiteTests/test_input_files/blacklisted/*.svg
 #    name: blacklisted svg files for testing
 
 before_test:
- - ps: "SketchAssistant/GenerateCoverageReport.bat"
-
+    - ps: "SketchAssistant/GenerateCoverageReport.bat"
 #test:
-    #don't run tests depending on [DeploymentItem] and filesystem access
-    #categories:
-    #    except:
-    #        - FileIO
+#don't run tests depending on [DeploymentItem] and filesystem access
+#categories:
+#    except:
+#        - FileIO

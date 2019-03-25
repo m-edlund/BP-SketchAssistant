@@ -87,10 +87,28 @@ namespace WhiteTests
 
         public Window setupapp()
         {
+            string[] files;
+            Regex rx = new Regex(@"^(.*\\SketchAssistant\\)");
+            Match match = rx.Match(TestContext.DeploymentDirectory);
+            String SketchAssistDir = match.Groups[1].Value;
+            try
+            {
+                files = Directory.GetFiles(SketchAssistDir + @"SketchAssistantWPF\bin\", "SketchAssistantWPF.exe", SearchOption.AllDirectories);
+            }
+            catch
+            {
+                Regex rx_0 = new Regex(@"^(.*\\projects\\)");
+                Match match_0 = rx_0.Match(TestContext.DeploymentDirectory);
+                String ProjectsDir = match_0.Groups[1].Value;
+                files = Directory.GetFiles(ProjectsDir, "SketchAssistantWPF.exe", SearchOption.AllDirectories);
+            }
+
+            ProcessStartInfo processStart = new ProcessStartInfo(files[0], "-debug");
+            /*
             string outputDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string editedDir = outputDir.Replace("WhiteTests", "SketchAssistantWPF");
             string app_path = editedDir + @"\SketchAssistantWPF.exe";
-            ProcessStartInfo processStart = new ProcessStartInfo(app_path, "-debug");
+            ProcessStartInfo processStart = new ProcessStartInfo(app_path, "-debug");*/
             application = Application.Launch(processStart);
             return application.GetWindow("Sketch Assistant");
         }
@@ -130,7 +148,7 @@ namespace WhiteTests
             Thread.Sleep(30);
             Assert.AreEqual("Last Action: A new canvas was created.", mainWindow.Get<TextBox>(SearchCriteria.ByAutomationId("LastActionBox")).Text.ToString());
             Thread.Sleep(30);
-            inputSimulator.Mouse.MoveMouseBy(100,100);
+            inputSimulator.Mouse.MoveMouseBy(100, 100);
             inputSimulator.Mouse.LeftButtonDown();
             Thread.Sleep(30);
             inputSimulator.Mouse.MoveMouseBy(100, 100);
@@ -978,28 +996,28 @@ namespace WhiteTests
 
         [DataTestMethod]
         [TestCategory("UnitTest")]
-        [DataRow(new int[] { 1 ,1, 3, 3 }, new int[] { 1, 1, 2, 2, 3, 3 }, false, 2.828427125)]
+        [DataRow(new int[] { 1, 1, 3, 3 }, new int[] { 1, 1, 2, 2, 3, 3 }, false, 2.828427125)]
         [DataRow(new int[] { 1, 1, 3, 3 }, new int[] { 1, 1, 2, 2, 3, 3 }, true, 2.828427125)]
-        [DataRow(new int[] { 1, 1, 1, 4 ,3, 4 }, new int[] { 1, 1, 1, 2, 1, 3, 1, 4, 2, 4, 3, 4 }, false, 5)]
+        [DataRow(new int[] { 1, 1, 1, 4, 3, 4 }, new int[] { 1, 1, 1, 2, 1, 3, 1, 4, 2, 4, 3, 4 }, false, 5)]
         [DataRow(new int[] { 1, 1, 1, 4, 3, 4 }, new int[] { 1, 1, 1, 2, 1, 3, 1, 4, 2, 4, 3, 4 }, true, 5)]
         public void PermanentLineTest(int[] inPoints, int[] outPoints, bool isTemp, double len)
         {
             List<Point> inLine = new List<Point>(); List<Point> outLine = new List<Point>();
-            for (int i = 0; i < inPoints.Length;i += 2) inLine.Add(new Point(inPoints[i], inPoints[i + 1]));
+            for (int i = 0; i < inPoints.Length; i += 2) inLine.Add(new Point(inPoints[i], inPoints[i + 1]));
             for (int i = 0; i < outPoints.Length; i += 2) outLine.Add(new Point(outPoints[i], outPoints[i + 1]));
             InternalLine uut;
             if (isTemp)
             {
                 uut = new InternalLine(inLine);
-                var zip = inLine.Zip(uut.GetPoints(), (a,b) => new Tuple<Point, Point>(a, b));
-                foreach (Tuple < Point, Point> tup in zip)
+                var zip = inLine.Zip(uut.GetPoints(), (a, b) => new Tuple<Point, Point>(a, b));
+                foreach (Tuple<Point, Point> tup in zip)
                 {
                     Assert.AreEqual(tup.Item1, tup.Item2);
                 }
             }
             else
             {
-                uut = new InternalLine(inLine,0);
+                uut = new InternalLine(inLine, 0);
                 var zip = outLine.Zip(uut.GetPoints(), (a, b) => new Tuple<Point, Point>(a, b));
                 foreach (Tuple<Point, Point> tup in zip)
                 {

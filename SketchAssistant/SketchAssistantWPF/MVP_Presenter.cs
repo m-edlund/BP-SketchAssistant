@@ -5,10 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Ink;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using OptiTrack;
+using System.Windows.Ink;
 
 namespace SketchAssistantWPF
 {
@@ -26,18 +27,22 @@ namespace SketchAssistantWPF
         /// A dictionary connecting the id of an InternalLine with the respective Polyline in the right canvas.
         /// </summary>
         Dictionary<int, Shape> rightPolyLines;
-
-        ImageDimension CanvasSizeLeft = new ImageDimension(0, 0);
-
-        ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
-
-        ImageDimension ImageSizeLeft = new ImageDimension(0, 0);
-
-        ImageDimension ImageSizeRight = new ImageDimension(0, 0);
-
-        List<double> ImageSimilarity = new List<double>();
-
-        List<InternalLine> LeftLines = new List<InternalLine>();
+        /// <summary>
+        /// The actual size of the left canvas.
+        /// </summary>
+        ImageDimension canvasSizeLeft = new ImageDimension(0, 0);
+        /// <summary>
+        /// The actual size of the right canvas.
+        /// </summary>
+        ImageDimension canvasSizeRight = new ImageDimension(0, 0);
+        /// <summary>
+        /// A list of line similarities, resulting in the similarity of the whole image.
+        /// </summary>
+        List<double> imageSimilarity = new List<double>();
+        /// <summary>
+        /// The lines in the left canvas.
+        /// </summary>
+        List<InternalLine> leftLines = new List<InternalLine>();
 
         /*******************/
         /*** ENUMERATORS ***/
@@ -65,7 +70,6 @@ namespace SketchAssistantWPF
         {
             programView = form;
             programModel = new MVP_Model(this);
-            //Initialize Class Variables
             fileImporter = new FileImporter();
         }
 
@@ -80,10 +84,9 @@ namespace SketchAssistantWPF
         /// <param name="rightPBS">The new size of the left picture box.</param>
         public void Resize(Tuple<int, int> leftPBS, Tuple<int, int> rightPBS)
         {
-            CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
-            CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
-            //programModel.UpdateSizes(CanvasSizeRight);
-            programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
+            canvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
+            canvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
+            programModel.ResizeEvent(canvasSizeRight);
         }
 
         /// <summary>
@@ -108,6 +111,7 @@ namespace SketchAssistantWPF
                         Tuple<int, int, List<InternalLine>> values = fileImporter.ParseSVGInputFile(fileNameTup.Item1, programModel.leftImageBoxWidth, programModel.leftImageBoxHeight);
                         values.Item3.ForEach(line => line.MakePermanent(0)); //Make all lines permanent
                         programModel.SetLeftLineList(values.Item1, values.Item2, values.Item3);
+                        programModel.ResizeEvent(canvasSizeRight);
                         programModel.ResetRightImage();
                         programModel.CanvasActivated();
                         programModel.ChangeState(true);
@@ -135,6 +139,35 @@ namespace SketchAssistantWPF
         public void ChangeState(bool NowDrawing)
         {
             programModel.ChangeState(NowDrawing);
+        }
+
+        /// <summary>
+        /// Gets whether the program is in drawing state or not.
+        /// </summary>
+        /// <returns></returns>
+        public bool GetDrawingState()
+        {
+            return programModel.inDrawingMode;
+        }
+
+        /// <summary>
+        /// Gets whether Optitrack is in use or not.
+        /// </summary>
+        /// <returns>Return optiTrackInUse</returns>
+        public bool GetOptitrackActive()
+        {
+            return programModel.optiTrackInUse;
+        }
+
+        /// <summary>
+        /// Pass-through function to change the OptiTrack-in-use state of the model
+        /// </summary>
+        public void ChangeOptiTrack(bool usingOptiTrack)
+        {
+            if (programModel.optitrackAvailable)
+            {
+                programModel.SetOptiTrack(usingOptiTrack);
+            }
         }
 
         /// <summary>
@@ -173,7 +206,7 @@ namespace SketchAssistantWPF
             }
             if (okToContinue)
             {
-                programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
+                programModel.ResizeEvent(canvasSizeRight);
                 programModel.ResetRightImage();
                 programModel.CanvasActivated();
                 programModel.ChangeState(true);
@@ -186,7 +219,7 @@ namespace SketchAssistantWPF
         /// Pass-trough when the mouse is moved.
         /// </summary>
         /// <param name="mouseAction">The action which is sent by the View.</param>
-        /// <param name="e">The Mouse event arguments.</param>
+        /// <param name="position">The position of the mouse.</param>
         public void MouseEvent(MouseAction mouseAction, Point position)
         {
             switch (mouseAction)
@@ -207,30 +240,33 @@ namespace SketchAssistantWPF
         public void MouseEvent(MouseAction mouseAction, StrokeCollection strokes)
         {
 
-            switch (mouseAction)
+            if (!programModel.optiTrackInUse)
             {
-                case MouseAction.Down:
-                    programModel.MouseDown();
-                    break;
-                case MouseAction.Up:
-                    if (strokes.Count > 0)
-                    {
-                        StylusPointCollection sPoints = strokes.First().StylusPoints;
-                        List<Point> points = new List<Point>();
-                        foreach (StylusPoint p in sPoints)
-                            points.Add(new Point(p.X, p.Y));
-                        programModel.MouseUp(points);
-                    }
-                    else
-                    {
-                        programModel.MouseUp(true);
-                    }
-                    break;
-                case MouseAction.Up_Invalid:
-                    programModel.MouseUp(false);
-                    break;
-                default:
-                    break;
+                switch (mouseAction)
+                {
+                    case MouseAction.Down:
+                        programModel.StartNewLine();
+                        break;
+                    case MouseAction.Up:
+                        if (strokes.Count > 0)
+                        {
+                            StylusPointCollection sPoints = strokes.First().StylusPoints;
+                            List<Point> points = new List<Point>();
+                            foreach (StylusPoint p in sPoints)
+                                points.Add(new Point(p.X, p.Y));
+                            programModel.FinishCurrentLine(points);
+                        }
+                        else
+                        {
+                            programModel.FinishCurrentLine(true);
+                        }
+                        break;
+                    case MouseAction.Up_Invalid:
+                        programModel.FinishCurrentLine(false);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
@@ -245,6 +281,18 @@ namespace SketchAssistantWPF
         public Point GetCursorPosition()
         {
             return programView.GetCursorPosition();
+        }
+
+        /// <summary>
+        /// Updates the currentline
+        /// </summary>
+        /// <param name="linepoints">The points of the current line.</param>
+        public void UpdateCurrentLine(List<Point> linepoints)
+        {
+            Polyline currentLine = new Polyline();
+            currentLine.Stroke = Brushes.Black;
+            currentLine.Points = new PointCollection(linepoints);
+            programView.DisplayCurrLine(currentLine);
         }
 
         /// <summary>
@@ -287,30 +335,18 @@ namespace SketchAssistantWPF
             }
             //Calculate similarity scores 
             UpdateSimilarityScore(Double.NaN); var templist = lines.Where(tup => tup.Item1).ToList();
-            if (LeftLines.Count > 0)
+            if (leftLines.Count > 0)
             {
-                for (int i = 0; i < LeftLines.Count; i++)
+                for (int i = 0; i < leftLines.Count; i++)
                 {
                     if (templist.Count == i) break;
-                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, LeftLines[i]));
+                    UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[i].Item2, leftLines[i]));
                 }
             }
             else if (templist.Count > 1)
             {
                 UpdateSimilarityScore(GeometryCalculator.CalculateSimilarity(templist[templist.Count - 2].Item2, templist[templist.Count - 1].Item2));
             }
-        }
-
-        /// <summary>
-        /// Updates the currentline
-        /// </summary>
-        /// <param name="linepoints">The points of the current line.</param>
-        public void UpdateCurrentLine(List<Point> linepoints)
-        {
-            Polyline currentLine = new Polyline();
-            currentLine.Stroke = Brushes.Black;
-            currentLine.Points = new PointCollection(linepoints);
-            programView.DisplayCurrLine(currentLine);
         }
 
         /// <summary>
@@ -329,7 +365,7 @@ namespace SketchAssistantWPF
             programView.SetCanvasState("LeftCanvas", true);
             programView.SetCanvasState("RightCanvas", true);
 
-            LeftLines = lines;
+            leftLines = lines;
         }
 
         /// <summary>
@@ -341,23 +377,49 @@ namespace SketchAssistantWPF
         /// <param name="canRedo">If actions in the model can be redone</param>
         /// <param name="canvasActive">If the right canvas is active</param>
         /// <param name="graphicLoaded">If an image is loaded in the model</param>
-        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive, bool graphicLoaded)
+        /// <param name="optiTrackAvailable">If there is an optitrack system available</param>
+        /// <param name="optiTrackInUse">If the optitrack system is active</param>
+        public void UpdateUIState(bool inDrawingMode, bool canUndo, bool canRedo, bool canvasActive,
+                bool graphicLoaded, bool optiTrackAvailable, bool optiTrackInUse)
         {
             Dictionary<String, MainWindow.ButtonState> dict = new Dictionary<String, MainWindow.ButtonState> {
                 {"canvasButton", MainWindow.ButtonState.Enabled }, {"drawButton", MainWindow.ButtonState.Disabled}, {"deleteButton",MainWindow.ButtonState.Disabled },
-                {"undoButton", MainWindow.ButtonState.Disabled },{"redoButton",  MainWindow.ButtonState.Disabled}};
+                {"undoButton", MainWindow.ButtonState.Disabled },{"redoButton",  MainWindow.ButtonState.Disabled}, {"drawWithOptiButton", MainWindow.ButtonState.Disabled}};
 
             if (canvasActive)
             {
                 if (inDrawingMode)
                 {
-                    dict["drawButton"] = MainWindow.ButtonState.Active;
-                    dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                    if (optiTrackAvailable)
+                    {
+                        if (optiTrackInUse)
+                        {
+                            dict["drawButton"] = MainWindow.ButtonState.Enabled;
+                            dict["drawWithOptiButton"] = MainWindow.ButtonState.Active;
+                            dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                        }
+                        else
+                        {
+                            dict["drawButton"] = MainWindow.ButtonState.Active;
+                            dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
+                            dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                        }
+                    }
+                    else
+                    {
+                        dict["drawButton"] = MainWindow.ButtonState.Active;
+                        dict["deleteButton"] = MainWindow.ButtonState.Enabled;
+                    }
+
                 }
                 else
                 {
                     dict["drawButton"] = MainWindow.ButtonState.Enabled;
                     dict["deleteButton"] = MainWindow.ButtonState.Active;
+                    if (optiTrackAvailable)
+                    {
+                        dict["drawWithOptiButton"] = MainWindow.ButtonState.Enabled;
+                    }
                 }
                 if (canUndo) { dict["undoButton"] = MainWindow.ButtonState.Enabled; }
                 if (canRedo) { dict["redoButton"] = MainWindow.ButtonState.Enabled; }
@@ -381,6 +443,17 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Pass-through function to desplay an Warning message in the view
+        /// </summary>
+        /// <param name="msg">The message.</param>
+
+        /// <returns>True if the user confirms (Yes), negative if he doesn't (No)</returns>
+        public bool PassWarning(String msg)
+        {
+            return programView.ShowWarning(msg);
+        }
+
+        /// <summary>
         /// Pass-trough function to update the display of the last action taken.
         /// </summary>
         /// <param name="msg">The new last action taken.</param>
@@ -398,6 +471,11 @@ namespace SketchAssistantWPF
             return programView.IsMousePressed();
         }
 
+        public void PassOptiTrackMessage(String stringToPass)
+        {
+            programView.SetOptiTrackText(stringToPass);
+        }
+
         /// <summary>
         /// Update the similarity score displayed in the UI.
         /// </summary>
@@ -407,13 +485,32 @@ namespace SketchAssistantWPF
         {
             if (Double.IsNaN(score))
             {
-                ImageSimilarity.Clear();
+                imageSimilarity.Clear();
                 programView.SetImageSimilarityText("");
             }
             else
             {
-                if (score >= 0 && score <= 1) ImageSimilarity.Add(score);
-                programView.SetImageSimilarityText((ImageSimilarity.Sum() / ImageSimilarity.Count).ToString());
+                if (score >= 0 && score <= 1) imageSimilarity.Add(score);
+                programView.SetImageSimilarityText((imageSimilarity.Sum() / imageSimilarity.Count).ToString());
+            }
+        }
+
+        /// <summary>
+        /// Change the color of an overlay item.
+        /// </summary>
+        /// <param name="name">The name of the item in the overlay dictionary</param>
+        /// <param name="color">The color of the item</param>
+        public void SetOverlayColor(String name, Brush color)
+        {
+            Shape shape = new Ellipse();
+            if(((MainWindow)programView).overlayDictionary.ContainsKey(name))
+            {
+                shape = ((MainWindow)programView).overlayDictionary[name];
+                
+                if(name.Substring(0, 7).Equals("dotLine"))
+                    shape.Stroke = color;
+                else
+                    shape.Fill = color;
             }
         }
 
@@ -426,18 +523,20 @@ namespace SketchAssistantWPF
         public void SetOverlayStatus(String name, bool visible, Point position)
         {
             Shape shape = new Ellipse(); double visibility = 1; double xDif = 0; double yDif = 0;
+            Point point = ConvertRightCanvasCoordinateToOverlay(position);
+            
             switch (name)
             {
                 case "optipoint":
-                    shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
-                    visibility = 0.5; xDif = 2.5; yDif = 2.5;
+                    shape = ((MainWindow)programView).overlayDictionary["optipoint"];
+                    visibility = 0.75; xDif = 2.5; yDif = 2.5;
                     break;
                 case "startpoint":
-                    shape = ((MainWindow)programView).OverlayDictionary["startpoint"];
+                    shape = ((MainWindow)programView).overlayDictionary["startpoint"];
                     xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
                     break;
                 case "endpoint":
-                    shape = ((MainWindow)programView).OverlayDictionary["endpoint"];
+                    shape = ((MainWindow)programView).overlayDictionary["endpoint"];
                     xDif = ((MainWindow)programView).markerRadius; yDif = xDif;
                     break;
                 default:
@@ -446,7 +545,6 @@ namespace SketchAssistantWPF
             }
             if (visible) shape.Opacity = visibility;
             else shape.Opacity = 0.00001;
-            Point point = ConvertRightCanvasCoordinateToOverlay(position);
             shape.Margin = new Thickness(point.X - xDif, point.Y - yDif, 0, 0);
         }
 
@@ -463,9 +561,9 @@ namespace SketchAssistantWPF
             switch (name.Substring(0, 7))
             {
                 case "dotLine":
-                    if (((MainWindow)programView).OverlayDictionary.ContainsKey(name))
+                    if (((MainWindow)programView).overlayDictionary.ContainsKey(name))
                     {
-                        shape = ((MainWindow)programView).OverlayDictionary[name];
+                        shape = ((MainWindow)programView).overlayDictionary[name];
                         break;
                     }
                     goto default;
@@ -486,7 +584,7 @@ namespace SketchAssistantWPF
         public void MoveOptiPoint(Point position)
         {
             Point point = ConvertRightCanvasCoordinateToOverlay(position);
-            Shape shape = ((MainWindow)programView).OverlayDictionary["optipoint"];
+            Shape shape = ((MainWindow)programView).overlayDictionary["optipoint"];
             shape.Margin = new Thickness(point.X - 2.5, point.Y - 2.5, 0, 0);
         }
 

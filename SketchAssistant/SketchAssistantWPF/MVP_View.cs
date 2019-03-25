@@ -123,6 +123,12 @@ namespace SketchAssistantWPF
         Point GetCursorPosition();
 
         /// <summary>
+        /// Sets the contents of the last action taken indicator label.
+        /// </summary>
+        /// <param name="message">The new contents</param>
+        void SetOptiTrackText(String message);
+
+        /// <summary>
         /// Sets the contents of the status bar label containing
         /// the similarity score of the left and right image.
         /// </summary>

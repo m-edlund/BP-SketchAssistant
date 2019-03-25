@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using OptiTrack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,7 +49,7 @@ namespace SketchAssistantWPF
             //  DispatcherTimer setup
             dispatcherTimer = new DispatcherTimer(DispatcherPriority.Render);
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 5);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
             //Setup overlay items
@@ -102,7 +103,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Dictionary containing the overlay elements
         /// </summary>
-        public Dictionary<String, Shape> OverlayDictionary = new Dictionary<string, Shape>();
+        public Dictionary<String, Shape> overlayDictionary = new Dictionary<string, Shape>();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -160,6 +161,26 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Changes the state of the program to drawing with OptiTrack
+        /// </summary>
+        private void DrawWithOptiButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProgramPresenter.GetOptitrackActive())
+            {
+                ProgramPresenter.ChangeOptiTrack(false);
+                if (ProgramPresenter.GetDrawingState())
+                    RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+                else
+                    RightCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
+            }
+            else
+            {
+                ProgramPresenter.ChangeOptiTrack(true);
+                RightCanvas.EditingMode = InkCanvasEditingMode.None;
+            }
+        }
+
+        /// <summary>
         /// Hold left mouse button to start drawing.
         /// </summary>
         private void RightCanvas_MouseDown(object sender, MouseButtonEventArgs e)
@@ -172,15 +193,18 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (strokeCollection.Count == 0)
+            if (ProgramPresenter.GetDrawingState())
             {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
-            }
-            else
-            {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
-                RightCanvas.Strokes.RemoveAt(0);
-                strokeCollection.RemoveAt(0);
+                if (strokeCollection.Count == 0)
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
+                }
+                else
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
+                    RightCanvas.Strokes.RemoveAt(0);
+                    strokeCollection.RemoveAt(0);
+                }
             }
         }
 
@@ -240,7 +264,11 @@ namespace SketchAssistantWPF
         private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (ProgramPresenter.SVGToolStripMenuItemClick())
+            {
+                ProgramPresenter.NewCanvas();
                 RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+                RightCanvas.Strokes.Clear();
+            }
         }
 
         /*************************/
@@ -389,6 +417,14 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Sets the contents of the last action taken indicator label.
+        /// </summary>
+        /// <param name="message">The new contents</param>
+        public void SetOptiTrackText(string message)
+        {
+            OptiTrackBox.Text = message;
+        }
+
         /// Sets the contents of the status bar label containing
         /// the similarity score of the left and right image.
         /// </summary>
@@ -427,6 +463,10 @@ namespace SketchAssistantWPF
                     break;
                 case "redoButton":
                     buttonToChange = RedoButton;
+                    break;
+                case "drawWithOptiButton":
+                    buttonToChange = DrawWithOptiButton;
+                    isToggleable = true;
                     break;
                 default:
                     Console.WriteLine("Invalid Button was given to SetToolStripButton. \nMaybe you forgot to add a case?");
@@ -539,18 +579,18 @@ namespace SketchAssistantWPF
             StartPointOverlay.Height = markerRadius * 2; StartPointOverlay.Width = markerRadius * 2;
             StartPointOverlay.Fill = Brushes.Green;
             StartPointOverlay.Effect = effect;
-            OverlayDictionary.Add("startpoint", StartPointOverlay);
+            overlayDictionary.Add("startpoint", StartPointOverlay);
             //Endpoint of a line to be redrawn
             Ellipse EndPointOverlay = new Ellipse();
             EndPointOverlay.Height = markerRadius * 2; EndPointOverlay.Width = markerRadius * 2;
             EndPointOverlay.Fill = Brushes.Green;
             EndPointOverlay.Effect = effect;
-            OverlayDictionary.Add("endpoint", EndPointOverlay);
+            overlayDictionary.Add("endpoint", EndPointOverlay);
             //Pointer of the optitrack system
             Ellipse OptitrackMarker = new Ellipse(); OptitrackMarker.Height = 5; OptitrackMarker.Width = 5;
             OptitrackMarker.Fill = Brushes.LightGray;
             OptitrackMarker.Effect = effect;
-            OverlayDictionary.Add("optipoint", OptitrackMarker);
+            overlayDictionary.Add("optipoint", OptitrackMarker);
             //10 Dotted Lines for debugging (if more are needed simply extend the for-loop
             for (int x = 0; x < 10; x++)
             {
@@ -558,19 +598,16 @@ namespace SketchAssistantWPF
                 dotLine.Stroke = Brushes.Red;
                 dotLine.StrokeDashArray = new DoubleCollection { 2 + x, 2 + x };
                 dotLine.StrokeThickness = 1;
-                OverlayDictionary.Add("dotLine" + x.ToString(), dotLine);
+                overlayDictionary.Add("dotLine" + x.ToString(), dotLine);
             }
 
             //Common features of all overlay items
-            foreach (KeyValuePair<String, Shape> s in OverlayDictionary)
+            foreach (KeyValuePair<String, Shape> s in overlayDictionary)
             {
                 OverlayCanvas.Children.Add(s.Value);
                 s.Value.Opacity = 0.00001;
                 s.Value.IsHitTestVisible = false;
             }
-
-            //Enable optipoint initially
-            ProgramPresenter.SetOverlayStatus("optipoint", true, GetCursorPosition());
         }
 
         /// <summary>
