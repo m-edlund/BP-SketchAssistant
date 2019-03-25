@@ -35,6 +35,10 @@ namespace SketchAssistantWPF
         /***********************/
 
         /// <summary>
+        /// this is a variable used for detecting whether the tracker is in the warning zone (0 +- variable), no drawing zone (0 +- 2 * variable) or normal drawing zone
+        /// </summary>
+        readonly double WARNING_ZONE_BOUNDARY = 0.10; //10cm
+        /// <summary>
         /// If the program is in drawing mode.
         /// </summary>
         public bool inDrawingMode { get; private set; }
@@ -126,10 +130,6 @@ namespace SketchAssistantWPF
         /// keeps track of whether last tick the trackable was inside drawing zone or not.
         /// </summary>
         private bool optiTrackInsideDrawingZone = false;
-        /// <summary>
-        /// this is a variable used for detecting whether the tracker is in the warning zone (0 +- variable), no drawing zone (0 +- 2 * variable) or normal drawing zone
-        /// </summary>
-        private double WARNING_ZONE_BOUNDARY = 0.10; //10cm
         /// <summary>
         /// object of class wristband used for controlling the vibrotactile wristband
         /// </summary>
@@ -246,7 +246,7 @@ namespace SketchAssistantWPF
             if(PathTraveled > 2)
             {
                 PathTraveled = 0; 
-                //Activate vibration here
+                //TODO: Activate vibration here
             }
         }
 
@@ -352,6 +352,7 @@ namespace SketchAssistantWPF
 
             if (optiCursorPositions.Count > 0) { previousOptiCursorPosition = optiCursorPositions.Dequeue(); }
             else { previousOptiCursorPosition = currentOptiCursorPosition; }
+            optiCursorPositions.Enqueue(currentOptiCursorPosition);
         }
 
         /********************************************/
@@ -361,9 +362,8 @@ namespace SketchAssistantWPF
         /// <summary>
         /// A function to update the dimensions of the left and right canvas when the window is resized.
         /// </summary>
-        /// <param name="LeftCanvas">The size of the left canvas.</param>
         /// <param name="RightCanvas">The size of the right canvas.</param>
-        public void ResizeEvent(ImageDimension LeftCanvas, ImageDimension RightCanvas)
+        public void ResizeEvent(ImageDimension RightCanvas)
         {
             if (RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
             RepopulateDeletionMatrixes();
@@ -479,7 +479,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// The function called by the Presenter to set a variable which describes if OptiTrack is in use
         /// </summary>
-        /// <param name="usingOptiTrack"></param>
+        /// <param name="usingOptiTrack">The status of optitrack button</param>
         public void SetOptiTrack(bool usingOptiTrack)
         {
             optiTrackInUse = usingOptiTrack;
@@ -489,11 +489,9 @@ namespace SketchAssistantWPF
                 optiTrackInUse = false;
                 //Disable optipoint
                 programPresenter.SetOverlayStatus("optipoint", false, currentCursorPosition);
-                Console.WriteLine("Point disabled");
             }
             else
             {
-                Console.WriteLine("Point enabled: {0}",optiTrackInUse);
                 //Enable optipoint
                 programPresenter.SetOverlayStatus("optipoint", true, currentCursorPosition);
             }
@@ -603,9 +601,7 @@ namespace SketchAssistantWPF
                         FinishCurrentLine(true);
                     }
                 }
-
-                //Draw with optitrack, when in drawing zone
-                if (CheckInsideDrawingZone(optiTrackZ))
+                else //Draw with optitrack, when in drawing zone
                 {
                     //Optitrack wasn't in the drawing zone last tick -> start a new line
                     if (!optiTrackInsideDrawingZone)
@@ -617,11 +613,11 @@ namespace SketchAssistantWPF
                     programPresenter.UpdateCurrentLine(currentLine);
                     if (optiTrackZ > WARNING_ZONE_BOUNDARY)
                     {
-                        wristband.pushForward();
+                        wristband.PushForward();
                     }
                     else if (optiTrackZ < -1 * WARNING_ZONE_BOUNDARY)
                     {
-                        wristband.pushBackward();
+                        wristband.PushBackward();
                     }
                 }
             }
