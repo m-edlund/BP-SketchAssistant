@@ -24,10 +24,8 @@ namespace SketchAssistantWPF
         /// </summary>
         ActionHistory historyOfActions;
         /// <summary>
-        /// The assistant responsible for the redraw mode
+        /// The connector class used to get frames from the Optitrack system.
         /// </summary>
-
-
         OptiTrackConnector connector;
 
 
@@ -60,7 +58,6 @@ namespace SketchAssistantWPF
         /// Queue for the cursorPositions
         /// </summary>
         Queue<Point> cursorPositions = new Queue<Point>();
-
         /// <summary>
         /// The Position of the Cursor of opti track
         /// </summary>
@@ -73,8 +70,6 @@ namespace SketchAssistantWPF
         /// Queue for the cursorPositions of opti track
         /// </summary>
         Queue<Point> optiCursorPositions = new Queue<Point>();
-
-
         /// <summary>
         /// Lookup Matrix for checking postions of lines in the image
         /// </summary>
@@ -99,9 +94,9 @@ namespace SketchAssistantWPF
         /// Height of the RightImageBox.
         /// </summary>
         public int rightImageBoxHeight;
-
-        public ImageDimension leftImageSize { get; private set; }
-
+        /// <summary>
+        /// The size of the right canvas.
+        /// </summary>
         public ImageDimension rightImageSize { get; private set; }
         /// <summary>
         /// Indicates whether or not the canvas on the right side is active.
@@ -140,16 +135,10 @@ namespace SketchAssistantWPF
         /// </summary>
         private Armband armband;
         /// <summary>
-        /// deactivates all Console.WriteLine() when set to false
-        /// </summary>
-        bool testing = false;//TODO: remove after finishing userstory
-
-        /// <summary>
         /// Is set to true when the trackable has passed to the backside of the drawing surface, 
         /// invalidating all inputs on its way back.
         /// </summary>
         bool OptiMovingBack = false;
-
         /// <summary>
         /// The Layer in which the optitrack system was. 0 is drawing layer, -1 is in front, 1 is behind
         /// </summary>
@@ -158,32 +147,35 @@ namespace SketchAssistantWPF
         /// The path traveled since the last tick
         /// </summary>
         double PathTraveled = 0;
-
         /// <summary>
         /// Whether or not the mouse is pressed.
         /// </summary>
         private bool mouseDown;
-
+        /// <summary>
+        /// A List of lines in the left canvas.
+        /// </summary>
         List<InternalLine> leftLineList;
-
+        /// <summary>
+        /// A list of lines in the right canvas along with a boolean indicating if they should be drawn.
+        /// </summary>
         List<Tuple<bool, InternalLine>> rightLineList;
-
+        /// <summary>
+        /// The line currently being drawin with optitrack.
+        /// </summary>
         List<Point> currentLine = new List<Point>();
 
         public MVP_Model(MVP_Presenter presenter)
         {
             programPresenter = presenter;
             historyOfActions = new ActionHistory();
-            //redrawAss = new RedrawAssistant();
-            //overlayItems = new List<Tuple<bool, HashSet<Point>>>();
             rightLineList = new List<Tuple<bool, InternalLine>>();
             canvasActive = false;
             UpdateUI();
             rightImageSize = new ImageDimension(0, 0);
-            leftImageSize = new ImageDimension(0, 0);
             connector = new OptiTrackConnector();
             armband = new Armband();
 
+            //Set up Optitrack
             optitrackAvailable = false;
             if (File.Exists(@"C:\Users\videowall-pc-user\Documents\BP-SketchAssistant\SketchAssistant\optitrack_setup.ttp"))
             {
@@ -195,24 +187,35 @@ namespace SketchAssistantWPF
             }
         }
 
-        [DllImport("user32.dll", EntryPoint = "SetCursorPos")]
-        private static extern bool SetCursorPos(int X, int Y);
-
-        //[DllImport("user32.dll")]
-        //public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
-
-        public enum MouseEventType : int
-        {
-            LeftDown = 0x02,
-            LeftUp = 0x04,
-            RightDown = 0x08,
-            RightUp = 0x10
-        }
-
         /**************************/
         /*** INTERNAL FUNCTIONS ***/
         /**************************/
 
+
+        /// <summary>
+        /// Check if the Optitrack trackable is in the drawing plane.
+        /// </summary>
+        /// <param name="optiTrackZ">The real world z coordinates of the trackable.</param>
+        /// <returns>If the trackable is in front of the drawing plane</returns>
+        private bool CheckInsideDrawingZone(float optiTrackZ)
+        {
+            if (Math.Abs(optiTrackZ) > WARNING_ZONE_BOUNDARY * 2) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Function that is called by the OptitrackController to pass frames to the model.
+        /// </summary>
+        /// <param name="frame">An Optitrack Frame</param>
+        void getOptiTrackPosition(OptiTrack.Frame frame)
+        {
+            if (frame.Trackables.Length >= 1)
+            {
+                optiTrackX = frame.Trackables[0].X;
+                optiTrackY = frame.Trackables[0].Y;
+                optiTrackZ = frame.Trackables[0].Z;
+            }
+        }
 
         /// <summary>
         /// Change the status of whether or not the lines are shown.
@@ -298,49 +301,33 @@ namespace SketchAssistantWPF
             return returnSet;
         }
 
-        //TODO: calibrate
-        double OPTITRACK_X_OFFSET = -0.4854;
-        double OPTITRACK_Y_OFFSET = 0.9;
-        double OPTITRACK_CANVAS_HEIGHT = 1.2;
-        double OPTITRACK_X_SCALE = 0.21 * (((1.8316/*size of canvis*/ / 0.0254) * 96) / (1.8316));
-        double OPTITRACK_Y_SCALE = 0.205 * (((1.2 / 0.0254) * 96) / (1.2));
         /// <summary>
-        /// converts given point to device-independent pixel
+        /// Converts given point to device-independent pixel.
         /// </summary>
         /// <param name="p">real world coordinate</param>
         /// <returns>The given Point converted to device-independent pixel </returns>
         private Point ConvertTo96thsOfInch(Point p)
         {
+            //The position of the optitrack coordinate system
+            // and sizes of the optitrack tracking area relative to the canvas.
+            double OPTITRACK_X_OFFSET = -0.4854;
+            double OPTITRACK_Y_OFFSET = 0.9;
+            double OPTITRACK_CANVAS_HEIGHT = 1.2;
+            double OPTITRACK_X_SCALE = 0.21 * (((1.8316/*size of canvas*/ / 0.0254) * 96) / (1.8316));
+            double OPTITRACK_Y_SCALE = 0.205 * (((1.2 / 0.0254) * 96) / (1.2));
+            //The coordinates on the display
             double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * OPTITRACK_X_SCALE;
             double yCoordinate = (OPTITRACK_CANVAS_HEIGHT - (p.Y - OPTITRACK_Y_OFFSET)) * OPTITRACK_Y_SCALE;
             return new Point(xCoordinate, yCoordinate);
         }
 
-        
-        /// <summary>
-        /// converts given point to pixel, calibrated for video wall in a08
-        /// </summary>
-        /// <param name="p"></param>
-        /// <returns></returns>
-        private Point ConvertToPixel(Point p)
-        {//TODO: realize comments
-            double xCoordinate = (p.X - OPTITRACK_X_OFFSET) * -1 * (/*Anzahl Pixel X-Richtung*/0 / (1.816)) + 0/*1/2 * x-richtung pixel*/; //TODO
-            double yCoordinate = (((OPTITRACK_CANVAS_HEIGHT + 0/*meter von oberer Rand Leinwand zu oberer Rand Bildschirm*/) - (p.Y - OPTITRACK_Y_OFFSET))) * (/*Anzahl Pixel Y-Richtung*/0 / (1.360));
-            return new Point(xCoordinate, yCoordinate);
-        }
-        
         /// <summary>
         /// Updates the Optitrack coordiantes, aswell as the marker for optitrack.
         /// </summary>
         /// <param name="p">The new cursor position</param>
-        public void SetCurrentFingerPosition(Point p)
+        private void SetCurrentFingerPosition(Point p)
         {
             Point correctedPoint = ConvertTo96thsOfInch(p);
-            if (testing)
-            {
-                Console.WriteLine("raw coordinates: " + p.X + ";" + p.Y);
-                Console.WriteLine(correctedPoint.X + "," + correctedPoint.Y);
-            }
 
 
             if (optiTrackZ < -2.2 * WARNING_ZONE_BOUNDARY && OptiLayer > -1)
@@ -378,7 +365,6 @@ namespace SketchAssistantWPF
         /// <param name="RightCanvas">The size of the right canvas.</param>
         public void ResizeEvent(ImageDimension LeftCanvas, ImageDimension RightCanvas)
         {
-            if (LeftCanvas.Height >= 0 && LeftCanvas.Width >= 0) { leftImageSize = LeftCanvas; }
             if (RightCanvas.Height >= 0 && RightCanvas.Width >= 0) { rightImageSize = RightCanvas; }
             RepopulateDeletionMatrixes();
         }
@@ -403,7 +389,6 @@ namespace SketchAssistantWPF
         /// <param name="listOfLines">The List of Lines to be displayed in the left image.</param>
         public void SetLeftLineList(int width, int height, List<InternalLine> listOfLines)
         {
-            leftImageSize = new ImageDimension(width, height);
             rightImageSize = new ImageDimension(width, height);
             leftLineList = listOfLines;
             graphicLoaded = true;
@@ -473,7 +458,6 @@ namespace SketchAssistantWPF
                     default:
                         break;
                 }
-                //TODO: For the person implementing overlay: Add check if overlay needs to be added
                 programPresenter.UpdateRightLines(rightLineList);
                 RepopulateDeletionMatrixes();
             }
@@ -521,9 +505,7 @@ namespace SketchAssistantWPF
         /// <param name="p">The new cursor position</param>
         public void SetCurrentCursorPosition(Point p)
         {
-            //if (!optiTrackInUse)
             currentCursorPosition = p;
-            //Temporary position of the optipoint change, change this when merging with optitrack branch
             mouseDown = programPresenter.IsMousePressed();
         }
 
@@ -554,9 +536,6 @@ namespace SketchAssistantWPF
         /// <param name="valid">Whether the up event is valid or not</param>
         public void FinishCurrentLine(bool valid)
         {
-            if (testing)
-                foreach (Point p in currentLine)
-                    Console.WriteLine(p.X + ";" + p.Y);
 
             mouseDown = false;
             if (valid)
@@ -600,23 +579,6 @@ namespace SketchAssistantWPF
             UpdateUI();
         }
 
-
-
-        void getOptiTrackPosition(OptiTrack.Frame frame)
-        {
-            if (frame.Trackables.Length >= 1)
-            {
-                optiTrackX = frame.Trackables[0].X;
-                optiTrackY = frame.Trackables[0].Y;
-                optiTrackZ = frame.Trackables[0].Z;
-                /*
-                Console.WriteLine("X:" + optiTrackX);
-                Console.WriteLine("Y:" + optiTrackY);
-                Console.WriteLine("Z:" + optiTrackZ);
-                */
-            }
-        }
-
         /// <summary>
         /// Method to be called every tick. Updates the current Line, or checks for Lines to delete, depending on the drawing mode.
         /// </summary>
@@ -639,7 +601,6 @@ namespace SketchAssistantWPF
                     {
                         optiTrackInsideDrawingZone = false;
                         FinishCurrentLine(true);
-                        if (testing) Console.WriteLine("line finished");
                     }
                 }
 
@@ -651,7 +612,6 @@ namespace SketchAssistantWPF
                     {
                         optiTrackInsideDrawingZone = true;
                         StartNewLine();
-                        if (testing) Console.WriteLine("new line begun");
                     }
                     else currentLine.Add(currentOptiCursorPosition);
                     programPresenter.UpdateCurrentLine(currentLine);
@@ -683,10 +643,8 @@ namespace SketchAssistantWPF
                 List<Point> uncheckedPoints = new List<Point>();
                 if (programPresenter.IsMousePressed() && !optiTrackInUse) //without optitrack
                     uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousCursorPosition, currentCursorPosition);
-                if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ)  && !OptiMovingBack)
-                {//with optitrack
+                if(optiTrackInUse && CheckInsideDrawingZone(optiTrackZ)  && !OptiMovingBack) //with optitrack
                     uncheckedPoints = GeometryCalculator.BresenhamLineAlgorithm(previousOptiCursorPosition, currentOptiCursorPosition);
-                } 
 
                 foreach (Point currPoint in uncheckedPoints)
                 {
@@ -703,19 +661,6 @@ namespace SketchAssistantWPF
                     }
                 }
             }
-        }
-        /*
-        private void projectPointOntoScreen(float optiTrackX, float optiTrackY)
-        {
-            Point auxiliaryPoint = ConvertToPixel(new Point(optiTrackX, optiTrackY));
-
-            //SetCursorPos((int)auxiliaryPoint.X, (int)auxiliaryPoint.Y);
-        }
-        */
-        private bool CheckInsideDrawingZone(float optiTrackZ)
-        {
-            if (Math.Abs(optiTrackZ) > WARNING_ZONE_BOUNDARY * 2) return false;
-            return true;
         }
 
         /// <summary>

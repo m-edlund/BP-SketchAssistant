@@ -27,17 +27,21 @@ namespace SketchAssistantWPF
         /// A dictionary connecting the id of an InternalLine with the respective Polyline in the right canvas.
         /// </summary>
         Dictionary<int, Shape> rightPolyLines;
-
+        /// <summary>
+        /// The actual size of the left canvas.
+        /// </summary>
         ImageDimension CanvasSizeLeft = new ImageDimension(0, 0);
-
+        /// <summary>
+        /// The actual size of the right canvas.
+        /// </summary>
         ImageDimension CanvasSizeRight = new ImageDimension(0, 0);
-
-        ImageDimension ImageSizeLeft = new ImageDimension(0, 0);
-
-        ImageDimension ImageSizeRight = new ImageDimension(0, 0);
-
+        /// <summary>
+        /// A list of line similarities, resulting in the similarity of the whole image.
+        /// </summary>
         List<double> ImageSimilarity = new List<double>();
-
+        /// <summary>
+        /// The lines in the left canvas.
+        /// </summary>
         List<InternalLine> LeftLines = new List<InternalLine>();
 
         /*******************/
@@ -66,7 +70,6 @@ namespace SketchAssistantWPF
         {
             programView = form;
             programModel = new MVP_Model(this);
-            //Initialize Class Variables
             fileImporter = new FileImporter();
         }
 
@@ -83,7 +86,6 @@ namespace SketchAssistantWPF
         {
             CanvasSizeLeft.ChangeDimension(leftPBS.Item1, leftPBS.Item2);
             CanvasSizeRight.ChangeDimension(rightPBS.Item1, rightPBS.Item2);
-            //programModel.UpdateSizes(CanvasSizeRight);
             programModel.ResizeEvent(CanvasSizeLeft, CanvasSizeRight);
         }
 
@@ -472,7 +474,6 @@ namespace SketchAssistantWPF
         public void PassOptiTrackMessage(String stringToPass)
         {
             programView.SetOptiTrackText(stringToPass);
-            //programView.SetOptiTrackText("X: ");// + x + "Y: " + y + "Z: " + z);
         }
 
         /// <summary>
