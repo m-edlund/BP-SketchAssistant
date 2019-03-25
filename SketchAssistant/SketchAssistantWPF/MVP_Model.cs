@@ -36,7 +36,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// duration of the tectile feedback occuring once every passed centimeter (in milliseconds)
         /// </summary>
-        static readonly int TACTILE_SURFACE_FEEDBACK_DURATION = 50;
+        static readonly int TACTILE_SURFACE_FEEDBACK_DURATION = 15;
 
         /***********************/
         /*** CLASS VARIABLES ***/
@@ -255,7 +255,7 @@ namespace SketchAssistantWPF
             var b = Math.Abs(previousOptiCursorPosition.Y - currentOptiCursorPosition.Y);
             PathTraveled += Math.Sqrt(Math.Pow(a,2) + Math.Pow(b,2));
             //Set the Interval of vibrations here
-            if(PathTraveled > 2)
+            if(PathTraveled > 15)
             {
                 PathTraveled = 0;
                 LocalArmbandInterface.Actuate(0, TACTILE_SURFACE_FEEDBACK_INTENSITY, TACTILE_SURFACE_FEEDBACK_DURATION);

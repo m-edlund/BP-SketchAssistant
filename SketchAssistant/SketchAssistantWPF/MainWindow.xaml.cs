@@ -118,6 +118,7 @@ namespace SketchAssistantWPF
         {
            // LocalArmbandInterface.deleteArmband();
             Console.WriteLine("armband deleted 2");
+            dispatcherTimer.Stop();
         }
 
         /// <summary>

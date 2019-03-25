@@ -44,7 +44,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -103,7 +103,6 @@
     <Compile Include="ActionHistory.cs" />
     <Compile Include="LocalArmbandInterface.cs" />
     <Compile Include="Wristband.cs" />
-    <Compile Include="CustomCanvas.cs" />
     <Compile Include="DebugData.cs" />
     <Compile Include="FileImporter.cs" />
     <Compile Include="FileImporterException.cs" />
