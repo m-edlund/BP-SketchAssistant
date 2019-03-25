@@ -54,7 +54,7 @@ namespace SketchAssistantWPF
         /// <param name="tactor">integer from 0 to 7 specifying the number of the tactor to actuate</param>
         /// <param name="intensity">intensity, ranging from 0.0 to 1.0 by default</param>
         /// <param name="duration">number of millisecons to actuate the tactor for</param>
-        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate@ArmbandInterface@@QAAXXZ",
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate100@ArmbandInterface@@QAAXHNH@Z",
      CallingConvention = CallingConvention.Cdecl)]
         public static extern void Actuate(int tactor, double intensity, int duration);
 

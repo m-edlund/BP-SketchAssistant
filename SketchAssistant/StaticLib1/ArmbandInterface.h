@@ -13,15 +13,13 @@ Basically, this class acts as a single static BodyActuator instance towards outs
 (side note: the use of the terms 'function' and 'method' might be a bit messy here...)
 */
 
-/*
 DllExport int setupArmband();
 DllExport void startVibrate(int tactor, float intensity);
 DllExport void stopVibrate(int tactor);
-DllExport void actuate100();
-DllExport void actuate66();
-DllExport void actuate33();
+DllExport void actuate100(int tactor, double intensity, int duration);
+DllExport void actuate66(int tactor, int duration);
+DllExport void actuate33(int tactor, int duration);
 DllExport void deleteArmband();
-*/
 
 class ArmbandInterface
 {
@@ -52,10 +50,20 @@ class ArmbandInterface
 		*/
 		__declspec(dllexport) void __cdecl stopVibrate(int tactor);
 		/*
-		make the specified tactor (number from 0 to 7) actuate at a specified intensity (default: between 0.0 and 1.0, but range may be set using the setIntensityRange function) for the specified duration (number of milliseconds) ,or until it is stopped
+		make the specified tactor (number from 0 to 7) actuate at intensity 1.0 (default: between 0.0 and 1.0, but range may be set using the setIntensityRange function) for the specified duration (number of milliseconds) ,or until it is stopped
 		provides access to the DLLs BodyActuator_actuate method and handles type conversion to C types required by the DLL which are not available in C#
 		*/
-		__declspec(dllexport) void __cdecl actuate(int tactor, double intensity, int duration);
+		__declspec(dllexport) void __cdecl actuate100(int tactor, double intensity, int duration);
+		/*
+		make the specified tactor (number from 0 to 7) actuate at intensity 0.66 (default: between 0.0 and 1.0, but range may be set using the setIntensityRange function) for the specified duration (number of milliseconds) ,or until it is stopped
+		provides access to the DLLs BodyActuator_actuate method and handles type conversion to C types required by the DLL which are not available in C#
+		*/
+		__declspec(dllexport) void __cdecl actuate66(int tactor, int duration);
+		/*
+		make the specified tactor (number from 0 to 7) actuate at intensity 0.33 (default: between 0.0 and 1.0, but range may be set using the setIntensityRange function) for the specified duration (number of milliseconds) ,or until it is stopped
+		provides access to the DLLs BodyActuator_actuate method and handles type conversion to C types required by the DLL which are not available in C#
+		*/
+		__declspec(dllexport) void __cdecl actuate33(int tactor, int duration);
 		/*
 		sets the frequency of the specified tactor to a new value (unit unknown, possibly Hz...)
 		*/
@@ -64,7 +72,7 @@ class ArmbandInterface
 		sets a new intensity range for a single actuator to make different actuators react differently even when receiving an actuation command with the same intensity (e.g. to to compensate differing tactile sensitivity on different parts of the human body)
 		*/
 		__declspec(dllexport) void __cdecl setIntensityRange(int tactor, double minIntensity, double maxIntensity);
-	private:
+	//private:
 		/*
 		internal method to initialize the BodyActuator object (and handle the memory allocation involved)
 		*/

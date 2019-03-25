@@ -259,7 +259,6 @@ namespace SketchAssistantWPF
             {
                 PathTraveled = 0;
                 LocalArmbandInterface.Actuate(0, TACTILE_SURFACE_FEEDBACK_INTENSITY, TACTILE_SURFACE_FEEDBACK_DURATION);
-                //TODO: Activate vibration here
             }
         }
 
@@ -539,10 +538,6 @@ namespace SketchAssistantWPF
                     currentLine.Add(currentCursorPosition);
                 }
             }
-            //TODO remove
-            //LocalArmbandInterface.startVibrate(0, 1);
-            LocalArmbandInterface.Actuate(0, 1.0, 20);
-            Console.WriteLine("Vibrate motor 0 for 20ms");
         }
 
         /// <summary>
@@ -636,6 +631,8 @@ namespace SketchAssistantWPF
                     {
                         wristband.PushBackward();
                     }
+
+                    CheckPathTraveled();
                 }
             }
             else if( !optiTrackInUse && inDrawingMode)
