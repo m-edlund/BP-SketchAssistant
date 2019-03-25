@@ -34,6 +34,10 @@ namespace SketchAssistantWPF
         /// The location of the point, if this is a point
         /// </summary>
         public Point point { get; private set; }
+        /// <summary>
+        /// The length of the line
+        /// </summary>
+        private double length = -1;
 
         /// <summary>
         /// The constructor for lines which are only temporary.
@@ -62,14 +66,18 @@ namespace SketchAssistantWPF
             isTemporary = false;
         }
 
-        public Point GetStartPoint()
+        /// <summary>
+        /// A function to make temporary lines non-temporary.
+        /// </summary>
+        /// <param name="id">The id of the line.</param>
+        public void MakePermanent(int id)
         {
-            return linePoints.First();
-        }
-
-        public Point GetEndPoint()
-        {
-            return linePoints.Last();
+            if (isTemporary)
+            {
+                identifier = id;
+                CleanPoints();
+                isTemporary = false;
+            }
         }
 
         public List<Point> GetPoints()
@@ -87,6 +95,26 @@ namespace SketchAssistantWPF
             return pointColl;
         }
 
+
+        /// <summary>
+        /// Get the length of the line.
+        /// </summary>
+        /// <returns>The length of the line.</returns>
+        public double GetLength()
+        {
+            if (length < 0)
+            {
+                length = 0;
+                for (int i = 0; i < linePoints.Count - 1; i++)
+                {
+                    var a = linePoints[i]; var b = linePoints[i + 1];
+
+                    length += Math.Sqrt(Math.Pow((a.X - b.X), 2) + Math.Pow((a.Y - b.Y), 2));
+                }
+            }
+            return length;
+        }
+
         /// <summary>
         /// A function that will take two matrixes and populate them with the line data of this line object
         /// </summary>
@@ -101,12 +129,12 @@ namespace SketchAssistantWPF
                     if (currPoint.X >= 0 && currPoint.Y >= 0 &&
                         currPoint.X < boolMatrix.GetLength(0) && currPoint.Y < boolMatrix.GetLength(1))
                     {
-                        boolMatrix[(int) currPoint.X, (int) currPoint.Y] = true;
-                        if (listMatrix[(int) currPoint.X, (int) currPoint.Y] == null)
+                        boolMatrix[(int)currPoint.X, (int)currPoint.Y] = true;
+                        if (listMatrix[(int)currPoint.X, (int)currPoint.Y] == null)
                         {
-                            listMatrix[(int) currPoint.X, (int) currPoint.Y] = new HashSet<int>();
+                            listMatrix[(int)currPoint.X, (int)currPoint.Y] = new HashSet<int>();
                         }
-                        listMatrix[(int) currPoint.X, (int) currPoint.Y].Add(identifier);
+                        listMatrix[(int)currPoint.X, (int)currPoint.Y].Add(identifier);
                     }
                 }
             }
@@ -121,16 +149,17 @@ namespace SketchAssistantWPF
             {
                 //check if its a point
                 var localIsPoint = linePoints.All(o => o.X == linePoints.First().X && o.Y == linePoints.First().Y);
-                if (!localIsPoint) {
+                if (!localIsPoint)
+                {
                     List<Point> newList = new List<Point>();
                     List<Point> tempList = new List<Point>();
                     //Since Point is non-nullable, we must ensure the nullPoints, 
                     //which we remove can not possibly be points of the original given line.
-                    int nullValue = (int) linePoints[0].X + 1;
+                    int nullValue = (int)linePoints[0].X + 1;
                     //Fill the gaps between points
                     for (int i = 0; i < linePoints.Count - 1; i++)
                     {
-                        nullValue += (int) linePoints[i + 1].X;
+                        nullValue += (int)linePoints[i + 1].X;
                         List<Point> partialList = GeometryCalculator.BresenhamLineAlgorithm(linePoints[i], linePoints[i + 1]);
                         tempList.AddRange(partialList);
                     }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using OptiTrack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,6 +20,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using System.Windows.Ink;
+using System.Windows.Media.Effects;
 
 namespace SketchAssistantWPF
 {
@@ -39,7 +41,7 @@ namespace SketchAssistantWPF
                     InDebugMode = true;
                 }
             }
-            if(!InDebugMode)
+            if (!InDebugMode)
             {
                 DebugMode.Visibility = Visibility.Collapsed;
             }
@@ -47,9 +49,11 @@ namespace SketchAssistantWPF
             //  DispatcherTimer setup
             dispatcherTimer = new DispatcherTimer(DispatcherPriority.Render);
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 5);
             ProgramPresenter.Resize(new Tuple<int, int>((int)LeftCanvas.Width, (int)LeftCanvas.Height),
                 new Tuple<int, int>((int)RightCanvas.Width, (int)RightCanvas.Height));
+            //Setup overlay items
+            SetupOverlay();
         }
 
         public enum ButtonState
@@ -91,7 +95,15 @@ namespace SketchAssistantWPF
         /// <summary>
         /// Stores Lines drawn on RightCanvas.
         /// </summary>
-        StrokeCollection strokeCollection = new StrokeCollection();
+        public StrokeCollection strokeCollection = new StrokeCollection();
+        /// <summary>
+        /// Size of areas marking endpoints of lines in the redraw mode.
+        /// </summary>
+        public int markerRadius = 5;
+        /// <summary>
+        /// Dictionary containing the overlay elements
+        /// </summary>
+        public Dictionary<String, Shape> overlayDictionary = new Dictionary<string, Shape>();
 
         /********************************************/
         /*** WINDOW SPECIFIC FUNCTIONS START HERE ***/
@@ -123,7 +135,6 @@ namespace SketchAssistantWPF
         public void RightCanvas_StrokeCollection(object sender, InkCanvasStrokeCollectedEventArgs e)
         {
             strokeCollection.Add(e.Stroke);
-            System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
         }
 
         /// <summary>
@@ -131,7 +142,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RedoButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.Redo();
+            if (!IsMousePressed()) ProgramPresenter.Redo();
         }
 
         /// <summary>
@@ -139,7 +150,7 @@ namespace SketchAssistantWPF
         /// </summary>
         private void UndoButton_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.Undo();
+            if (!IsMousePressed()) ProgramPresenter.Undo();
         }
 
         /// <summary>
@@ -161,12 +172,31 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Changes the state of the program to drawing with OptiTrack
+        /// </summary>
+        private void DrawWithOptiButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ProgramPresenter.GetOptitrackActive())
+            {
+                ProgramPresenter.ChangeOptiTrack(false);
+                if (ProgramPresenter.GetDrawingState())
+                    RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+                else
+                    RightCanvas.EditingMode = InkCanvasEditingMode.EraseByStroke;
+            }
+            else
+            {
+                ProgramPresenter.ChangeOptiTrack(true);
+                RightCanvas.EditingMode = InkCanvasEditingMode.None;
+            }
+        }
+
+        /// <summary>
         /// Hold left mouse button to start drawing.
         /// </summary>
         private void RightCanvas_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down);");
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, strokeCollection);
         }
 
         /// <summary>
@@ -174,18 +204,41 @@ namespace SketchAssistantWPF
         /// </summary>
         private void RightCanvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if(strokeCollection.Count == 0)
+            if (ProgramPresenter.GetDrawingState())
             {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid);
+                if (strokeCollection.Count == 0)
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
+                }
+                else
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
+                    RightCanvas.Strokes.RemoveAt(0);
+                    strokeCollection.RemoveAt(0);
+                }
             }
-            else
+        }
+
+        /// <summary>
+        /// Is called when a stylus is lifted, which has the same effect as releasing the mouse.
+        /// Lifting the finger when using touch also toggles this, therfore this function is sufficient.
+        /// </summary>
+        private void RightCanvas_IsStylusCapturedChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine("Stylus Capture is now: {0}", RightCanvas.IsStylusCaptured);
+            if (!RightCanvas.IsStylusCaptured)
             {
-                ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);
-                RightCanvas.Strokes.RemoveAt(0);
-                strokeCollection.RemoveAt(0);
-                System.Diagnostics.Debug.WriteLine(strokeCollection.Count);
+                if (strokeCollection.Count == 0)
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up_Invalid, strokeCollection);
+                }
+                else
+                {
+                    ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection);
+                    RightCanvas.Strokes.RemoveAt(0);
+                    strokeCollection.RemoveAt(0);
+                }
             }
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up);");
         }
 
         /// <summary>
@@ -194,7 +247,6 @@ namespace SketchAssistantWPF
         private void RightCanvas_MouseMove(object sender, MouseEventArgs e)
         {
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, e.GetPosition(RightCanvas));
-            //System.Diagnostics.Debug.WriteLine("new Point(" + ((int)e.GetPosition(RightCanvas).X).ToString() + "," + ((int)e.GetPosition(RightCanvas).Y).ToString() + "), ");
         }
 
         /// <summary>
@@ -215,15 +267,6 @@ namespace SketchAssistantWPF
         private void dispatcherTimer_Tick(object sender, EventArgs e)
         {
             ProgramPresenter.Tick();
-            //System.Diagnostics.Debug.WriteLine("ProgramPresenter.Tick();");
-        }
-
-        /// <summary>
-        /// Import button for .isad drawing, will open an OpenFileDialog
-        /// </summary>
-        private void ISADMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            ProgramPresenter.ExamplePictureToolStripMenuItemClick();
         }
 
         /// <summary>
@@ -231,7 +274,12 @@ namespace SketchAssistantWPF
         /// </summary>
         private void SVGMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            ProgramPresenter.SVGToolStripMenuItemClick();
+            if (ProgramPresenter.SVGToolStripMenuItemClick())
+            {
+                ProgramPresenter.NewCanvas();
+                RightCanvas.EditingMode = InkCanvasEditingMode.Ink;
+                RightCanvas.Strokes.Clear();
+            }
         }
 
         /*************************/
@@ -253,8 +301,10 @@ namespace SketchAssistantWPF
         /// <returns>Whether or not the mouse is pressed.</returns>
         public bool IsMousePressed()
         {
-            if (!debugRunning) {
-                return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed)); }
+            if (!debugRunning)
+            {
+                return (Mouse.LeftButton.Equals(MouseButtonState.Pressed) || Mouse.RightButton.Equals(MouseButtonState.Pressed));
+            }
             else return true;
         }
 
@@ -327,7 +377,7 @@ namespace SketchAssistantWPF
             newPoint.Height = 3; newPoint.Width = 3;
             newPoint.Fill = Brushes.Black;
             RightCanvas.Children.Add(newPoint);
-            newPoint.Margin = new Thickness(line.point.X - 1.5, line.point.Y - 1.5, 0,0);
+            newPoint.Margin = new Thickness(line.point.X - 1.5, line.point.Y - 1.5, 0, 0);
         }
 
         /// <summary>
@@ -378,6 +428,26 @@ namespace SketchAssistantWPF
         }
 
         /// <summary>
+        /// Sets the contents of the last action taken indicator label.
+        /// </summary>
+        /// <param name="message">The new contents</param>
+        public void SetOptiTrackText(string message)
+        {
+            OptiTrackBox.Text = message;
+        }
+
+        /// Sets the contents of the status bar label containing
+        /// the similarity score of the left and right image.
+        /// </summary>
+        /// <param name="message">The message to be set, 
+        /// will be set to the default value if left empty.</param>
+        public void SetImageSimilarityText(string message)
+        {
+            if (message.Count() > 0) LineSimilarityBox.Text = message;
+            else LineSimilarityBox.Text = "-";
+        }
+
+        /// <summary>
         /// Changes the states of a tool strip button.
         /// </summary>
         /// <param name="buttonName">The name of the button.</param>
@@ -404,6 +474,10 @@ namespace SketchAssistantWPF
                     break;
                 case "redoButton":
                     buttonToChange = RedoButton;
+                    break;
+                case "drawWithOptiButton":
+                    buttonToChange = DrawWithOptiButton;
+                    isToggleable = true;
                     break;
                 default:
                     Console.WriteLine("Invalid Button was given to SetToolStripButton. \nMaybe you forgot to add a case?");
@@ -488,24 +562,12 @@ namespace SketchAssistantWPF
             switch (canvasName)
             {
                 case ("LeftCanvas"):
-                    if (active)
-                    {
-                        LeftCanvas.Background = Brushes.White;
-                    }
-                    else
-                    {
-                        LeftCanvas.Background = Brushes.SlateGray;
-                    }
+                    if (active) LeftCanvas.Background = Brushes.White;
+                    else LeftCanvas.Background = Brushes.SlateGray;
                     break;
                 case ("RightCanvas"):
-                    if (active)
-                    {
-                        RightCanvas.Background = Brushes.White;
-                    }
-                    else
-                    {
-                        RightCanvas.Background = Brushes.SlateGray;
-                    }
+                    if (active) RightCanvas.Background = Brushes.White;
+                    else RightCanvas.Background = Brushes.SlateGray;
                     break;
                 default:
                     throw new InvalidOperationException("Unknown canvas name, Check that the canvas passed is either LeftCanvas or RightCanvas");
@@ -516,7 +578,48 @@ namespace SketchAssistantWPF
         /*** HELPING FUNCTION ***/
         /************************/
 
+        /// <summary>
+        /// A function that generates the overlay elements and sets all their values.
+        /// </summary>
+        private void SetupOverlay()
+        {
+            DropShadowEffect effect = new DropShadowEffect(); effect.ShadowDepth = 0;
+            OverlayCanvas.Background = null;
+            //Startpoint of a line to be redrawn
+            Ellipse StartPointOverlay = new Ellipse();
+            StartPointOverlay.Height = markerRadius * 2; StartPointOverlay.Width = markerRadius * 2;
+            StartPointOverlay.Fill = Brushes.Green;
+            StartPointOverlay.Effect = effect;
+            overlayDictionary.Add("startpoint", StartPointOverlay);
+            //Endpoint of a line to be redrawn
+            Ellipse EndPointOverlay = new Ellipse();
+            EndPointOverlay.Height = markerRadius * 2; EndPointOverlay.Width = markerRadius * 2;
+            EndPointOverlay.Fill = Brushes.Green;
+            EndPointOverlay.Effect = effect;
+            overlayDictionary.Add("endpoint", EndPointOverlay);
+            //Pointer of the optitrack system
+            Ellipse OptitrackMarker = new Ellipse(); OptitrackMarker.Height = 5; OptitrackMarker.Width = 5;
+            OptitrackMarker.Fill = Brushes.LightGray;
+            OptitrackMarker.Effect = effect;
+            overlayDictionary.Add("optipoint", OptitrackMarker);
+            //10 Dotted Lines for debugging (if more are needed simply extend the for-loop
+            for (int x = 0; x < 10; x++)
+            {
+                Line dotLine = new Line();
+                dotLine.Stroke = Brushes.Red;
+                dotLine.StrokeDashArray = new DoubleCollection { 2 + x, 2 + x };
+                dotLine.StrokeThickness = 1;
+                overlayDictionary.Add("dotLine" + x.ToString(), dotLine);
+            }
 
+            //Common features of all overlay items
+            foreach (KeyValuePair<String, Shape> s in overlayDictionary)
+            {
+                OverlayCanvas.Children.Add(s.Value);
+                s.Value.Opacity = 0.00001;
+                s.Value.IsHitTestVisible = false;
+            }
+        }
 
         /// <summary>
         /// Sends inputs to the presenter simulating drawing, used for testing and debugging.
@@ -554,6 +657,8 @@ namespace SketchAssistantWPF
             Debug(4);
         }
 
+
+
         /// <summary>
         /// A function which simulates canvas input for debugging.
         /// </summary>
@@ -584,7 +689,7 @@ namespace SketchAssistantWPF
             debugRunning = true;
             ProgramPresenter.Tick(); await Task.Delay(10);
             ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, start);
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down); await Task.Delay(10);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Down, strokeCollection); await Task.Delay(10);
             for (int x = 0; x < points.Length; x++)
             {
                 ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Move, points[x]);
@@ -595,7 +700,7 @@ namespace SketchAssistantWPF
                     await Task.Delay(1);
                 }
             }
-            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up); await Task.Delay(1);
+            ProgramPresenter.MouseEvent(MVP_Presenter.MouseAction.Up, strokeCollection); await Task.Delay(1);
             debugRunning = false;
             dispatcherTimer.Start();
         }

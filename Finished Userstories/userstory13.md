@@ -1,13 +1,13 @@
-# Userstory 13 
+﻿# Userstory 13 
  
 |**ID**|13|  
 |-|-|
-|**Name**|Start und Endpunkt anzeigen|
-|**Beschreibung**|Beim Nachzeichnen kann der Start- & Endpunkt einer nachzuzeichnenden Linie angzeigt werden.|
-|**Akzeptanzkriterium**|Sofern auf der linken Seite eine nachzeichenbare Grafik dargestellt wird, kann der Start- und Endpunkt der ersten Linie der linken Grafik an der richtigen Stelle auf der rechten Seite angezeigt werden.|
+|**Name**|Overlay Unterstützung|
+|**Beschreibung**|Als Nutzer möchte ich, dass beim Nachzeichnen, der Start- & Endpunkt einer nachzuzeichnenden Linie angzeigt werden kann, sowie bei Verwendung des Optitrack Systems ein Cursor angezeigt werden kann.|
+|**Akzeptanzkriterium**|Es ist möglich Overlay Elemente anzuzeigen und frei zu positionieren.|
 |Geschätzter Aufwand (Story Points)|2|
-|Entwickler|Martin|
-|Umgesetzt in Iteration|4|
-|Tatsächlicher Aufwand (Std.)|1|
-|Velocity (Std./Story Point)|0.5|
+|Entwickler|Martin Edlund|
+|Umgesetzt in Iteration|15|
+|Tatsächlicher Aufwand (Std.)|8|
+|Velocity (Std./Story Point)|4|
 |Bemerkungen|Keine|

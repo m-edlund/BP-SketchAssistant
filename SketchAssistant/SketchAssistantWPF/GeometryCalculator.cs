@@ -13,6 +13,150 @@ namespace SketchAssistantWPF
     public static class GeometryCalculator
     {
         /// <summary>
+        /// Calculate the approximate similarity of two lines. 
+        /// Using three weighted parameters to calculate a value between 0 and 1 to indicate the similarity of the lines.
+        /// </summary>
+        /// <param name="line0">The first line.</param>
+        /// <param name="line1">The second line.</param>
+        /// <returns>The similarity of the two lines.</returns>
+        public static double CalculateSimilarity(InternalLine line0, InternalLine line1)
+        {
+            double CosSim = Math.Abs(CalculateAverageCosineSimilarity(line0, line1));
+            double LenSim = CalculateLengthSimilarity(line0, line1);
+            double AvDist = CalculateAverageDistance(line0, line1);
+            double DistSim = (50 - AvDist) / 50;
+            if (DistSim < 0) DistSim = 0;
+            if (CosSim < 0.5 || Double.IsNaN(CosSim)) CosSim = 0;
+            double output = (2 * CosSim + LenSim + DistSim) / 4;
+            System.Diagnostics.Debug.WriteLine("Results: CosSim: {0}, LenSim: {1}, AvDist {2}, DistSim: {3}. Total: {4}",
+                CosSim, LenSim, AvDist, DistSim, output);
+            return output;
+        }
+
+        /// <summary>
+        /// The cosine similarity of two vectors.
+        /// </summary>
+        /// <param name="v0">The first vector</param>
+        /// <param name="v1">The second vector</param>
+        /// <returns>The cosine similarity</returns>
+        private static double CosineSimilarity(Vector v0, Vector v1)
+        {
+            return (v0.X * v1.X + v0.Y * v1.Y) / (Math.Sqrt(v0.X * v0.X + v0.Y * v0.Y) * Math.Sqrt(v1.X * v1.X + v1.Y * v1.Y));
+        }
+
+        /// <summary>
+        /// An approximate calculation of the average cosine similarity 
+        /// of two lines, achieved by calculating the cosine similarity of subvectors.
+        /// </summary>
+        /// <param name="line0">The first line</param>
+        /// <param name="line1">The second line</param>
+        /// <returns>The approximate average cosine similarity of all subvectors</returns>
+        public static double CalculateAverageCosineSimilarity(InternalLine line0, InternalLine line1)
+        {
+            //check if one of the lines is a point, or both lines are points
+            if ((line0.isPoint && !line1.isPoint) || (line1.isPoint && !line0.isPoint)) return 0;
+            else if (line0.isPoint && line1.isPoint) return 1;
+
+            List<Point> points0 = line0.GetPoints();
+            List<Point> points1 = line1.GetPoints();
+
+            if (points0.Count == points1.Count)
+            {
+                //If the two lists have an equal amount of subvectors, 
+                //compare the nth subvectors from each list and average the value.
+                double sum = 0; int i = 0;
+                List<Point> shortL = points0; List<Point> longL = points1;
+                for (; i < shortL.Count - 1; i++)
+                {
+                    if (i + 1 == shortL.Count || i + 1 == longL.Count) break;
+                    Vector v0 = new Vector(shortL[i + 1].X - shortL[i].X, shortL[i + 1].Y - shortL[i].Y);
+                    Vector v1 = new Vector(longL[i + 1].X - longL[i].X, longL[i + 1].Y - longL[i].Y);
+                    sum += CosineSimilarity(v0, v1);
+                }
+                return sum / i;
+            }
+            else
+            {
+                //Determine if the longer list is of similar length or contains significatly more items
+                List<Point> shortL = points0; List<Point> longL = points0;
+                if (points0.Count < points1.Count) { longL = points1; }
+                if (points0.Count > points1.Count) { shortL = points1; }
+                double dif = (longL.Count - 1) / (shortL.Count - 1);
+                if (dif > 1)
+                {
+                    //The longer list is significantly longer
+                    //Each element in the shorter list is compared to multiple 
+                    // elements in the longer list to make up the difference
+                    double sum = 0; int adds = 0;
+
+                    for (int i = 0; i < shortL.Count - 1; i++)
+                    {
+                        if (i + 1 == shortL.Count) break;
+                        for (int j = 0; j <= dif; j++)
+                        {
+                            var k = i + j;
+                            if (k + 1 == longL.Count) break;
+                            Vector v0 = new Vector(shortL[i + 1].X - shortL[i].X, shortL[i + 1].Y - shortL[i].Y);
+                            Vector v1 = new Vector(longL[k + 1].X - longL[k].X, longL[k + 1].Y - longL[k].Y);
+                            sum += CosineSimilarity(v0, v1); adds++;
+                        }
+                    }
+                    return sum / adds;
+                }
+                else
+                {
+                    //The longer list is almost the same length as the shorter list
+                    //The remaining items are simply skipped
+                    double sum = 0; int i = 0;
+                    for (; i < shortL.Count - 1; i++)
+                    {
+                        if (i + 1 == shortL.Count || i + 1 == longL.Count) break;
+                        Vector v0 = new Vector(shortL[i + 1].X - shortL[i].X, shortL[i + 1].Y - shortL[i].Y);
+                        Vector v1 = new Vector(longL[i + 1].X - longL[i].X, longL[i + 1].Y - longL[i].Y);
+                        sum += CosineSimilarity(v0, v1);
+                    }
+                    return sum / i;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Calculate the similarity in length of two Lines.
+        /// </summary>
+        /// <param name="line0">The first line.</param>
+        /// <param name="line1">The second line.</param>
+        /// <returns>How similar the lines are in length.</returns>
+        private static double CalculateLengthSimilarity(InternalLine line0, InternalLine line1)
+        {
+            double len0 = line0.GetLength(); double len1 = line1.GetLength();
+            var dif = Math.Abs(len1 - len0);
+            if (dif == 0) return 1;
+            double shorter;
+            if (len1 > len0) shorter = len0;
+            else shorter = len1;
+            if (dif >= shorter) return 0;
+            return (shorter - dif) / shorter;
+        }
+
+        /// <summary>
+        /// Calculate the average distance between the ends of two lines.
+        /// </summary>
+        /// <param name="line0">The first line.</param>
+        /// <param name="line1">The second line.</param>
+        /// <returns>The shortest average distance between the ends of the lines.</returns>
+        private static double CalculateAverageDistance(InternalLine line0, InternalLine line1)
+        {
+            List<Point> points0 = line0.GetPoints();
+            List<Point> points1 = line1.GetPoints();
+            double distfirstfirst = Math.Sqrt(Math.Pow((points0[0].X - points1[0].X), 2) + Math.Pow((points0[0].Y - points1[0].Y), 2));
+            double distlastlast = Math.Sqrt(Math.Pow((points0.Last().X - points1.Last().X), 2) + Math.Pow((points0.Last().Y - points1.Last().Y), 2));
+            double distfirstlast = Math.Sqrt(Math.Pow((points0[0].X - points1.Last().X), 2) + Math.Pow((points0[0].Y - points1.Last().Y), 2));
+            double distlastfirst = Math.Sqrt(Math.Pow((points0.Last().X - points1[0].X), 2) + Math.Pow((points0.Last().Y - points1[0].Y), 2));
+            if ((distfirstfirst + distlastlast) / 2 < (distfirstlast + distlastfirst) / 2) return (distfirstfirst + distlastlast) / 2;
+            else return (distfirstlast + distlastfirst) / 2;
+        }
+
+        /// <summary>
         /// A simple algorithm that returns a filled circle with a radius and a center point.
         /// </summary>
         /// <param name="center">The center point of the alorithm </param>

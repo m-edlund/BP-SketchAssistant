@@ -26,7 +26,7 @@ namespace SketchAssistantWPF
         /// <summary>
         /// array containing all characters interpreted as whitespaces which seperate words/tokens in the input file
         /// </summary>
-        readonly char[] whitespaces = new char[] { ' ' , ',' };
+        readonly char[] whitespaces = new char[] { ' ', ',' };
 
         /// <summary>
         /// number of points to create along the outline of an ellipse, divisible by 4
@@ -43,7 +43,7 @@ namespace SketchAssistantWPF
         /// </summary>
         /// <param name="fileName">the path of the input file</param>
         /// <returns>the width and height of the left canvas and the parsed picture as a list of lines</returns>
-public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
+        public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
         {
             return ParseISADInput(System.IO.File.ReadAllLines(fileName));
         }
@@ -69,7 +69,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             }
             Tuple<int, int> dimensions = ParseISADHeader(allLines);
             List<InternalLine> picture = ParseISADBody(allLines, dimensions.Item1, dimensions.Item2);
-            
+
             return new Tuple<int, int, List<InternalLine>>(dimensions.Item1, dimensions.Item2, picture);
         }
 
@@ -197,13 +197,13 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             i++;
             int width; //width of the resulting picture in pixels
             int height; //height of the resulting picture in pixels
-            if(windowWidth != 0 && windowHeight != 0)
+            if (windowWidth != 0 && windowHeight != 0)
             {
                 if (windowWidth / windowHeight > sizedef.Item1 / sizedef.Item2) //height dominant, width has to be smaller than drawing window to preserve xy-scale
                 {
                     scale = windowHeight / sizedef.Item2;
                     height = (int)Math.Round(windowHeight);
-                    width = (int) Math.Round(scale * sizedef.Item1);
+                    width = (int)Math.Round(scale * sizedef.Item1);
                 }
                 else //width dominant, height has to be smaller than drawing window to preserve xy-scale
                 {
@@ -218,7 +218,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
                 width = sizedef.Item1;
                 height = sizedef.Item2;
             }
-            for (int j=0; j < allLines.Length; j++)
+            for (int j = 0; j < allLines.Length; j++)
             {
                 allLines[j] = allLines[j].Trim(whitespaces);
             }
@@ -238,9 +238,9 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
                 i++;
             }
             String[] currentLine = allLines[i].Split(' ');
-            int width= -1;
-            int height= -1;
-            for(int j= 0; j < currentLine.Length; j++)
+            int width = -1;
+            int height = -1;
+            for (int j = 0; j < currentLine.Length; j++)
             {
                 if (currentLine[j].StartsWith("width"))
                 {
@@ -251,9 +251,9 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
                     height = Convert.ToInt32(ParseSingleSVGAttribute(currentLine[j]));
                 }
             }
-            if(width == -1)
+            if (width == -1)
             {
-                throw new FileImporterException("missing width definition in SVG header", "the header should contain the \"width=...\" attribute", i+1);
+                throw new FileImporterException("missing width definition in SVG header", "the header should contain the \"width=...\" attribute", i + 1);
             }
             if (height == -1)
             {
@@ -301,7 +301,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
         /// <returns>the parsed element as a Line object, or null if the element is not supported</returns>
         private List<InternalLine> ParseSingleLineSVGElement(string[] currentElement)
         {
-            List<Point> points= null;
+            List<Point> points = null;
             List<InternalLine> element = null;
             switch (currentElement[0])
             {
@@ -350,7 +350,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             double h = 0;
             double rx = 0;
             double ry = 0;
-            for(int j= 0; j < currentElement.Length; j++)
+            for (int j = 0; j < currentElement.Length; j++)
             {
                 if (currentElement[j].StartsWith("x="))
                 {
@@ -540,9 +540,9 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
                 }
             }
             List<Point> polygon = new List<Point>();
-            for (int k = 0; k < points.Length - 1; k+=2)
+            for (int k = 0; k < points.Length - 1; k += 2)
             {
-                polygon.Add(ScaleAndCreatePoint(Convert.ToDouble(points[k], CultureInfo.InvariantCulture), Convert.ToDouble(points[k+1], CultureInfo.InvariantCulture)));
+                polygon.Add(ScaleAndCreatePoint(Convert.ToDouble(points[k], CultureInfo.InvariantCulture), Convert.ToDouble(points[k + 1], CultureInfo.InvariantCulture)));
             }
             polygon.Add(ScaleAndCreatePoint(Convert.ToDouble(points[0], CultureInfo.InvariantCulture), Convert.ToDouble(points[1], CultureInfo.InvariantCulture))); //close polygon
             return polygon;
@@ -573,12 +573,12 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             NormalizePathDeclaration(pathElements); //expand path data to always explicitly have the command descriptor in front of the appropriate number of arguments and to seperate command descriptors, coordinates and other tokens always into seperate list elements (equivalent to seperation with spaces in the input file, but svg allows also for comma as a seperator, and for omitting seperators where possible without losing information (refer to svg grammer) to reduce file size
             List<InternalLine> element = new List<InternalLine>();
             List<Point> currentLine = new List<Point>();
-            double lastBezierControlPointX= 0;
-            double lastBezierControlPointY= 0;
+            double lastBezierControlPointX = 0;
+            double lastBezierControlPointY = 0;
             double lastPositionX;
             double lastPositionY;
-            double initialPositionX= -1;
-            double initialPositionY= -1;
+            double initialPositionX = -1;
+            double initialPositionY = -1;
             bool newSubpath = true;
             Tuple<List<Point>, double, double> valuesArc; //list of points, new values for: lastPositionX, lastPositionY
             Tuple<List<Point>, double, double, double, double> valuesBezierCurve; //list of points, new values for: lastPositionX, lastPositionY, lastBezierControlPointX, lastBezierControlPointY
@@ -588,7 +588,8 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             lastPositionX = valuesSinglePoint.Item2;
             lastPositionY = valuesSinglePoint.Item3;
             String currentToken;
-            while (!(pathElements.Count == 0)){
+            while (!(pathElements.Count == 0))
+            {
                 if (newSubpath)
                 {
                     initialPositionX = lastPositionX; //update buffers for coordinates of first point of active subpath
@@ -773,7 +774,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
         {
             Char lastCommand = 'M';
             int argumentCounter = 0;
-            for( int j= 0; j < pathElements.Count; j++)
+            for (int j = 0; j < pathElements.Count; j++)
             {
                 String currentElement = pathElements.ElementAt(j);
                 if (currentElement.Length != 1)
@@ -788,8 +789,9 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
                     }
                     else if ((currentElement.First() >= '0' && currentElement.First() <= '9') || currentElement.First() == '-' || currentElement.First() == '+' || currentElement.First() != 'e') //seperate a single coordinate / number
                     {
-                        bool repeatCommandDescriptor = false; 
-                        switch (lastCommand){ //check for reaching of next command with omitted command descriptor
+                        bool repeatCommandDescriptor = false;
+                        switch (lastCommand)
+                        { //check for reaching of next command with omitted command descriptor
                             case 'M':
                                 if (argumentCounter >= 2) repeatCommandDescriptor = true;
                                 break;
@@ -866,7 +868,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
                                 break;
                             }
                         }
-                        argumentCounter++; 
+                        argumentCounter++;
                     }
                     else //parse non-space seperators and skip other unsupported characters (the only other valid ones per svg standard would be weird tokens looking like format descriptors (e.g. '#xC'), these are unsopported and will likely cause an error or other inconsitencies during parsing)
                     {
@@ -888,7 +890,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
                         lastCommand = currentElement.First();
                         argumentCounter = 0;
                     }
-                    else if(!(currentElement.First() >= '0' && currentElement.First() <= '9')) //not a number
+                    else if (!(currentElement.First() >= '0' && currentElement.First() <= '9')) //not a number
                     {
                         pathElements.RemoveAt(j); //remove element
                         j--; //decrement index pointer so next element will not be skipped (indices of all folowing elements just decreased by 1)
@@ -1415,14 +1417,14 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             {
                 xPlusFlag = true; //left point lies right of line
             }
-            if(sweepFlag != largeArcFlag) //need "right" center point, not "left" one (refer to svg specification, sweepFlag means going around the circle in "clockwise" direction, largeArcFlag means tracing the larger of the two possible arcs in the selected direction) 
+            if (sweepFlag != largeArcFlag) //need "right" center point, not "left" one (refer to svg specification, sweepFlag means going around the circle in "clockwise" direction, largeArcFlag means tracing the larger of the two possible arcs in the selected direction) 
             {
                 xPlusFlag = !xPlusFlag;
                 yPlusFlag = !yPlusFlag;
             }
             double xC; // coordinates of center point of circle
             double yC;
-            if(xPlusFlag) xC = x3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionYRelative) / q); //x3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((y1 - y2) / q);
+            if (xPlusFlag) xC = x3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionYRelative) / q); //x3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((y1 - y2) / q);
             else xC = x3 - Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionYRelative) / q);
             if (yPlusFlag) yC = y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q); //y3 + Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((x2-x1) / q);
             else yC = y3 - Math.Sqrt(radsq - ((q / 2) * (q / 2))) * ((nextPositionXRelative) / q);
@@ -1430,7 +1432,7 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             for (int j = 0; j < values.Item1.Length; j++)
             {
                 values.Item1[j] = values.Item1[j] + xC; //correct center point coordinate bias
-                values.Item2[j] = values.Item2[j] + yC; 
+                values.Item2[j] = values.Item2[j] + yC;
             }
             return values;
         }
@@ -1458,13 +1460,13 @@ public Tuple<int, int, List<InternalLine>> ParseISADInputFile(String fileName)
             }
             else // get smaller angleDifference
             {
-                if(angleDifference > Math.PI) angleDifference = ((double)2 * Math.PI) - angleDifference;  // was larger angleDifference
+                if (angleDifference > Math.PI) angleDifference = ((double)2 * Math.PI) - angleDifference;  // was larger angleDifference
             }
-            int numberOfPoints = (int) Math.Ceiling(angleDifference / angle);  //compute number of points to sample
+            int numberOfPoints = (int)Math.Ceiling(angleDifference / angle);  //compute number of points to sample
             double[] xValues = new double[numberOfPoints];
             double[] yValues = new double[numberOfPoints];
             double phiCurrent = phiStart;
-            for (int j = 0; j < numberOfPoints-1; j++) //compute intermediate points
+            for (int j = 0; j < numberOfPoints - 1; j++) //compute intermediate points
             {
                 if (clockwise) phiCurrent -= angle; //get new angle
                 else phiCurrent += angle;
