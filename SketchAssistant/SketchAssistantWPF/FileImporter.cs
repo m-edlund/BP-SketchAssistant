@@ -679,7 +679,7 @@ namespace SketchAssistantWPF
                 }
                 else if (currentToken.Equals("c"))
                 {
-                    valuesBezierCurve = Parse_C(pathElements, lastPositionX, lastPositionY);
+                    valuesBezierCurve = Parse_c(pathElements, lastPositionX, lastPositionY);
                     currentLine.AddRange(valuesBezierCurve.Item1); //add point to new line
                     lastPositionX = valuesBezierCurve.Item2; //save last point coordinates
                     lastPositionY = valuesBezierCurve.Item3; //save last point coordinates
@@ -851,7 +851,7 @@ namespace SketchAssistantWPF
                         {
                             pathElements.Insert(j, lastCommand + ""); //repeat command descriptor
                             j++; //skip command descriptor (was put into active position in the list
-                            argumentCounter = 0; //reset argument counter
+                            argumentCounter = -1; //reset argument counter
                         }
                         bool decimalPointEncountered = false;
                         for (int k = 1; k < currentElement.Length; k++)
@@ -860,10 +860,10 @@ namespace SketchAssistantWPF
                             {
                                 decimalPointEncountered = true;
                             }
-                            else if (!((currentElement.ElementAt(k) >= '0' && currentElement.ElementAt(k) <= '9') || currentElement.First() == '-' || currentElement.First() == '+' || currentElement.First() != 'e'))
+                            else if (!((currentElement.ElementAt(k) >= '0' && currentElement.ElementAt(k) <= '9') || currentElement.ElementAt(k) == 'e'))
                             {
                                 pathElements.RemoveAt(j);
-                                pathElements.Insert(j, currentElement.Substring(0, k - 1)); //insert number as seperate element
+                                pathElements.Insert(j, currentElement.Substring(0, k)); //insert number as seperate element
                                 pathElements.Insert(j + 1, currentElement.Substring(k)); //insert rest of String at next position so it will be processed again
                                 break;
                             }
@@ -959,7 +959,7 @@ namespace SketchAssistantWPF
                         {
                             pathElements.Insert(j, lastCommand + ""); //repeat command descriptor
                             j++; //skip command descriptor (was put into active position in the list
-                            argumentCounter = 0; //reset argument counter
+                            argumentCounter = -1; //reset argument counter
                         }
                         argumentCounter++;
                     }
