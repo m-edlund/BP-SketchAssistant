@@ -188,6 +188,11 @@ namespace SketchAssistantWPF
                 Console.WriteLine("trying to initialize Armband...");
                 int tmp = LocalArmbandInterface.SetupArmband();
                 Console.WriteLine("Armband initialization terminated, exit code: " + tmp);
+                comFiveAvailable = true;
+            }
+            else
+            {
+                Console.WriteLine("COM5 device not found");
             }
 
             programPresenter = presenter;
@@ -607,6 +612,21 @@ namespace SketchAssistantWPF
         /// </summary>
         public void Tick()
         {
+            //Show startpoints
+            if (leftLineList != null && leftLineList.Count > 0)
+            {
+                var templist = rightLineList.Where(tup => tup.Item1).ToList();
+                if (templist.Count < leftLineList.Count)
+                {
+                    programPresenter.SetOverlayStatus("startpoint", true, leftLineList[templist.Count].GetPoints()[0]);
+                }
+                else
+                {
+                    programPresenter.SetOverlayStatus("startpoint", false, new Point(50, 50));
+                }
+
+            }
+
             if (cursorPositions.Count > 0) { previousCursorPosition = cursorPositions.Dequeue(); }
             else { previousCursorPosition = currentCursorPosition; }
 

@@ -14,6 +14,16 @@ namespace SketchAssistantWPF
     public static class LocalArmbandInterface
     {
         /// <summary>
+        /// constant to set the vibration mode:
+        /// 0 -> no vibration
+        /// 1 -> intensity 0.33
+        /// 2 -> intensity 0.66
+        /// 3 -> intensity 1.0
+        /// </summary>
+        static readonly int VIBRATION_MODE = 2;
+
+
+        /// <summary>
         /// initializes the armband (and binds the C dll)
         /// must be called before calling any other of the methods of this class
         /// explicitly allocates memory and therefore must only be called once and must be followed by a call to DestroyArmband eventually
@@ -49,14 +59,61 @@ namespace SketchAssistantWPF
         public static extern void StopVibration(int motorNumber);
 
         /// <summary>
-        /// starts actuation of the specified tactor (motor) at the specified intensity for a specified amount of time
+        /// starts actuation of the specified tactor (motor) at  0.33 for a specified amount of time
+        /// </summary>
+        /// <param name="tactor">integer from 0 to 7 specifying the number of the tactor to actuate</param>
+        /// <param name="intensity">intensity, ranging from 0.0 to 1.0 by default</param>
+        /// <param name="duration">number of millisecons to actuate the tactor for</param>
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate33@ArmbandInterface@@QAAXHNH@Z",
+     CallingConvention = CallingConvention.Cdecl)]
+        private static extern void Actuate33(int tactor, double intensity, int duration);
+
+        /// <summary>
+        /// starts actuation of the specified tactor (motor) at intensity 0.66 for a specified amount of time
+        /// </summary>
+        /// <param name="tactor">integer from 0 to 7 specifying the number of the tactor to actuate</param>
+        /// <param name="intensity">intensity, ranging from 0.0 to 1.0 by default</param>
+        /// <param name="duration">number of millisecons to actuate the tactor for</param>
+        [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate66@ArmbandInterface@@QAAXHNH@Z",
+     CallingConvention = CallingConvention.Cdecl)]
+        private static extern void Actuate66(int tactor, double intensity, int duration);
+
+        /// <summary>
+        /// starts actuation of the specified tactor (motor) at intensity 1.0 for a specified amount of time
         /// </summary>
         /// <param name="tactor">integer from 0 to 7 specifying the number of the tactor to actuate</param>
         /// <param name="intensity">intensity, ranging from 0.0 to 1.0 by default</param>
         /// <param name="duration">number of millisecons to actuate the tactor for</param>
         [DllImport(@"../Debug/StaticLibMotors.dll", EntryPoint = "?actuate100@ArmbandInterface@@QAAXHNH@Z",
      CallingConvention = CallingConvention.Cdecl)]
-        public static extern void Actuate(int tactor, double intensity, int duration);
+        private static extern void Actuate100(int tactor, double intensity, int duration);
+
+        /// <summary>
+        /// starts actuation of the specified tactor (motor) at the specified intensity (specified in VIBRATION_MODE) for a specified amount of time
+        /// </summary>
+        /// <param name="tactor">integer from 0 to 7 specifying the number of the tactor to actuate</param>
+        /// <param name="intensity">intensity, ranging from 0.0 to 1.0 by default</param>
+        /// <param name="duration">number of millisecons to actuate the tactor for</param>
+        public static void Actuate(int tactor, double intensity, int duration)
+        {
+            switch (VIBRATION_MODE)
+            {
+                case 0:
+                    break;
+                case 1:
+                    Actuate33(tactor, intensity, duration);
+                    break;
+                case 2:
+                    Actuate66(tactor, intensity, duration);
+                    break;
+                case 3:
+                    Actuate100(tactor, intensity, duration);
+                    break;
+                default:
+                    Console.WriteLine("Error: invalid value for VIBRATION_MODE constant");
+                    break;
+            }
+        }
 
     }
 }

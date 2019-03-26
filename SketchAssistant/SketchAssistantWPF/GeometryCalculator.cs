@@ -81,7 +81,12 @@ namespace SketchAssistantWPF
                 List<Point> shortL = points0; List<Point> longL = points0;
                 if (points0.Count < points1.Count) { longL = points1; }
                 if (points0.Count > points1.Count) { shortL = points1; }
-                double dif = (longL.Count - 1) / (shortL.Count - 1);
+                double dif = 2;
+                if (shortL.Count != 1)
+                {
+                    dif = (longL.Count - 1) / (shortL.Count - 1);
+                }
+                
                 if (dif > 1)
                 {
                     //The longer list is significantly longer

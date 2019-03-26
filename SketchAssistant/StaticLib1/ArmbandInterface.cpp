@@ -171,7 +171,7 @@ extern "C" {
 	make the specified tactor (number from 0 to 7) actuate at a intensity 0.66 (default: between 0.0 and 1.0, but range may be set using the setIntensityRange function) for the specified duration (number of milliseconds) ,or until it is stopped
 	provides access to the DLLs BodyActuator_actuate method and handles type conversion to C types required by the DLL which are not available in C#
 	*/
-	DllExport void __cdecl ArmbandInterface::actuate66(int tactor, int duration) {
+	DllExport void __cdecl ArmbandInterface::actuate66(int tactor, double intensity, int duration) {
 		(actuateFunctionHandle)(armband, tactor, 0.66, duration);
 	}
 
@@ -179,7 +179,7 @@ extern "C" {
 	make the specified tactor (number from 0 to 7) actuate at intensity 0.33 (default: between 0.0 and 1.0, but range may be set using the setIntensityRange function) for the specified duration (number of milliseconds) ,or until it is stopped
 	provides access to the DLLs BodyActuator_actuate method and handles type conversion to C types required by the DLL which are not available in C#
 	*/
-	DllExport void __cdecl ArmbandInterface::actuate33(int tactor, int duration) {
+	DllExport void __cdecl ArmbandInterface::actuate33(int tactor, double intensity, int duration) {
 		(actuateFunctionHandle)(armband, tactor, 0.33, duration);
 	}
 
